@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Fire Department</title>
+    <link rel="stylesheet" href="css/admin_styles.css">
+</head>
+<body>
+<header>
+    <h1>Admin Panel</h1>
+    <button id="logoutBtn">Logout</button>
+</header>
+
+<nav>
+    <ul>
+        <li><a href="#" data-section="dashboard">Dashboard/Stats</a></li>
+        <li><a href="#" data-section="incidents">Manage Incidents</a></li>
+        <li><a href="#" data-section="users">Manage Users</a></li>
+        <li><a href="#" data-section="messages">View Messages</a></li>
+    </ul>
+</nav>
+
+<main id="adminContentArea">
+    <!-- Dynamic content will be loaded here -->
+</main>
+
+<script src="js/admin_auth.js" defer></script>
+<script src="js/admin_app.js" defer></script>
+</body>
+</html>

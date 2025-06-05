@@ -115,4 +115,24 @@ public class EditMessagesTable {
         }
     }
 
+    public ArrayList<Message> getAllMessages() throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<Message> messages = new ArrayList<Message>();
+        ResultSet rs;
+        try {
+            rs = stmt.executeQuery("SELECT * FROM messages ORDER BY date_time DESC");
+            while (rs.next()) {
+                String json = DB_Connection.getResultsToJSON(rs);
+                Gson gson = new Gson();
+                Message msg = gson.fromJson(json, Message.class);
+                messages.add(msg);
+            }
+            return messages;
+        } catch (Exception e) {
+            System.err.println("Got an exception! ");
+        }
+        return null;
+    }
+
 }

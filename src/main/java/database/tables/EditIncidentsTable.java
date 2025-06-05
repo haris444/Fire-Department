@@ -165,7 +165,7 @@ public class EditIncidentsTable {
      * @throws ClassNotFoundException
      */
     public void createNewIncident(Incident bt) throws ClassNotFoundException {
-        
+
         try {
             Connection con = DB_Connection.getConnection();
 
@@ -205,5 +205,88 @@ public class EditIncidentsTable {
         } catch (SQLException ex) {
             Logger.getLogger(EditIncidentsTable.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    /**
+     * Count incidents by type for admin statistics.
+     * @return ArrayList of HashMaps containing type and count
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public ArrayList<HashMap<String, Object>> countIncidentsByType() throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<HashMap<String, Object>> results = new ArrayList<HashMap<String, Object>>();
+        ResultSet rs;
+
+        try {
+            rs = stmt.executeQuery("SELECT incident_type, COUNT(*) as count FROM incidents GROUP BY incident_type");
+            while (rs.next()) {
+                HashMap<String, Object> typeCount = new HashMap<String, Object>();
+                typeCount.put("type", rs.getString("incident_type"));
+                typeCount.put("count", rs.getInt("count"));
+                results.add(typeCount);
+            }
+            return results;
+        } catch (Exception e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+        } finally {
+            stmt.close();
+            con.close();
+        }
+        return null;
+    }
+
+    /**
+     * Get total vehicles involved across all incidents.
+     * @return Total number of vehicles
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public int getTotalVehiclesInvolved() throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ResultSet rs;
+
+        try {
+            rs = stmt.executeQuery("SELECT SUM(vehicles) as total FROM incidents");
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (Exception e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+        } finally {
+            stmt.close();
+            con.close();
+        }
+        return 0;
+    }
+
+    /**
+     * Get total firemen involved across all incidents.
+     * @return Total number of firemen
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public int getTotalFiremenInvolved() throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ResultSet rs;
+
+        try {
+            rs = stmt.executeQuery("SELECT SUM(firemen) as total FROM incidents");
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (Exception e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+        } finally {
+            stmt.close();
+            con.close();
+        }
+        return 0;
     }
 }

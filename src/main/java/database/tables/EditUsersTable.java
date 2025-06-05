@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mainClasses.Participant;
@@ -23,28 +24,28 @@ import mainClasses.Participant;
  */
 public class EditUsersTable {
 
- 
+
     public void addUserFromJSON(String json) throws ClassNotFoundException{
-         User user=jsonToUser(json);
-         addNewUser(user);
+        User user=jsonToUser(json);
+        addNewUser(user);
     }
-    
-     public User jsonToUser(String json){
-         Gson gson = new Gson();
+
+    public User jsonToUser(String json){
+        Gson gson = new Gson();
 
         User user = gson.fromJson(json, User.class);
         return user;
     }
-    
+
     public String userToJSON(User user){
-         Gson gson = new Gson();
+        Gson gson = new Gson();
 
         String json = gson.toJson(user, User.class);
         return json;
     }
-    
-   
-    
+
+
+
     public void updateUser(String username,String key,String value) throws SQLException, ClassNotFoundException{
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
@@ -53,10 +54,10 @@ public class EditUsersTable {
         stmt.close();
         con.close();
     }
-   
-    
+
+
     public User databaseToUsers(String username, String password) throws SQLException, ClassNotFoundException{
-         Connection con = DB_Connection.getConnection();
+        Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
         ResultSet rs;
@@ -73,9 +74,9 @@ public class EditUsersTable {
         }
         return null;
     }
-    
+
     public String databaseUserToJSON(String username, String password) throws SQLException, ClassNotFoundException{
-         Connection con = DB_Connection.getConnection();
+        Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
         ResultSet rs;
@@ -91,8 +92,72 @@ public class EditUsersTable {
         return null;
     }
 
+    /**
+     * Retrieves all users from the database with summary information only.
+     * Returns user_id, username, firstname, and lastname for each user.
+     *
+     * @return ArrayList<User> containing user summary objects
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public ArrayList<User> getAllUsersSummary() throws SQLException, ClassNotFoundException {
+        ArrayList<User> userList = new ArrayList<User>();
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
 
-     public void createUsersTable() throws SQLException, ClassNotFoundException {
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT user_id, username, firstname, lastname FROM users");
+
+            while (rs.next()) {
+                User user = new User();
+                user.setUser_id(rs.getInt("user_id"));
+                user.setUsername(rs.getString("username"));
+                user.setFirstname(rs.getString("firstname"));
+                user.setLastname(rs.getString("lastname"));
+                userList.add(user);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+        } finally {
+            stmt.close();
+            con.close();
+        }
+
+        return userList;
+    }
+
+    /**
+     * Deletes a user from the database by username.
+     *
+     * @param username The username of the user to delete
+     * @return true if deletion was successful, false otherwise
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public boolean deleteUserByUsername(String username) throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        boolean success = false;
+
+        try {
+            String deleteQuery = "DELETE FROM users WHERE username = '" + username + "'";
+            int rowsAffected = stmt.executeUpdate(deleteQuery);
+            success = (rowsAffected > 0);
+
+        } catch (SQLException e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+        } finally {
+            stmt.close();
+            con.close();
+        }
+
+        return success;
+    }
+
+    public void createUsersTable() throws SQLException, ClassNotFoundException {
 
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
@@ -113,14 +178,14 @@ public class EditUsersTable {
                 + "    prefecture VARCHAR(15) not null,"
                 + "    job VARCHAR(200) not null,"
                 + "    telephone VARCHAR(14) not null unique,"
-                  + "    lat DOUBLE,"
+                + "    lat DOUBLE,"
                 + "    lon DOUBLE,"
                 + " PRIMARY KEY (user_id))";
         stmt.execute(query);
         stmt.close();
     }
-    
-    
+
+
     /**
      * Establish a database connection and add in the database.
      *
@@ -166,6 +231,6 @@ public class EditUsersTable {
         }
     }
 
-   
+
 
 }

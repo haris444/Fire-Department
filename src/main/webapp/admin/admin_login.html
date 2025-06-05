@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Fire Department</title>
+    <link rel="stylesheet" href="css/admin_styles.css">
+</head>
+<body>
+<div class="container">
+    <form id="adminLoginForm">
+        <h1>Administrator Login</h1>
+
+        <div class="form-group">
+            <label for="adminUsername">Username:</label>
+            <input type="text" id="adminUsername" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="adminPassword">Password:</label>
+            <input type="password" id="adminPassword" name="password" required>
+        </div>
+
+        <input type="submit" value="Login">
+
+        <div id="loginErrorMessage"></div>
+    </form>
+</div>
+
+<script src="js/admin_auth.js" defer></script>
+</body>
+</html>

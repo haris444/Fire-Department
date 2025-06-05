@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd">
-       <servlet>
+    <servlet>
         <servlet-name>GetUser</servlet-name>
         <servlet-class>servlets.GetUser</servlet-class>
     </servlet>
@@ -12,11 +12,43 @@
         <servlet-name>DeleteDB</servlet-name>
         <servlet-class>servlets.DeleteDB</servlet-class>
     </servlet>
-   
+
     <servlet>
         <servlet-name>NewServlet</servlet-name>
         <servlet-class>servlets.NewServlet</servlet-class>
     </servlet>
+
+    <!-- Admin Servlet Declarations -->
+    <servlet>
+        <servlet-name>AdminLoginServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminLoginServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AdminLogoutServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminLogoutServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AdminIncidentsServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminIncidentsServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AdminUsersServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminUsersServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AdminMessagesServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminMessagesServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>AdminStatisticsServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
+    </servlet>
+
     <servlet-mapping>
         <servlet-name>NewServlet</servlet-name>
         <url-pattern>/NewServlet</url-pattern>
@@ -33,6 +65,38 @@
         <servlet-name>DeleteDB</servlet-name>
         <url-pattern>/DeleteDB</url-pattern>
     </servlet-mapping>
+
+    <!-- Admin Servlet Mappings -->
+    <servlet-mapping>
+        <servlet-name>AdminLoginServlet</servlet-name>
+        <url-pattern>/admin/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AdminLogoutServlet</servlet-name>
+        <url-pattern>/admin/logout</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AdminIncidentsServlet</servlet-name>
+        <url-pattern>/admin/incidents</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AdminUsersServlet</servlet-name>
+        <url-pattern>/admin/users</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AdminMessagesServlet</servlet-name>
+        <url-pattern>/admin/messages</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AdminStatisticsServlet</servlet-name>
+        <url-pattern>/admin/statistics</url-pattern>
+    </servlet-mapping>
+
     <session-config>
         <session-timeout>
             30
