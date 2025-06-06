@@ -135,4 +135,95 @@ public class EditMessagesTable {
         return null;
     }
 
+    /**
+     * Fetches messages sent by a specific user.
+     * @param username The username who sent the messages
+     * @return ArrayList of messages sent by the user
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public ArrayList<Message> getMessagesSentByUser(String username) throws SQLException, ClassNotFoundException {
+        Connection con = null;
+        Statement stmt = null;
+        ArrayList<Message> messages = new ArrayList<Message>();
+        ResultSet rs;
+
+        try {
+            con = DB_Connection.getConnection();
+            stmt = con.createStatement();
+
+            String query = "SELECT * FROM messages WHERE sender = '" + username + "'";
+
+
+
+            query += " ORDER BY date_time DESC";
+
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                String json = DB_Connection.getResultsToJSON(rs);
+                Gson gson = new Gson();
+                Message msg = gson.fromJson(json, Message.class);
+                messages.add(msg);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+            throw e;
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (con != null) {
+                con.close();
+            }
+        }
+
+        return messages;
+    }
+
+
+    /**
+     * Fetches all messages sent to a specific recipient.
+     * @param recipient The recipient to fetch messages for (can be username or 'public')
+     * @return ArrayList of messages sent to the recipient
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public ArrayList<Message> getMessagesByRecipient(String recipient) throws SQLException, ClassNotFoundException {
+        Connection con = null;
+        Statement stmt = null;
+        ArrayList<Message> messages = new ArrayList<Message>();
+        ResultSet rs;
+
+        try {
+            con = DB_Connection.getConnection();
+            stmt = con.createStatement();
+
+            String query = "SELECT * FROM messages WHERE recipient = '" + recipient + "' ORDER BY date_time DESC";
+
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                String json = DB_Connection.getResultsToJSON(rs);
+                Gson gson = new Gson();
+                Message msg = gson.fromJson(json, Message.class);
+                messages.add(msg);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+            throw e;
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (con != null) {
+                con.close();
+            }
+        }
+
+        return messages;
+    }
+
 }

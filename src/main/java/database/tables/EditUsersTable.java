@@ -231,6 +231,77 @@ public class EditUsersTable {
         }
     }
 
+    public boolean updateUserProfile(User userWithNewDetails) throws SQLException, ClassNotFoundException {
+        Connection con = null;
+        Statement stmt = null;
+        boolean success = false;
 
+        try {
+            con = DB_Connection.getConnection();
+            stmt = con.createStatement();
+
+            String updateQuery = "UPDATE users SET " +
+                    "firstname='" + userWithNewDetails.getFirstname() + "', " +
+                    "lastname='" + userWithNewDetails.getLastname() + "', " +
+                    "birthdate='" + userWithNewDetails.getBirthdate() + "', " +
+                    "gender='" + userWithNewDetails.getGender() + "', " +
+                    "afm='" + userWithNewDetails.getAfm() + "', " +
+                    "country='" + userWithNewDetails.getCountry() + "', " +
+                    "address='" + userWithNewDetails.getAddress() + "', " +
+                    "municipality='" + userWithNewDetails.getMunicipality() + "', " +
+                    "prefecture='" + userWithNewDetails.getPrefecture() + "', " +
+                    "job='" + userWithNewDetails.getJob() + "', " +
+                    "telephone='" + userWithNewDetails.getTelephone() + "', " +
+                    "lat='" + userWithNewDetails.getLat() + "', " +
+                    "lon='" + userWithNewDetails.getLon() + "' " +
+                    "WHERE username='" + userWithNewDetails.getUsername() + "'";
+
+            int rowsAffected = stmt.executeUpdate(updateQuery);
+            success = (rowsAffected > 0);
+
+        } catch (SQLException e) {
+            System.err.println("Got an exception! ");
+            System.err.println(e.getMessage());
+            throw e;
+        } finally {
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (con != null) {
+                con.close();
+            }
+        }
+
+        return success;
+    }
+
+    /**
+     * Direct database query to get user by username.
+     * This is a simple implementation for the school assignment.
+     *
+     * @param username The username to fetch
+     * @return User object or null if not found
+     * @throws Exception
+     */
+    public User getUserByUsernameFromDB(String username) throws Exception {
+        database.DB_Connection dbConn = new database.DB_Connection();
+        java.sql.Connection con = dbConn.getConnection();
+        java.sql.Statement stmt = con.createStatement();
+
+        try {
+            java.sql.ResultSet rs = stmt.executeQuery("SELECT * FROM users WHERE username = '" + username + "'");
+            if (rs.next()) {
+                String json = dbConn.getResultsToJSON(rs);
+                Gson gson = new Gson();
+                User user = gson.fromJson(json, User.class);
+                return user;
+            }
+        } finally {
+            stmt.close();
+            con.close();
+        }
+
+        return null;
+    }
 
 }

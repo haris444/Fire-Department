@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+    <link rel="stylesheet" href="css/user_styles.css">
+</head>
+<body>
+<div class="container">
+    <form id="userRegisterForm">
+        <h1>User Registration</h1>
+
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required>
+        </div>
+
+        <div class="form-group">
+            <label for="firstname">First Name:</label>
+            <input type="text" id="firstname" name="firstname" required>
+        </div>
+
+        <div class="form-group">
+            <label for="lastname">Last Name:</label>
+            <input type="text" id="lastname" name="lastname" required>
+        </div>
+
+        <div class="form-group">
+            <label for="birthdate">Birth Date:</label>
+            <input type="date" id="birthdate" name="birthdate" required>
+        </div>
+
+        <div class="form-group">
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="afm">AFM:</label>
+            <input type="text" id="afm" name="afm" required>
+        </div>
+
+        <div class="form-group">
+            <label for="country">Country:</label>
+            <input type="text" id="country" name="country" required>
+        </div>
+
+        <div class="form-group">
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" required>
+        </div>
+
+        <div class="form-group">
+            <label for="municipality">Municipality:</label>
+            <input type="text" id="municipality" name="municipality" required>
+        </div>
+
+        <div class="form-group">
+            <label for="prefecture">Prefecture:</label>
+            <input type="text" id="prefecture" name="prefecture" required>
+        </div>
+
+        <div class="form-group">
+            <label for="job">Job:</label>
+            <input type="text" id="job" name="job" required>
+        </div>
+
+        <div class="form-group">
+            <label for="telephone">Telephone:</label>
+            <input type="tel" id="telephone" name="telephone" required>
+        </div>
+
+        <div class="form-group">
+            <label for="lat">Latitude (optional):</label>
+            <input type="number" id="lat" name="lat" step="any">
+        </div>
+
+        <div class="form-group">
+            <label for="lon">Longitude (optional):</label>
+            <input type="number" id="lon" name="lon" step="any">
+        </div>
+
+        <input type="submit" value="Register">
+
+        <div id="registerMessage"></div>
+
+        <p class="login-link">
+            Already have an account? <a href="login.html">Login here</a>
+        </p>
+    </form>
+</div>
+
+<script src="js/user_auth.js" defer></script>
+</body>
+</html>

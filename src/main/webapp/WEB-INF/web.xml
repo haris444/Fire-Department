@@ -49,6 +49,37 @@
         <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
     </servlet>
 
+    <!-- User Servlet Declarations -->
+    <servlet>
+        <servlet-name>UserRegisterServlet</servlet-name>
+        <servlet-class>servlets.user.UserRegisterServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>UserLoginServlet</servlet-name>
+        <servlet-class>servlets.user.UserLoginServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>UserLogoutServlet</servlet-name>
+        <servlet-class>servlets.user.UserLogoutServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>UserProfileServlet</servlet-name>
+        <servlet-class>servlets.user.UserProfileServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>UserIncidentServlet</servlet-name>
+        <servlet-class>servlets.user.UserIncidentServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>UserMessageServlet</servlet-name>
+        <servlet-class>servlets.user.UserMessageServlet</servlet-class>
+    </servlet>
+
     <servlet-mapping>
         <servlet-name>NewServlet</servlet-name>
         <url-pattern>/NewServlet</url-pattern>
@@ -95,6 +126,37 @@
     <servlet-mapping>
         <servlet-name>AdminStatisticsServlet</servlet-name>
         <url-pattern>/admin/statistics</url-pattern>
+    </servlet-mapping>
+
+    <!-- User Servlet Mappings -->
+    <servlet-mapping>
+        <servlet-name>UserRegisterServlet</servlet-name>
+        <url-pattern>/user/register</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>UserLoginServlet</servlet-name>
+        <url-pattern>/user/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>UserLogoutServlet</servlet-name>
+        <url-pattern>/user/logout</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>UserProfileServlet</servlet-name>
+        <url-pattern>/user/profile</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>UserIncidentServlet</servlet-name>
+        <url-pattern>/user/incidents</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>UserMessageServlet</servlet-name>
+        <url-pattern>/user/messages</url-pattern>
     </servlet-mapping>
 
     <session-config>
