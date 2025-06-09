@@ -181,9 +181,10 @@ function handleEditIncidentForm(incidentId) {
         '<div class="form-group">' +
         '<label for="editIncidentStatus">Status:</label>' +
         '<select id="editIncidentStatus" name="status" required>' +
-        '<option value="Open">Open</option>' +
         '<option value="In Progress">In Progress</option>' +
-        '<option value="Closed">Closed</option>' +
+        '<option value="Running">Running</option>' +
+        '<option value="Submitted">Submitted</option>' +
+        '<option value="Finished">Finished</option>' +
         '</select>' +
         '</div>' +
         '<div class="form-group">' +
@@ -192,6 +193,7 @@ function handleEditIncidentForm(incidentId) {
         '<option value="Low">Low</option>' +
         '<option value="Medium">Medium</option>' +
         '<option value="High">High</option>' +
+        '<option value="Unknown">Unknown</option>' +
         '</select>' +
         '</div>' +
         '<button type="submit">Update Incident</button>' +
@@ -210,7 +212,7 @@ function handleEditIncidentForm(incidentId) {
             incident_type: document.getElementById('editIncidentType').value,
             description: document.getElementById('editIncidentDescription').value,
             status: document.getElementById('editIncidentStatus').value,
-            danger_level: document.getElementById('editIncidentDanger').value
+            danger: document.getElementById('editIncidentDanger').value
         };
         submitIncidentUpdate(incidentId, formData);
     });
@@ -298,8 +300,8 @@ function loadMessagesSection() {
         '<textarea id="messageText" name="message_text" required></textarea>' +
         '</div>' +
         '<div class="form-group">' +
-        '<label for="recipientType">Recipient:</label>' +
-        '<select id="recipientType" name="recipient_type" required>' +
+        '<label for="recipient">Recipient:</label>' +
+        '<select id="recipient" name="recipient" required>' +
         '<option value="Public">Public</option>' +
         '<option value="All Users">All Users</option>' +
         '</select>' +
@@ -327,7 +329,7 @@ function loadMessagesSection() {
         event.preventDefault();
         const formData = {
             message_text: document.getElementById('messageText').value,
-            recipient_type: document.getElementById('recipientType').value,
+            recipient: document.getElementById('recipient').value,
             incident_id: document.getElementById('incidentId').value || null
         };
         sendAdminMessage(formData);

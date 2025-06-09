@@ -37,6 +37,7 @@ public class UserMessageServlet extends BaseUserServlet {
 
             // Get messages for user (messages to them and public messages)
             ArrayList<Message> messagesForUser = editMessagesTable.getMessagesByRecipient(loggedInUsername);
+            messagesForUser.addAll(editMessagesTable.getMessagesByRecipient("public"));
 
             // Get messages sent by user
             ArrayList<Message> messagesSentByUser = editMessagesTable.getMessagesSentByUser(loggedInUsername);
@@ -45,21 +46,7 @@ public class UserMessageServlet extends BaseUserServlet {
             Set<Integer> messageIds = new HashSet<>();
             ArrayList<Message> allMessages = new ArrayList<>();
 
-            // Add messages for user
-            for (Message msg : messagesForUser) {
-                if (!messageIds.contains(msg.getMessage_id())) {
-                    messageIds.add(msg.getMessage_id());
-                    allMessages.add(msg);
-                }
-            }
-
-            // Add messages sent by user
-            for (Message msg : messagesSentByUser) {
-                if (!messageIds.contains(msg.getMessage_id())) {
-                    messageIds.add(msg.getMessage_id());
-                    allMessages.add(msg);
-                }
-            }
+            allMessages.addAll(messagesForUser);
 
             // Convert to JSON array
             Gson gson = new Gson();

@@ -418,12 +418,12 @@ function loadMessagesSection() {
     contentArea.innerHTML = html;
 
     // Load messages
-    makeUserAjaxRequest('../user/messages', 'GET', null, function(err, messagesData) {
+    makeUserAjaxRequest('../user/messages', 'GET', null, function(err, allMessages) {
         const messagesContainer = document.getElementById('messagesContainer');
         if (err) {
             messagesContainer.innerHTML = '<div class="error-message">Error loading messages: ' + err.message + '</div>';
         } else {
-            renderMessages(messagesData);
+            renderMessages(allMessages);
         }
     });
 
@@ -438,32 +438,17 @@ function renderMessages(messagesData) {
     const messagesContainer = document.getElementById('messagesContainer');
 
     let html = '<div class="message-list">';
-    html += '<h3>Messages Sent by You</h3>';
 
-    if (messagesData.messagesSentByUser && messagesData.messagesSentByUser.length > 0) {
-        messagesData.messagesSentByUser.forEach(function(message) {
-            html += '<div class="message-item sent">';
-            html += '<div class="message-header">To: ' + message.recipient + ' | Incident: ' + (message.incident_id || 'N/A') + '</div>';
+    if (messagesData && messagesData.length > 0) {
+        messagesData.forEach(function(message) {
+            html += '<div class="message-item">';
+            html += '<div class="message-header">From: ' + message.sender + ' | To: ' + message.recipient + ' | Incident: ' + (message.incident_id || 'N/A') + '</div>';
             html += '<div class="message-content">' + message.message + '</div>';
             html += '<div class="message-time">' + message.date_time + '</div>';
             html += '</div>';
         });
     } else {
-        html += '<p>No messages sent yet.</p>';
-    }
-
-    html += '<h3>Messages for You</h3>';
-
-    if (messagesData.messagesForUser && messagesData.messagesForUser.length > 0) {
-        messagesData.messagesForUser.forEach(function(message) {
-            html += '<div class="message-item received">';
-            html += '<div class="message-header">From: ' + message.sender + ' | Incident: ' + (message.incident_id || 'N/A') + '</div>';
-            html += '<div class="message-content">' + message.message + '</div>';
-            html += '<div class="message-time">' + message.date_time + '</div>';
-            html += '</div>';
-        });
-    } else {
-        html += '<p>No messages received yet.</p>';
+        html += '<p>No messages available.</p>';
     }
 
     html += '</div>';
