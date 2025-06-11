@@ -24,11 +24,13 @@
         <servlet-class>servlets.LoginServlet</servlet-class>
     </servlet>
 
-    <!-- Admin Servlet Declarations (excluding login) -->
+    <!-- Consolidated Logout Servlet -->
     <servlet>
-        <servlet-name>AdminLogoutServlet</servlet-name>
-        <servlet-class>servlets.admin.AdminLogoutServlet</servlet-class>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>servlets.LogoutServlet</servlet-class>
     </servlet>
+
+    <!-- Admin Servlet Declarations (excluding login) -->
 
     <servlet>
         <servlet-name>AdminIncidentsServlet</servlet-name>
@@ -56,10 +58,6 @@
         <servlet-class>servlets.user.UserRegisterServlet</servlet-class>
     </servlet>
 
-    <servlet>
-        <servlet-name>UserLogoutServlet</servlet-name>
-        <servlet-class>servlets.user.UserLogoutServlet</servlet-class>
-    </servlet>
 
     <servlet>
         <servlet-name>UserProfileServlet</servlet-name>
@@ -99,11 +97,18 @@
         <url-pattern>/login</url-pattern>
     </servlet-mapping>
 
-    <!-- Admin Servlet Mappings (excluding login) -->
+    <!-- Consolidated Logout Servlet Mappings -->
     <servlet-mapping>
-        <servlet-name>AdminLogoutServlet</servlet-name>
+        <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/admin/logout</url-pattern>
     </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/user/logout</url-pattern>
+    </servlet-mapping>
+
+    <!-- Admin Servlet Mappings (excluding login) -->
 
     <servlet-mapping>
         <servlet-name>AdminIncidentsServlet</servlet-name>
@@ -131,10 +136,6 @@
         <url-pattern>/user/register</url-pattern>
     </servlet-mapping>
 
-    <servlet-mapping>
-        <servlet-name>UserLogoutServlet</servlet-name>
-        <url-pattern>/user/logout</url-pattern>
-    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>UserProfileServlet</servlet-name>
