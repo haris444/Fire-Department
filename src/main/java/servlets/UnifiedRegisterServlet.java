@@ -7,10 +7,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import database.tables.EditUsersTable;
-import database.tables.EditVolunteersTable;
 import database.tables.CheckForDuplicatesExample;
 import mainClasses.User;
-import mainClasses.Volunteer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,7 +33,7 @@ public class UnifiedRegisterServlet extends HttpServlet {
 
             System.out.println("Received JSON: " + jsonBuffer.toString());
 
-            // Parse JSON to get registrationType
+            // Parse JSON to get registrationType first
             JsonParser parser = new JsonParser();
             JsonObject jsonObject = parser.parse(jsonBuffer.toString()).getAsJsonObject();
 
@@ -49,14 +47,38 @@ public class UnifiedRegisterServlet extends HttpServlet {
             String registrationType = jsonObject.get("registrationType").getAsString();
             System.out.println("Registration type: " + registrationType);
 
-            if ("user".equals(registrationType)) {
-                handleUserRegistration(jsonBuffer.toString(), response);
-            } else if ("volunteer".equals(registrationType)) {
-                handleVolunteerRegistration(jsonBuffer.toString(), response);
-            } else {
+            // Validate registration type
+            if (!"user".equals(registrationType) && !"volunteer".equals(registrationType)) {
                 sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST,
                         "Invalid registration type. Must be 'user' or 'volunteer'");
+                return;
             }
+
+            // Parse JSON payload directly into User object
+            Gson gson = new Gson();
+            User user = gson.fromJson(jsonBuffer.toString(), User.class);
+
+            // Set the user_type based on registrationType
+            user.setUser_type(registrationType);
+
+            // Check for duplicates using the consolidated duplicate checker
+            CheckForDuplicatesExample duplicateChecker = new CheckForDuplicatesExample();
+            boolean usernameAvailable = duplicateChecker.isUserNameAvailable(user.getUsername());
+            boolean emailAvailable = duplicateChecker.isEmailAvailable(user.getEmail());
+
+            if (!usernameAvailable || !emailAvailable) {
+                sendErrorResponse(response, HttpServletResponse.SC_CONFLICT,
+                        "Username or email already exists.");
+                return;
+            }
+
+            // Save the user to the consolidated users table
+            EditUsersTable editUsersTable = new EditUsersTable();
+            editUsersTable.addNewUser(user);
+
+            // Send success response
+            String message = registrationType.substring(0, 1).toUpperCase() + registrationType.substring(1) + " registration successful. Please login.";
+            sendSuccessResponse(response, message);
 
         } catch (Exception e) {
             System.err.println("Error in UnifiedRegisterServlet: " + e.getMessage());
@@ -64,54 +86,6 @@ public class UnifiedRegisterServlet extends HttpServlet {
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Registration failed. Please try again.");
         }
-    }
-
-    private void handleUserRegistration(String jsonString, HttpServletResponse response) throws Exception {
-        // Parse JSON to User object
-        Gson gson = new Gson();
-        User user = gson.fromJson(jsonString, User.class);
-
-        // Check for duplicates
-        CheckForDuplicatesExample duplicateChecker = new CheckForDuplicatesExample();
-        boolean usernameAvailable = duplicateChecker.isUserNameAvailable(user.getUsername());
-        boolean emailAvailable = duplicateChecker.isEmailAvailable(user.getEmail());
-
-        if (!usernameAvailable || !emailAvailable) {
-            sendErrorResponse(response, HttpServletResponse.SC_CONFLICT,
-                    "Username or email already exists.");
-            return;
-        }
-
-        // Register the user
-        EditUsersTable editUsersTable = new EditUsersTable();
-        editUsersTable.addNewUser(user);
-
-        // Send success response
-        sendSuccessResponse(response, "User registration successful. Please login.");
-    }
-
-    private void handleVolunteerRegistration(String jsonString, HttpServletResponse response) throws Exception {
-        // Parse JSON to Volunteer object
-        Gson gson = new Gson();
-        Volunteer volunteer = gson.fromJson(jsonString, Volunteer.class);
-
-        // Check for duplicates
-        CheckForDuplicatesExample duplicateChecker = new CheckForDuplicatesExample();
-        boolean usernameAvailable = duplicateChecker.isUserNameAvailable(volunteer.getUsername());
-        boolean emailAvailable = duplicateChecker.isEmailAvailable(volunteer.getEmail());
-
-        if (!usernameAvailable || !emailAvailable) {
-            sendErrorResponse(response, HttpServletResponse.SC_CONFLICT,
-                    "Username or email already exists.");
-            return;
-        }
-
-        // Register the volunteer
-        EditVolunteersTable editVolunteersTable = new EditVolunteersTable();
-        editVolunteersTable.addNewVolunteer(volunteer);
-
-        // Send success response
-        sendSuccessResponse(response, "Volunteer registration successful. Please login.");
     }
 
     private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {

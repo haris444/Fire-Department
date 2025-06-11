@@ -98,6 +98,7 @@ function loadUserSection(sectionName) {
 function loadUserProfileSection() {
     contentArea.innerHTML = '<div class="content-section"><h2>My Profile</h2><div id="profileContainer">Loading profile...</div></div>';
 
+    // UPDATED: Now calls unified ProfileServlet which returns User object with all fields
     makeUserAjaxRequest('../user/profile', 'GET', null, function(err, userData) {
         const profileContainer = document.getElementById('profileContainer');
         if (err) {
@@ -108,21 +109,33 @@ function loadUserProfileSection() {
     });
 }
 
+// UPDATED: Modified to conditionally render volunteer-specific fields
 function renderUserProfileForm(user) {
     const profileContainer = document.getElementById('profileContainer');
 
     let html = '<form id="userProfileForm" class="user-form">';
     html += '<h3>Profile Information</h3>';
 
+    // CONDITIONAL RENDERING: Check if this is a volunteer to show volunteer-specific fields
+    const isVolunteer = user.user_type === 'volunteer';
+
     // Non-editable fields
     html += '<div class="form-row">';
     html += '<div class="form-group">';
     html += '<label>Username:</label>';
-    html += '<input type="text" value="' + user.username + '" readonly>';
+    html += '<input type="text" value="' + (user.username || '') + '" readonly>';
     html += '</div>';
     html += '<div class="form-group">';
     html += '<label>Email:</label>';
-    html += '<input type="email" value="' + user.email + '" readonly>';
+    html += '<input type="email" value="' + (user.email || '') + '" readonly>';
+    html += '</div>';
+    html += '</div>';
+
+    // UPDATED: Show user type (read-only)
+    html += '<div class="form-row">';
+    html += '<div class="form-group">';
+    html += '<label>Account Type:</label>';
+    html += '<input type="text" value="' + (user.user_type || 'user') + '" readonly>';
     html += '</div>';
     html += '</div>';
 
@@ -130,18 +143,18 @@ function renderUserProfileForm(user) {
     html += '<div class="form-row">';
     html += '<div class="form-group">';
     html += '<label for="firstname">First Name:</label>';
-    html += '<input type="text" id="firstname" name="firstname" value="' + user.firstname + '" required>';
+    html += '<input type="text" id="firstname" name="firstname" value="' + (user.firstname || '') + '" required>';
     html += '</div>';
     html += '<div class="form-group">';
     html += '<label for="lastname">Last Name:</label>';
-    html += '<input type="text" id="lastname" name="lastname" value="' + user.lastname + '" required>';
+    html += '<input type="text" id="lastname" name="lastname" value="' + (user.lastname || '') + '" required>';
     html += '</div>';
     html += '</div>';
 
     html += '<div class="form-row">';
     html += '<div class="form-group">';
     html += '<label for="birthdate">Birth Date:</label>';
-    html += '<input type="date" id="birthdate" name="birthdate" value="' + user.birthdate + '" required>';
+    html += '<input type="date" id="birthdate" name="birthdate" value="' + (user.birthdate || '') + '" required>';
     html += '</div>';
     html += '<div class="form-group">';
     html += '<label for="gender">Gender:</label>';
@@ -156,38 +169,38 @@ function renderUserProfileForm(user) {
     html += '<div class="form-row">';
     html += '<div class="form-group">';
     html += '<label for="afm">AFM:</label>';
-    html += '<input type="text" id="afm" name="afm" value="' + user.afm + '" required>';
+    html += '<input type="text" id="afm" name="afm" value="' + (user.afm || '') + '" required>';
     html += '</div>';
     html += '<div class="form-group">';
     html += '<label for="country">Country:</label>';
-    html += '<input type="text" id="country" name="country" value="' + user.country + '" required>';
+    html += '<input type="text" id="country" name="country" value="' + (user.country || '') + '" required>';
     html += '</div>';
     html += '</div>';
 
     html += '<div class="form-group">';
     html += '<label for="address">Address:</label>';
-    html += '<input type="text" id="address" name="address" value="' + user.address + '" required>';
+    html += '<input type="text" id="address" name="address" value="' + (user.address || '') + '" required>';
     html += '</div>';
 
     html += '<div class="form-row">';
     html += '<div class="form-group">';
     html += '<label for="municipality">Municipality:</label>';
-    html += '<input type="text" id="municipality" name="municipality" value="' + user.municipality + '" required>';
+    html += '<input type="text" id="municipality" name="municipality" value="' + (user.municipality || '') + '" required>';
     html += '</div>';
     html += '<div class="form-group">';
     html += '<label for="prefecture">Prefecture:</label>';
-    html += '<input type="text" id="prefecture" name="prefecture" value="' + user.prefecture + '" required>';
+    html += '<input type="text" id="prefecture" name="prefecture" value="' + (user.prefecture || '') + '" required>';
     html += '</div>';
     html += '</div>';
 
     html += '<div class="form-row">';
     html += '<div class="form-group">';
     html += '<label for="job">Job:</label>';
-    html += '<input type="text" id="job" name="job" value="' + user.job + '" required>';
+    html += '<input type="text" id="job" name="job" value="' + (user.job || '') + '" required>';
     html += '</div>';
     html += '<div class="form-group">';
     html += '<label for="telephone">Telephone:</label>';
-    html += '<input type="tel" id="telephone" name="telephone" value="' + user.telephone + '" required>';
+    html += '<input type="tel" id="telephone" name="telephone" value="' + (user.telephone || '') + '" required>';
     html += '</div>';
     html += '</div>';
 
@@ -202,6 +215,33 @@ function renderUserProfileForm(user) {
     html += '</div>';
     html += '</div>';
 
+    // CONDITIONAL RENDERING: Only show volunteer-specific fields if user_type is 'volunteer'
+    if (isVolunteer) {
+        html += '<h3>Volunteer Information</h3>';
+
+        html += '<div class="form-row">';
+        html += '<div class="form-group">';
+        html += '<label for="volunteer_type">Volunteer Type:</label>';
+        html += '<select id="volunteer_type" name="volunteer_type">';
+        html += '<option value="">Select Type</option>';
+        html += '<option value="simple"' + (user.volunteer_type === 'simple' ? ' selected' : '') + '>Simple</option>';
+        html += '<option value="driver"' + (user.volunteer_type === 'driver' ? ' selected' : '') + '>Driver</option>';
+        html += '</select>';
+        html += '</div>';
+        html += '</div>';
+
+        html += '<div class="form-row">';
+        html += '<div class="form-group">';
+        html += '<label for="height">Height (m):</label>';
+        html += '<input type="number" id="height" name="height" value="' + (user.height || '') + '" step="0.01" placeholder="e.g., 1.75">';
+        html += '</div>';
+        html += '<div class="form-group">';
+        html += '<label for="weight">Weight (kg):</label>';
+        html += '<input type="number" id="weight" name="weight" value="' + (user.weight || '') + '" step="0.1" placeholder="e.g., 70.5">';
+        html += '</div>';
+        html += '</div>';
+    }
+
     html += '<button type="submit">Update Profile</button>';
     html += '</form>';
     html += '<div id="profileUpdateMessage"></div>';
@@ -215,7 +255,9 @@ function renderUserProfileForm(user) {
     });
 }
 
+// UPDATED: Modified to handle optional volunteer fields in form submission
 function submitUserProfileUpdate() {
+    // Collect standard user fields
     const formData = {
         firstname: document.getElementById('firstname').value,
         lastname: document.getElementById('lastname').value,
@@ -232,6 +274,23 @@ function submitUserProfileUpdate() {
         lon: document.getElementById('lon').value || null
     };
 
+    // CONDITIONAL DATA COLLECTION: Only collect volunteer fields if they exist in the DOM
+    // This means the user is a volunteer and these fields were rendered
+    const volunteerTypeField = document.getElementById('volunteer_type');
+    const heightField = document.getElementById('height');
+    const weightField = document.getElementById('weight');
+
+    if (volunteerTypeField) {
+        formData.volunteer_type = volunteerTypeField.value || null;
+    }
+    if (heightField) {
+        formData.height = heightField.value || null;
+    }
+    if (weightField) {
+        formData.weight = weightField.value || null;
+    }
+
+    // UPDATED: Send to unified ProfileServlet which handles both users and volunteers
     makeUserAjaxRequest('../user/profile', 'POST', formData, function(err, response) {
         const messageDiv = document.getElementById('profileUpdateMessage');
         if (err) {

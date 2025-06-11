@@ -4,8 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
 import database.tables.EditIncidentsTable;
-import database.tables.EditUsersTable;
-import database.tables.EditVolunteersTable;
 import database.DB_Connection;
 import servlets.BaseServlet;
 import java.io.IOException;
@@ -17,6 +15,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * AdminStatisticsServlet (Refactored)
+ *
+ * This servlet has been updated to work with the consolidated 'users' table.
+ * It now correctly queries the single table to count users and volunteers
+ * based on the 'user_type' field.
+ */
 public class AdminStatisticsServlet extends BaseServlet {
 
     @Override
@@ -32,13 +37,11 @@ public class AdminStatisticsServlet extends BaseServlet {
         try {
             // Initialize database table objects
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            EditUsersTable editUsersTable = new EditUsersTable();
-            EditVolunteersTable editVolunteersTable = new EditVolunteersTable();
 
-            // Fetch statistics data
+            // Fetch statistics data using updated methods
             ArrayList<HashMap<String, Object>> incidentsByType = editIncidentsTable.countIncidentsByType();
-            int userCount = getUserCount();
-            int volunteerCount = getVolunteerCount();
+            int userCount = getUserCount(); // This now correctly counts only 'user' types
+            int volunteerCount = getVolunteerCount(); // This now correctly counts 'volunteer' types
             int totalVehiclesInvolved = editIncidentsTable.getTotalVehiclesInvolved();
             int totalFiremenInvolved = editIncidentsTable.getTotalFiremenInvolved();
 
@@ -69,11 +72,17 @@ public class AdminStatisticsServlet extends BaseServlet {
         }
     }
 
+    /**
+     * Counts the number of registered users (excluding volunteers and admins).
+     * @return The total count of users with user_type = 'user'.
+     * @throws Exception
+     */
     private int getUserCount() throws Exception {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users");
+        // MODIFIED: Query now filters by user_type = 'user'
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'user'");
         int count = 0;
         if (rs.next()) {
             count = rs.getInt("count");
@@ -84,11 +93,17 @@ public class AdminStatisticsServlet extends BaseServlet {
         return count;
     }
 
+    /**
+     * Counts the number of registered volunteers.
+     * @return The total count of users with user_type = 'volunteer'.
+     * @throws Exception
+     */
     private int getVolunteerCount() throws Exception {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM volunteers");
+        // MODIFIED: Query now checks the consolidated 'users' table for user_type = 'volunteer'
+        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'volunteer'");
         int count = 0;
         if (rs.next()) {
             count = rs.getInt("count");

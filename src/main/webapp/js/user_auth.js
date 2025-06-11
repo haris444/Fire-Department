@@ -35,7 +35,8 @@ function initializeRegistrationPage() {
         registerForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // Determine registration type by checking which toggle button is active
+            // CRITICAL: Determine registration type by checking which toggle button is active
+            // This registrationType field is essential for UnifiedRegisterServlet to set user_type correctly
             const userToggle = document.getElementById('userToggle');
             const volunteerToggle = document.getElementById('volunteerToggle');
             let registrationType = 'user'; // default
@@ -44,9 +45,9 @@ function initializeRegistrationPage() {
                 registrationType = 'volunteer';
             }
 
-            // Collect form field values
+            // Collect form field values - registrationType is the key field for unified registration
             const formData = {
-                registrationType: registrationType,
+                registrationType: registrationType, // CRITICAL: This tells the servlet what user_type to set
                 username: document.getElementById('username').value,
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value,
@@ -65,7 +66,8 @@ function initializeRegistrationPage() {
                 lon: document.getElementById('lon').value || null
             };
 
-            // If registering as volunteer, collect volunteer-specific fields
+            // UPDATED: Collect volunteer-specific fields only when registering as volunteer
+            // These fields will be stored in the same User table but only populated for volunteers
             if (registrationType === 'volunteer') {
                 formData.volunteer_type = document.getElementById('volunteer_type').value;
                 formData.height = document.getElementById('height').value || null;
@@ -81,7 +83,7 @@ function initializeRegistrationPage() {
 
             // AJAX POST to UnifiedRegisterServlet
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'register', true);
+            xhr.open('POST', 'register', true); // Maps to /register -> UnifiedRegisterServlet
 
             xhr.setRequestHeader('Content-Type', 'application/json');
 
@@ -243,7 +245,8 @@ function validateRegistrationForm(formData, confirmPassword, messageDiv, registr
         }
     }
 
-    // Check volunteer-specific required fields
+    // UPDATED: Check volunteer-specific required fields
+    // Only validate volunteer_type if registering as volunteer
     if (registrationType === 'volunteer') {
         if (!formData.volunteer_type || formData.volunteer_type.trim() === '') {
             showErrorMessage(messageDiv, 'Please select a volunteer type.');

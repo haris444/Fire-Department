@@ -158,7 +158,6 @@ public class EditUsersTable {
     }
 
     public void createUsersTable() throws SQLException, ClassNotFoundException {
-
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
@@ -170,8 +169,8 @@ public class EditUsersTable {
                 + "    firstname VARCHAR(30) not null,"
                 + "    lastname VARCHAR(30) not null,"
                 + "    birthdate DATE not null,"
-                + "    gender  VARCHAR (7) not null,"
-                + "    afm  VARCHAR (10) not null,"
+                + "    gender VARCHAR(7) not null,"
+                + "    afm VARCHAR(10) not null,"
                 + "    country VARCHAR(30) not null,"
                 + "    address VARCHAR(100) not null,"
                 + "    municipality VARCHAR(50) not null,"
@@ -180,6 +179,10 @@ public class EditUsersTable {
                 + "    telephone VARCHAR(14) not null unique,"
                 + "    lat DOUBLE,"
                 + "    lon DOUBLE,"
+                + "    user_type VARCHAR(10) not null," // type: 'admin', 'user', 'volunteer'
+                + "    volunteer_type VARCHAR(10),"      //  optional
+                + "    height DOUBLE,"                    //  optional
+                + "    weight DOUBLE,"                    //  optional
                 + " PRIMARY KEY (user_id))";
         stmt.execute(query);
         stmt.close();
@@ -188,6 +191,8 @@ public class EditUsersTable {
 
     /**
      * Establish a database connection and add in the database.
+     * Updated to work with consolidated users table including new fields:
+     * user_type, volunteer_type, height, weight
      *
      * @throws ClassNotFoundException
      */
@@ -197,9 +202,14 @@ public class EditUsersTable {
 
             Statement stmt = con.createStatement();
 
+            // Handle nullable fields - convert null values to SQL NULL
+            String volunteerType = (user.getVolunteer_type() == null) ? "NULL" : "'" + user.getVolunteer_type() + "'";
+            String height = (user.getHeight() == null) ? "NULL" : user.getHeight().toString();
+            String weight = (user.getWeight() == null) ? "NULL" : user.getWeight().toString();
+
             String insertQuery = "INSERT INTO "
                     + " users (username,email,password,firstname,lastname,birthdate,gender,afm,country,address,municipality,prefecture,"
-                    + "job,telephone,lat,lon)"
+                    + "job,telephone,lat,lon,user_type,volunteer_type,height,weight)"
                     + " VALUES ("
                     + "'" + user.getUsername() + "',"
                     + "'" + user.getEmail() + "',"
@@ -216,7 +226,11 @@ public class EditUsersTable {
                     + "'" + user.getJob() + "',"
                     + "'" + user.getTelephone() + "',"
                     + "'" + user.getLat() + "',"
-                    + "'" + user.getLon() + "'"
+                    + "'" + user.getLon() + "',"
+                    + "'" + user.getUser_type() + "',"
+                    + volunteerType + ","
+                    + height + ","
+                    + weight
                     + ")";
             //stmt.execute(table);
             System.out.println(insertQuery);

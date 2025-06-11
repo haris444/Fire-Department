@@ -13,13 +13,13 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 /**
- * Consolidated Login Servlet that handles authentication for both admin and regular users.
- * This servlet replaces the separate AdminLoginServlet and UserLoginServlet classes.
+ * Consolidated Login Servlet that handles authentication for all user types.
+ * This servlet authenticates users against the consolidated users database table
+ * and creates appropriate session attributes based on the user_type field.
  *
  * Authentication Flow:
- * - If username is "admin", validates against hardcoded admin credentials
- * - Otherwise, validates against the users database table
- * - Creates appropriate session attributes based on user type
+ * - Single database lookup for all user types ('admin', 'user', 'volunteer')
+ * - Creates session attributes based on user_type returned from database
  */
 public class LoginServlet extends HttpServlet {
 
@@ -44,13 +44,36 @@ public class LoginServlet extends HttpServlet {
             String username = loginRequest.username;
             String password = loginRequest.password;
 
-            // Differentiate user type based on username
-            if ("admin".equals(username)) {
-                // Handle admin authentication with hardcoded credentials
-                handleAdminAuthentication(username, password, request, response);
+            // Unified authentication - single database lookup for all user types
+            EditUsersTable editUsersTable = new EditUsersTable();
+            User user = editUsersTable.databaseToUsers(username, password);
+
+            if (user != null) {
+                // Authentication successful - create session based on user type
+                HttpSession session = request.getSession(true);
+                session.setAttribute("loggedInUserUsername", user.getUsername());
+
+                // Set role-specific session attributes based on user_type
+                switch (user.getUser_type()) {
+                    case "admin":
+                        session.setAttribute("adminUser", "true");
+                        break;
+                    case "user":
+                        session.setAttribute("userRole", "REGULAR_USER");
+                        break;
+                    case "volunteer":
+                        session.setAttribute("userRole", "VOLUNTEER");
+                        break;
+                }
+
+                String sessionToken = session.getId();
+                String message = user.getUser_type().substring(0, 1).toUpperCase() + user.getUser_type().substring(1) + " login successful";
+
+                // Send successful login response
+                sendSuccessResponse(response, sessionToken, user.getUsername(), message);
             } else {
-                // Handle regular user authentication via database
-                handleUserAuthentication(username, password, request, response);
+                // Authentication failed
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
             }
 
         } catch (SQLException ex) {
@@ -69,80 +92,11 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * Handles authentication for admin users by validating against database credentials.
-     *
-     * @param username The provided username
-     * @param password The provided password
-     * @param request The HTTP request
-     * @param response The HTTP response
-     * @throws IOException If response writing fails
-     * @throws SQLException If database access fails
-     * @throws ClassNotFoundException If database driver is not found
-     */
-    private void handleAdminAuthentication(String username, String password,
-                                           HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SQLException, ClassNotFoundException {
-
-        // Validate admin credentials against database
-        EditUsersTable editUsersTable = new EditUsersTable();
-        User user = editUsersTable.databaseToUsers(username, password);
-
-        if (user != null) {
-            // Create session and set admin attributes
-            HttpSession session = request.getSession(true);
-            session.setAttribute("adminUser", "true");
-
-            String sessionToken = session.getId();
-
-            // Send successful admin login response
-            sendSuccessResponse(response, sessionToken, username, "Admin login successful");
-        } else {
-            // Database authentication failed
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid admin credentials");
-        }
-    }
-
-    /**
-     * Handles authentication for regular users via database lookup.
-     *
-     * @param username The provided username
-     * @param password The provided password
-     * @param request The HTTP request
-     * @param response The HTTP response
-     * @throws IOException If response writing fails
-     * @throws SQLException If database access fails
-     * @throws ClassNotFoundException If database driver is not found
-     */
-    private void handleUserAuthentication(String username, String password,
-                                          HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SQLException, ClassNotFoundException {
-
-        // Authenticate user using database
-        EditUsersTable editUsersTable = new EditUsersTable();
-        User user = editUsersTable.databaseToUsers(username, password);
-
-        if (user != null) {
-            // Create session and set user attributes
-            HttpSession session = request.getSession(true);
-            session.setAttribute("loggedInUserUsername", user.getUsername());
-            session.setAttribute("userRole", "REGULAR_USER");
-
-            String sessionToken = session.getId();
-
-            // Send successful user login response (includes username as per original UserLoginServlet)
-            sendSuccessResponse(response, sessionToken, user.getUsername(), "User login successful");
-        } else {
-            // Database authentication failed
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid user credentials");
-        }
-    }
-
-    /**
      * Sends a successful authentication response.
      *
      * @param response The HTTP response
      * @param sessionToken The session token to include in response
-     * @param username The authenticated username (null for admin-only response)
+     * @param username The authenticated username
      * @param message Success message
      * @throws IOException If response writing fails
      */
@@ -151,14 +105,10 @@ public class LoginServlet extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         PrintWriter out = response.getWriter();
 
-        // Build JSON response - include username for user logins, exclude for admin
+        // Build JSON response including username for all user types
         StringBuilder jsonResponse = new StringBuilder();
         jsonResponse.append("{\"success\": true, \"sessionToken\": \"").append(sessionToken).append("\"");
-
-        if (username != null && !"admin".equals(username)) {
-            jsonResponse.append(", \"username\": \"").append(username).append("\"");
-        }
-
+        jsonResponse.append(", \"username\": \"").append(username).append("\"");
         jsonResponse.append(", \"message\": \"").append(message).append("\"}");
 
         out.print(jsonResponse.toString());

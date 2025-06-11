@@ -1,26 +1,52 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package mainClasses;
 
 
-/**
- *
- * @author Mike
- */
 public class User {
-    int user_id;
-    String username,email,password,firstname,lastname,birthdate;
-    String gender,job,afm;
-    String country,address;
-    Double lat,lon;
-    String telephone;
-    String municipality,prefecture;
+        int user_id;
+        String username, email, password, firstname, lastname, birthdate;
+        String gender, job, afm;
+        String country, address;
+        Double lat, lon;
+        String telephone;
+        String municipality, prefecture;
 
-    
+        String user_type;
+        String volunteer_type;
+        Double height;
+        Double weight;
+
+
+    public Double getHeight() {
+        return height;
+    }
+
+    public void setHeight(Double height) {
+        this.height = height;
+    }
+
+    public String getUser_type() {
+        return user_type;
+    }
+
+    public void setUser_type(String user_type) {
+        this.user_type = user_type;
+    }
+
+    public String getVolunteer_type() {
+        return volunteer_type;
+    }
+
+    public void setVolunteer_type(String volunteer_type) {
+        this.volunteer_type = volunteer_type;
+    }
+
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
 
     public String getJob() {
         return job;

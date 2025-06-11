@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd">
+
+    <!-- Utility Servlets -->
     <servlet>
         <servlet-name>GetUser</servlet-name>
         <servlet-class>servlets.GetUser</servlet-class>
@@ -12,69 +14,62 @@
         <servlet-name>DeleteDB</servlet-name>
         <servlet-class>servlets.DeleteDB</servlet-class>
     </servlet>
-
     <servlet>
         <servlet-name>NewServlet</servlet-name>
         <servlet-class>servlets.NewServlet</servlet-class>
     </servlet>
 
-    <!-- Consolidated Login Servlet -->
+    <!-- UPDATED: Consolidated Login Servlet (handles both admin and user login) -->
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>servlets.LoginServlet</servlet-class>
     </servlet>
 
-    <!-- Consolidated Logout Servlet -->
+    <!-- UPDATED: Consolidated Logout Servlet (handles both admin and user logout) -->
     <servlet>
         <servlet-name>LogoutServlet</servlet-name>
         <servlet-class>servlets.LogoutServlet</servlet-class>
     </servlet>
 
-    <!-- Unified Registration Servlet -->
+    <!-- Unified Registration Servlet (handles both user and volunteer registration) -->
     <servlet>
         <servlet-name>UnifiedRegisterServlet</servlet-name>
         <servlet-class>servlets.UnifiedRegisterServlet</servlet-class>
     </servlet>
 
-    <!-- Admin Servlet Declarations (excluding login) -->
-
+    <!-- Admin Servlet Declarations -->
     <servlet>
         <servlet-name>AdminIncidentsServlet</servlet-name>
         <servlet-class>servlets.admin.AdminIncidentsServlet</servlet-class>
     </servlet>
-
     <servlet>
         <servlet-name>AdminUsersServlet</servlet-name>
         <servlet-class>servlets.admin.AdminUsersServlet</servlet-class>
     </servlet>
-
     <servlet>
         <servlet-name>AdminMessagesServlet</servlet-name>
         <servlet-class>servlets.admin.AdminMessagesServlet</servlet-class>
     </servlet>
-
     <servlet>
         <servlet-name>AdminStatisticsServlet</servlet-name>
         <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
     </servlet>
 
-    <!-- User Servlet Declarations (excluding login and old register) -->
-
+    <!-- UPDATED: User Servlet Declarations (now using unified profile servlet) -->
     <servlet>
         <servlet-name>UserProfileServlet</servlet-name>
         <servlet-class>servlets.user.UserProfileServlet</servlet-class>
     </servlet>
-
     <servlet>
         <servlet-name>UserIncidentServlet</servlet-name>
         <servlet-class>servlets.user.UserIncidentServlet</servlet-class>
     </servlet>
-
     <servlet>
         <servlet-name>UserMessageServlet</servlet-name>
         <servlet-class>servlets.user.UserMessageServlet</servlet-class>
     </servlet>
 
+    <!-- Utility Servlet Mappings -->
     <servlet-mapping>
         <servlet-name>NewServlet</servlet-name>
         <url-pattern>/NewServlet</url-pattern>
@@ -92,18 +87,17 @@
         <url-pattern>/DeleteDB</url-pattern>
     </servlet-mapping>
 
-    <!-- Consolidated Login Servlet Mapping -->
+    <!-- UPDATED: Consolidated Login Servlet Mapping (single endpoint for all logins) -->
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
     </servlet-mapping>
 
-    <!-- Consolidated Logout Servlet Mappings -->
+    <!-- UPDATED: Consolidated Logout Servlet Mappings (handles both admin and user) -->
     <servlet-mapping>
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/admin/logout</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/user/logout</url-pattern>
@@ -115,48 +109,41 @@
         <url-pattern>/register</url-pattern>
     </servlet-mapping>
 
-    <!-- Admin Servlet Mappings (excluding login) -->
-
+    <!-- Admin Servlet Mappings -->
     <servlet-mapping>
         <servlet-name>AdminIncidentsServlet</servlet-name>
         <url-pattern>/admin/incidents</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>AdminUsersServlet</servlet-name>
         <url-pattern>/admin/users</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>AdminMessagesServlet</servlet-name>
         <url-pattern>/admin/messages</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>AdminStatisticsServlet</servlet-name>
         <url-pattern>/admin/statistics</url-pattern>
     </servlet-mapping>
 
-    <!-- User Servlet Mappings (excluding login and old register) -->
-
+    <!-- UPDATED: User Servlet Mappings (unified profile servlet handles both users and volunteers) -->
     <servlet-mapping>
         <servlet-name>UserProfileServlet</servlet-name>
         <url-pattern>/user/profile</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>UserIncidentServlet</servlet-name>
         <url-pattern>/user/incidents</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>UserMessageServlet</servlet-name>
         <url-pattern>/user/messages</url-pattern>
     </servlet-mapping>
 
+    <!-- Session Configuration -->
     <session-config>
-        <session-timeout>
-            30
-        </session-timeout>
+        <session-timeout>30</session-timeout>
     </session-config>
+
 </web-app>

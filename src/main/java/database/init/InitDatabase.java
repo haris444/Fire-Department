@@ -14,7 +14,6 @@ import database.tables.EditMessagesTable;
 import database.tables.EditParticipantsTable;
 
 import database.tables.EditUsersTable;
-import database.tables.EditVolunteersTable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -33,14 +32,12 @@ public class InitDatabase {
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
         InitDatabase init = new InitDatabase();
+        init.dropDatabase();
+
         init.initDatabase();
         init.initTables();
         init.addToDatabaseExamples();
-        //init.updateRecords();
-        init.databaseToJSON();
 
-        //  init.dropDatabase();
-        // init.deleteRecords();
     }
 
     public void dropDatabase() throws SQLException, ClassNotFoundException {
@@ -63,15 +60,11 @@ public class InitDatabase {
         EditUsersTable eut = new EditUsersTable();
         eut.createUsersTable();
 
-        EditVolunteersTable volunteers = new EditVolunteersTable();
-        volunteers.createVolunteersTable();
-
         EditIncidentsTable editIncidents = new EditIncidentsTable();
         editIncidents.createIncidentsTable();
 
-        EditParticipantsTable editParticipants = new EditParticipantsTable();
-        editParticipants.createParticipantTable();
-//
+        //EditParticipantsTable editParticipants = new EditParticipantsTable();
+        //editParticipants.createParticipantTable();
 
         EditMessagesTable editMsgs = new EditMessagesTable();
         editMsgs.createMessageTable();
@@ -84,16 +77,15 @@ public class InitDatabase {
         eut.addUserFromJSON(Resources.admin);
         eut.addUserFromJSON(Resources.user1JSON);
         eut.addUserFromJSON(Resources.user2JSON);
-        System.out.println(Resources.user3JSON);
         eut.addUserFromJSON(Resources.user3JSON);
         eut.addUserFromJSON(Resources.user4JSON);
 
-        //volunteers
-        EditVolunteersTable editVolunteers = new EditVolunteersTable();
-        editVolunteers.addVolunteerFromJSON(Resources.volunteer1JSON);
-        editVolunteers.addVolunteerFromJSON(Resources.volunteer2JSON);
-        editVolunteers.addVolunteerFromJSON(Resources.volunteer3JSON);
-        editVolunteers.addVolunteerFromJSON(Resources.volunteer4JSON);
+        //former volunteers, now added as users with user_type="volunteer"
+        eut.addUserFromJSON(Resources.volunteer1JSON);
+        eut.addUserFromJSON(Resources.volunteer2JSON);
+        eut.addUserFromJSON(Resources.volunteer3JSON);
+        eut.addUserFromJSON(Resources.volunteer4JSON);
+
         //incidents
         EditIncidentsTable editIncidents = new EditIncidentsTable();
         editIncidents.addIncidentFromJSON(Resources.incident1);
@@ -102,11 +94,12 @@ public class InitDatabase {
         editIncidents.addIncidentFromJSON(Resources.incident4);
         editIncidents.addIncidentFromJSON(Resources.incident5);
         //participants
+        /*
         EditParticipantsTable editParticipants = new EditParticipantsTable();
         editParticipants.addParticipantFromJSON(Resources.participant1);
         editParticipants.addParticipantFromJSON(Resources.participant2);
         editParticipants.addParticipantFromJSON(Resources.participant3);
-
+        */
         EditMessagesTable editmessages = new EditMessagesTable();
         editmessages.addMessageFromJSON(Resources.message1);
         editmessages.addMessageFromJSON(Resources.message2);
@@ -132,8 +125,8 @@ public class InitDatabase {
         allIncidents2 = editIncidents.databaseToIncidentsSearch("all", "running", "Hersonissos");
         JsonArray incidentsJSON2 = gson2.toJsonTree(allIncidents2).getAsJsonArray();
         System.out.println("All Running Incidents in Hersonissos\n" + incidentsJSON2);
-        
-        
+
+
         //       all messages of an incident
         EditMessagesTable editmessages = new EditMessagesTable();
         ArrayList<Message> messagesOfIncident = new ArrayList<Message>();

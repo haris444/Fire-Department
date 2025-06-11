@@ -1,0 +1,200 @@
+package servlets;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import com.google.gson.Gson;
+import database.tables.EditUsersTable;
+import mainClasses.User;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+/**
+ * Universal Profile Servlet for handling user profile operations.
+ * This servlet serves all user types (users and volunteers) from the consolidated users table.
+ * It provides endpoints for both fetching and updating complete user profile data.
+ *
+ * Security: Both GET and POST operations require valid user session with REGULAR_USER or VOLUNTEER role.
+ *
+ * @author Mike
+ */
+public class ProfileServlet extends BaseServlet {
+
+    /**
+     * Handles profile data retrieval for authenticated users.
+     * Returns the complete User object including all fields (basic + volunteer-specific).
+     * The frontend will determine which fields to display based on user_type.
+     *
+     * @param request HTTP request containing user session
+     * @param response HTTP response with complete user profile data in JSON format
+     * @throws IOException if response writing fails
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Check user session - allow both REGULAR_USER and VOLUNTEER roles
+        if (!isUserAuthenticated(request, response)) {
+            return;
+        }
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        try {
+            // Get logged in username from session
+            HttpSession session = request.getSession(false);
+            String loggedInUsername = (String) session.getAttribute("loggedInUserUsername");
+
+            // Fetch complete user profile from consolidated users table
+            EditUsersTable editUsersTable = new EditUsersTable();
+            User user = editUsersTable.getUserByUsernameFromDB(loggedInUsername);
+
+            if (user != null) {
+                // Convert complete User object to JSON (including all optional fields)
+                // Password is excluded for security by not including it in the serialization
+                Gson gson = new Gson();
+
+                // Create a copy without password for security
+                User userForResponse = new User();
+                userForResponse.setUser_id(user.getUser_id());
+                userForResponse.setUsername(user.getUsername());
+                userForResponse.setEmail(user.getEmail());
+                userForResponse.setFirstname(user.getFirstname());
+                userForResponse.setLastname(user.getLastname());
+                userForResponse.setBirthdate(user.getBirthdate());
+                userForResponse.setGender(user.getGender());
+                userForResponse.setAfm(user.getAfm());
+                userForResponse.setCountry(user.getCountry());
+                userForResponse.setAddress(user.getAddress());
+                userForResponse.setMunicipality(user.getMunicipality());
+                userForResponse.setPrefecture(user.getPrefecture());
+                userForResponse.setJob(user.getJob());
+                userForResponse.setTelephone(user.getTelephone());
+                userForResponse.setLat(user.getLat());
+                userForResponse.setLon(user.getLon());
+                userForResponse.setUser_type(user.getUser_type());
+                userForResponse.setVolunteer_type(user.getVolunteer_type());
+                userForResponse.setHeight(user.getHeight());
+                userForResponse.setWeight(user.getWeight());
+
+                String userJson = gson.toJson(userForResponse);
+
+                // Send success response with complete user data
+                response.setStatus(HttpServletResponse.SC_OK);
+                PrintWriter out = response.getWriter();
+                out.print(userJson);
+                out.flush();
+            } else {
+                // User not found in database
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                PrintWriter out = response.getWriter();
+                out.print("{\"success\": false, \"message\": \"User profile not found\"}");
+                out.flush();
+            }
+
+        } catch (Exception e) {
+            // Handle database or other errors
+            System.err.println("Error fetching user profile: " + e.getMessage());
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            PrintWriter out = response.getWriter();
+            out.print("{\"success\": false, \"message\": \"Error fetching profile data\"}");
+            out.flush();
+        }
+    }
+
+    /**
+     * Handles profile data updates for authenticated users.
+     * Accepts complete User object in JSON format and updates all fields in the database.
+     * Supports updating both basic user fields and optional volunteer-specific fields.
+     *
+     * @param request HTTP request containing JSON payload with updated user data
+     * @param response HTTP response with operation status
+     * @throws IOException if response writing fails
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Check user session - allow both REGULAR_USER and VOLUNTEER roles
+        if (!isUserAuthenticated(request, response)) {
+            return;
+        }
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        try {
+            // Get logged in username from session
+            HttpSession session = request.getSession(false);
+            String loggedInUsername = (String) session.getAttribute("loggedInUserUsername");
+
+            // Read JSON payload from request body
+            StringBuilder jsonBuffer = new StringBuilder();
+            BufferedReader reader = request.getReader();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                jsonBuffer.append(line);
+            }
+
+            System.out.println("Received profile update JSON: " + jsonBuffer.toString());
+
+            // Parse JSON to User object (includes all fields: basic + optional volunteer fields)
+            Gson gson = new Gson();
+            User userUpdate = gson.fromJson(jsonBuffer.toString(), User.class);
+
+            // Ensure the username matches the logged-in user (security measure)
+            userUpdate.setUsername(loggedInUsername);
+
+            // Update the complete user profile in the consolidated users table
+            EditUsersTable editUsersTable = new EditUsersTable();
+            boolean success = editUsersTable.updateUserProfile(userUpdate);
+
+            if (success) {
+                // Profile update successful
+                response.setStatus(HttpServletResponse.SC_OK);
+                PrintWriter out = response.getWriter();
+                out.print("{\"success\": true, \"message\": \"Profile updated successfully\"}");
+                out.flush();
+            } else {
+                // Profile update failed
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                PrintWriter out = response.getWriter();
+                out.print("{\"success\": false, \"message\": \"Profile update failed\"}");
+                out.flush();
+            }
+
+        } catch (Exception e) {
+            // Handle JSON parsing, database, or other errors
+            System.err.println("Error updating user profile: " + e.getMessage());
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            PrintWriter out = response.getWriter();
+            out.print("{\"success\": false, \"message\": \"Error processing profile update\"}");
+            out.flush();
+        }
+    }
+
+    /**
+     * Helper method to check if user is authenticated with proper role.
+     * Verifies user session and allows access for both REGULAR_USER and VOLUNTEER roles.
+     *
+     * @param request HTTP request to check session
+     * @param response HTTP response for sending unauthorized errors
+     * @return true if user is authenticated with valid role, false otherwise
+     * @throws IOException if response writing fails
+     */
+    private boolean isUserAuthenticated(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Check for REGULAR_USER role
+        if (checkSession(request, response, "userRole", "REGULAR_USER")) {
+            return true;
+        }
+
+        // Check for VOLUNTEER role
+        if (checkSession(request, response, "userRole", "VOLUNTEER")) {
+            return true;
+        }
+
+        // If neither role check passed, user is not authenticated
+        // checkSession already sent the unauthorized response
+        return false;
+    }
+}
