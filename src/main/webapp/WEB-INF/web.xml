@@ -55,6 +55,16 @@
         <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
     </servlet>
 
+    <!-- Volunteer Servlet Declarations -->
+    <servlet>
+        <servlet-name>VolunteerIncidentServlet</servlet-name>
+        <servlet-class>servlets.volunteer.VolunteerIncidentServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VolunteerMessageServlet</servlet-name>
+        <servlet-class>servlets.volunteer.VolunteerMessageServlet</servlet-class>
+    </servlet>
+
     <!-- UPDATED: User Servlet Declarations (now using unified profile servlet) -->
     <servlet>
         <servlet-name>UserProfileServlet</servlet-name>
@@ -139,6 +149,16 @@
     <servlet-mapping>
         <servlet-name>UserMessageServlet</servlet-name>
         <url-pattern>/user/messages</url-pattern>
+    </servlet-mapping>
+
+    <!-- Volunteer Servlet Mappings -->
+    <servlet-mapping>
+        <servlet-name>VolunteerIncidentServlet</servlet-name>
+        <url-pattern>/volunteer/incidents</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VolunteerMessageServlet</servlet-name>
+        <url-pattern>/volunteer/messages</url-pattern>
     </servlet-mapping>
 
     <!-- Session Configuration -->

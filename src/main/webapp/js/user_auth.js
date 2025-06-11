@@ -26,6 +26,13 @@ function redirectToUserPanel() {
     window.location.href = 'panel.html';
 }
 
+// ADDED: Function to redirect to the volunteer panel
+function redirectToVolunteerPanel() {
+    // The path is relative to the login page's location (e.g., /user/login.html)
+    window.location.href = '../volunteer/panel.html';
+}
+
+
 // Registration Logic for register.html
 function initializeRegistrationPage() {
     const registerForm = document.getElementById('userRegisterForm');
@@ -35,19 +42,13 @@ function initializeRegistrationPage() {
         registerForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // CRITICAL: Determine registration type by checking which toggle button is active
-            // This registrationType field is essential for UnifiedRegisterServlet to set user_type correctly
-            const userToggle = document.getElementById('userToggle');
+            // Determine registration type by checking which toggle button is active
             const volunteerToggle = document.getElementById('volunteerToggle');
-            let registrationType = 'user'; // default
+            let registrationType = (volunteerToggle && volunteerToggle.classList.contains('active')) ? 'volunteer' : 'user';
 
-            if (volunteerToggle && volunteerToggle.classList.contains('active')) {
-                registrationType = 'volunteer';
-            }
-
-            // Collect form field values - registrationType is the key field for unified registration
+            // Collect form field values
             const formData = {
-                registrationType: registrationType, // CRITICAL: This tells the servlet what user_type to set
+                registrationType: registrationType,
                 username: document.getElementById('username').value,
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value,
@@ -66,8 +67,6 @@ function initializeRegistrationPage() {
                 lon: document.getElementById('lon').value || null
             };
 
-            // UPDATED: Collect volunteer-specific fields only when registering as volunteer
-            // These fields will be stored in the same User table but only populated for volunteers
             if (registrationType === 'volunteer') {
                 formData.volunteer_type = document.getElementById('volunteer_type').value;
                 formData.height = document.getElementById('height').value || null;
@@ -76,57 +75,31 @@ function initializeRegistrationPage() {
 
             const confirmPassword = document.getElementById('confirmPassword').value;
 
-            // Client-side validation
             if (!validateRegistrationForm(formData, confirmPassword, messageDiv, registrationType)) {
                 return;
             }
 
-            // AJAX POST to UnifiedRegisterServlet
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'register', true); // Maps to /register -> UnifiedRegisterServlet
-
+            // Path from register.html (root) to the servlet is direct
+            xhr.open('POST', 'register', true);
             xhr.setRequestHeader('Content-Type', 'application/json');
 
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 201) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            showSuccessMessage(messageDiv, 'Registration successful! Please login with your credentials.');
-                            registerForm.reset();
-                            // Reset toggle to default state
-                            if (userToggle && volunteerToggle) {
-                                userToggle.classList.add('active');
-                                volunteerToggle.classList.remove('active');
-                                document.getElementById('volunteerFields').style.display = 'none';
-                            }
-                        } catch (e) {
-                            showSuccessMessage(messageDiv, 'Registration successful! Please login.');
-                        }
-                    } else if (xhr.status === 409) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            showErrorMessage(messageDiv, response.message || 'Username or email already exists.');
-                        } catch (e) {
-                            showErrorMessage(messageDiv, 'Username or email already exists.');
-                        }
-                    } else if (xhr.status === 500) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            showErrorMessage(messageDiv, response.message || 'Registration failed. Please try again.');
-                        } catch (e) {
-                            showErrorMessage(messageDiv, 'Registration failed. Please try again.');
-                        }
+                        showSuccessMessage(messageDiv, 'Registration successful! Please login.');
+                        registerForm.reset();
                     } else {
-                        showErrorMessage(messageDiv, 'Network error occurred. Please try again.');
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            showErrorMessage(messageDiv, response.message || 'An error occurred.');
+                        } catch (e) {
+                            showErrorMessage(messageDiv, 'An unknown error occurred.');
+                        }
                     }
                 }
             };
-
-            xhr.onerror = function() {
-                showErrorMessage(messageDiv, 'Network error occurred. Please try again.');
-            };
-
+            xhr.onerror = () => showErrorMessage(messageDiv, 'Network error.');
             xhr.send(JSON.stringify(formData));
         });
     }
@@ -144,19 +117,15 @@ function initializeLoginPage() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            // Basic validation
             if (!username || !password) {
                 showErrorMessage(errorDiv, 'Please enter both username and password.');
                 return;
             }
 
-            const payload = {
-                username: username,
-                password: password
-            };
+            const payload = { username, password };
 
-            // AJAX POST to UserLoginServlet
             const xhr = new XMLHttpRequest();
+            // Path is from /user/login.html, so we go up one level to the root
             xhr.open('POST', '../login', true);
             xhr.setRequestHeader('Content-Type', 'application/json');
 
@@ -165,67 +134,53 @@ function initializeLoginPage() {
                     if (xhr.status === 200) {
                         try {
                             const response = JSON.parse(xhr.responseText);
-
                             if (response.success === true) {
                                 storeUserSession(response.sessionToken, response.username);
-                                redirectToUserPanel();
+
+                                // MODIFIED: Redirect based on user_type from the server's response
+                                if (response.user_type === 'volunteer') {
+                                    redirectToVolunteerPanel();
+                                } else if (response.user_type === 'user') {
+                                    redirectToUserPanel();
+                                } else {
+                                    showErrorMessage(errorDiv, 'Login successful, but role is undefined.');
+                                }
                             } else {
                                 showErrorMessage(errorDiv, response.message || 'Login failed');
                             }
                         } catch (e) {
                             showErrorMessage(errorDiv, 'Invalid response from server');
                         }
-                    } else if (xhr.status === 401) {
+                    } else {
                         try {
                             const response = JSON.parse(xhr.responseText);
-                            showErrorMessage(errorDiv, response.message || 'Invalid credentials');
-                        } catch (e) {
-                            showErrorMessage(errorDiv, 'Invalid credentials');
+                            showErrorMessage(errorDiv, response.message || 'Invalid credentials or server error.');
+                        } catch(e) {
+                            showErrorMessage(errorDiv, 'Invalid credentials or server error.');
                         }
-                    } else {
-                        showErrorMessage(errorDiv, 'Network error occurred');
                     }
                 }
             };
 
-            xhr.onerror = function() {
-                showErrorMessage(errorDiv, 'Network error occurred');
-            };
-
+            xhr.onerror = () => showErrorMessage(errorDiv, 'Network error occurred');
             xhr.send(JSON.stringify(payload));
         });
     }
 }
 
-// Logout Function (called from user_app.js)
+// Logout Function (called from user_app.js and volunteer_app.js)
 function logoutUser() {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '../user/logout', true);
+    // Use a unified logout URL
+    xhr.open('POST', '../logout', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader("X-User-Session-Token", getUserSessionToken()); // Send token to invalidate server session
 
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    clearUserSession();
-                    redirectToUserLogin();
-                } catch (e) {
-                    clearUserSession();
-                    redirectToUserLogin();
-                }
-            } else {
-                // Even if logout fails on server, clear local session
-                clearUserSession();
-                redirectToUserLogin();
-            }
-        }
-    };
-
-    xhr.onerror = function() {
-        // Even on network error, clear local session
+    // Always clear local session and redirect, regardless of server response
+    xhr.onload = xhr.onerror = function() {
         clearUserSession();
-        redirectToUserLogin();
+        // Redirect to the main index page after logout
+        window.location.href = '../index.html';
     };
 
     xhr.send();
@@ -233,20 +188,17 @@ function logoutUser() {
 
 // Registration Form Validation
 function validateRegistrationForm(formData, confirmPassword, messageDiv, registrationType) {
-    // Check required fields
     const requiredFields = ['username', 'email', 'password', 'firstname', 'lastname',
         'birthdate', 'gender', 'afm', 'country', 'address',
         'municipality', 'prefecture', 'job', 'telephone'];
 
     for (let field of requiredFields) {
-        if (!formData[field] || formData[field].trim() === '') {
-            showErrorMessage(messageDiv, `Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
+        if (!formData[field] || String(formData[field]).trim() === '') {
+            showErrorMessage(messageDiv, `Please fill in the ${field} field.`);
             return false;
         }
     }
 
-    // UPDATED: Check volunteer-specific required fields
-    // Only validate volunteer_type if registering as volunteer
     if (registrationType === 'volunteer') {
         if (!formData.volunteer_type || formData.volunteer_type.trim() === '') {
             showErrorMessage(messageDiv, 'Please select a volunteer type.');
@@ -254,33 +206,19 @@ function validateRegistrationForm(formData, confirmPassword, messageDiv, registr
         }
     }
 
-    // Check password match
     if (formData.password !== confirmPassword) {
         showErrorMessage(messageDiv, 'Passwords do not match.');
         return false;
     }
-
-    // Basic password strength check
     if (formData.password.length < 6) {
         showErrorMessage(messageDiv, 'Password must be at least 6 characters long.');
         return false;
     }
-
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
         showErrorMessage(messageDiv, 'Please enter a valid email address.');
         return false;
     }
-
-    // Validate telephone (basic check for numbers and common formats)
-    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-    if (!phoneRegex.test(formData.telephone)) {
-        showErrorMessage(messageDiv, 'Please enter a valid telephone number.');
-        return false;
-    }
-
-    // AFM validation (assuming Greek AFM format - 9 digits)
     const afmRegex = /^\d{9}$/;
     if (!afmRegex.test(formData.afm)) {
         showErrorMessage(messageDiv, 'AFM must be exactly 9 digits.');
@@ -292,73 +230,35 @@ function validateRegistrationForm(formData, confirmPassword, messageDiv, registr
 
 // Message Display Functions
 function showErrorMessage(element, message) {
-    element.textContent = message;
-    element.className = 'error-message';
-    element.style.display = 'block';
+    if(element) {
+        element.textContent = message;
+        element.className = 'error-message';
+        element.style.display = 'block';
+    }
 }
 
 function showSuccessMessage(element, message) {
-    element.textContent = message;
-    element.className = 'success-message';
-    element.style.display = 'block';
+    if(element) {
+        element.textContent = message;
+        element.className = 'success-message';
+        element.style.display = 'block';
+    }
 }
 
-function showInfoMessage(element, message) {
-    element.textContent = message;
-    element.className = 'info-message';
-    element.style.display = 'block';
-}
-
-// Authentication Check for user panel
+// Authentication Check for user panel (can be used by volunteer panel too)
 function checkAuthStatusForPanel() {
     if (!getUserSessionToken() || !getLoggedInUsername()) {
-        redirectToUserLogin();
+        // Assumes this is called from within user/ or volunteer/ directory
+        window.location.href = '../user/login.html';
     }
 }
 
 // Initialize based on current page
 document.addEventListener('DOMContentLoaded', function() {
-    // Add toggle logic for registration page
-    const userToggle = document.getElementById('userToggle');
-    const volunteerToggle = document.getElementById('volunteerToggle');
-    const volunteerFields = document.getElementById('volunteerFields');
-
-    if (userToggle && volunteerToggle && volunteerFields) {
-        userToggle.addEventListener('click', function() {
-            userToggle.classList.add('active');
-            volunteerToggle.classList.remove('active');
-            volunteerFields.style.display = 'none';
-            // Remove required attribute from volunteer fields
-            const volunteerTypeField = document.getElementById('volunteer_type');
-            if (volunteerTypeField) {
-                volunteerTypeField.removeAttribute('required');
-            }
-        });
-
-        volunteerToggle.addEventListener('click', function() {
-            volunteerToggle.classList.add('active');
-            userToggle.classList.remove('active');
-            volunteerFields.style.display = 'block';
-            // Add required attribute to volunteer type field
-            const volunteerTypeField = document.getElementById('volunteer_type');
-            if (volunteerTypeField) {
-                volunteerTypeField.setAttribute('required', 'required');
-            }
-        });
-    }
-
-    // Check if we're on the registration page
     if (document.getElementById('userRegisterForm')) {
         initializeRegistrationPage();
     }
-
-    // Check if we're on the login page
     if (document.getElementById('userLoginForm')) {
         initializeLoginPage();
-    }
-
-    // Check if we're on the user panel page
-    if (document.getElementById('userContentArea')) {
-        checkAuthStatusForPanel();
     }
 });

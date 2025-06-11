@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -129,5 +130,24 @@ public class EditParticipantsTable {
         } catch (SQLException ex) {
             Logger.getLogger(EditParticipantsTable.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public ArrayList<Integer> getIncidentIdsByVolunteer(String volunteerUsername) throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<Integer> incidentIds = new ArrayList<>();
+        ResultSet rs = null;
+        try {
+            String query = "SELECT incident_id FROM participants WHERE volunteer_username = '" + volunteerUsername + "'";
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                incidentIds.add(rs.getInt("incident_id"));
+            }
+        } finally {
+            if (rs != null) rs.close();
+            stmt.close();
+            con.close();
+        }
+        return incidentIds;
     }
 }

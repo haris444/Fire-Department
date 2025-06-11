@@ -289,4 +289,32 @@ public class EditIncidentsTable {
         }
         return 0;
     }
+
+    public ArrayList<Incident> getIncidentsByIds(ArrayList<Integer> ids) throws SQLException, ClassNotFoundException {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<Incident> incidents = new ArrayList<>();
+
+        // Create a comma-separated string of IDs for the IN clause
+        String idList = ids.toString().replace("[", "(").replace("]", ")");
+
+        try {
+            String query = "SELECT * FROM incidents WHERE incident_id IN " + idList;
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                String json = DB_Connection.getResultsToJSON(rs);
+                Gson gson = new Gson();
+                Incident incident = gson.fromJson(json, Incident.class);
+                incidents.add(incident);
+            }
+        } finally {
+            stmt.close();
+            con.close();
+        }
+        return incidents;
+    }
+
 }
