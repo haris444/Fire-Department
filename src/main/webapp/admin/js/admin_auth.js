@@ -38,7 +38,7 @@ function initializeLoginPage() {
             };
 
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '../admin/login', true);
+            xhr.open('POST', '../login', true);
             xhr.setRequestHeader('Content-Type', 'application/json');
 
             xhr.onreadystatechange = function() {
