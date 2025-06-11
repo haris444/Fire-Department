@@ -35,8 +35,18 @@ function initializeRegistrationPage() {
         registerForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
+            // Determine registration type by checking which toggle button is active
+            const userToggle = document.getElementById('userToggle');
+            const volunteerToggle = document.getElementById('volunteerToggle');
+            let registrationType = 'user'; // default
+
+            if (volunteerToggle && volunteerToggle.classList.contains('active')) {
+                registrationType = 'volunteer';
+            }
+
             // Collect form field values
             const formData = {
+                registrationType: registrationType,
                 username: document.getElementById('username').value,
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value,
@@ -55,16 +65,23 @@ function initializeRegistrationPage() {
                 lon: document.getElementById('lon').value || null
             };
 
+            // If registering as volunteer, collect volunteer-specific fields
+            if (registrationType === 'volunteer') {
+                formData.volunteer_type = document.getElementById('volunteer_type').value;
+                formData.height = document.getElementById('height').value || null;
+                formData.weight = document.getElementById('weight').value || null;
+            }
+
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             // Client-side validation
-            if (!validateRegistrationForm(formData, confirmPassword, messageDiv)) {
+            if (!validateRegistrationForm(formData, confirmPassword, messageDiv, registrationType)) {
                 return;
             }
 
-            // AJAX POST to UserRegisterServlet
+            // AJAX POST to UnifiedRegisterServlet
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '../user/register', true);
+            xhr.open('POST', 'register', true);
 
             xhr.setRequestHeader('Content-Type', 'application/json');
 
@@ -75,6 +92,12 @@ function initializeRegistrationPage() {
                             const response = JSON.parse(xhr.responseText);
                             showSuccessMessage(messageDiv, 'Registration successful! Please login with your credentials.');
                             registerForm.reset();
+                            // Reset toggle to default state
+                            if (userToggle && volunteerToggle) {
+                                userToggle.classList.add('active');
+                                volunteerToggle.classList.remove('active');
+                                document.getElementById('volunteerFields').style.display = 'none';
+                            }
                         } catch (e) {
                             showSuccessMessage(messageDiv, 'Registration successful! Please login.');
                         }
@@ -207,7 +230,7 @@ function logoutUser() {
 }
 
 // Registration Form Validation
-function validateRegistrationForm(formData, confirmPassword, messageDiv) {
+function validateRegistrationForm(formData, confirmPassword, messageDiv, registrationType) {
     // Check required fields
     const requiredFields = ['username', 'email', 'password', 'firstname', 'lastname',
         'birthdate', 'gender', 'afm', 'country', 'address',
@@ -216,6 +239,14 @@ function validateRegistrationForm(formData, confirmPassword, messageDiv) {
     for (let field of requiredFields) {
         if (!formData[field] || formData[field].trim() === '') {
             showErrorMessage(messageDiv, `Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
+            return false;
+        }
+    }
+
+    // Check volunteer-specific required fields
+    if (registrationType === 'volunteer') {
+        if (!formData.volunteer_type || formData.volunteer_type.trim() === '') {
+            showErrorMessage(messageDiv, 'Please select a volunteer type.');
             return false;
         }
     }
@@ -284,6 +315,35 @@ function checkAuthStatusForPanel() {
 
 // Initialize based on current page
 document.addEventListener('DOMContentLoaded', function() {
+    // Add toggle logic for registration page
+    const userToggle = document.getElementById('userToggle');
+    const volunteerToggle = document.getElementById('volunteerToggle');
+    const volunteerFields = document.getElementById('volunteerFields');
+
+    if (userToggle && volunteerToggle && volunteerFields) {
+        userToggle.addEventListener('click', function() {
+            userToggle.classList.add('active');
+            volunteerToggle.classList.remove('active');
+            volunteerFields.style.display = 'none';
+            // Remove required attribute from volunteer fields
+            const volunteerTypeField = document.getElementById('volunteer_type');
+            if (volunteerTypeField) {
+                volunteerTypeField.removeAttribute('required');
+            }
+        });
+
+        volunteerToggle.addEventListener('click', function() {
+            volunteerToggle.classList.add('active');
+            userToggle.classList.remove('active');
+            volunteerFields.style.display = 'block';
+            // Add required attribute to volunteer type field
+            const volunteerTypeField = document.getElementById('volunteer_type');
+            if (volunteerTypeField) {
+                volunteerTypeField.setAttribute('required', 'required');
+            }
+        });
+    }
+
     // Check if we're on the registration page
     if (document.getElementById('userRegisterForm')) {
         initializeRegistrationPage();

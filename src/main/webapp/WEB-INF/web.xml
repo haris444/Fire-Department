@@ -30,6 +30,12 @@
         <servlet-class>servlets.LogoutServlet</servlet-class>
     </servlet>
 
+    <!-- Unified Registration Servlet -->
+    <servlet>
+        <servlet-name>UnifiedRegisterServlet</servlet-name>
+        <servlet-class>servlets.UnifiedRegisterServlet</servlet-class>
+    </servlet>
+
     <!-- Admin Servlet Declarations (excluding login) -->
 
     <servlet>
@@ -52,12 +58,7 @@
         <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
     </servlet>
 
-    <!-- User Servlet Declarations (excluding login) -->
-    <servlet>
-        <servlet-name>UserRegisterServlet</servlet-name>
-        <servlet-class>servlets.user.UserRegisterServlet</servlet-class>
-    </servlet>
-
+    <!-- User Servlet Declarations (excluding login and old register) -->
 
     <servlet>
         <servlet-name>UserProfileServlet</servlet-name>
@@ -108,6 +109,12 @@
         <url-pattern>/user/logout</url-pattern>
     </servlet-mapping>
 
+    <!-- Unified Registration Servlet Mapping -->
+    <servlet-mapping>
+        <servlet-name>UnifiedRegisterServlet</servlet-name>
+        <url-pattern>/register</url-pattern>
+    </servlet-mapping>
+
     <!-- Admin Servlet Mappings (excluding login) -->
 
     <servlet-mapping>
@@ -130,12 +137,7 @@
         <url-pattern>/admin/statistics</url-pattern>
     </servlet-mapping>
 
-    <!-- User Servlet Mappings (excluding login) -->
-    <servlet-mapping>
-        <servlet-name>UserRegisterServlet</servlet-name>
-        <url-pattern>/user/register</url-pattern>
-    </servlet-mapping>
-
+    <!-- User Servlet Mappings (excluding login and old register) -->
 
     <servlet-mapping>
         <servlet-name>UserProfileServlet</servlet-name>
