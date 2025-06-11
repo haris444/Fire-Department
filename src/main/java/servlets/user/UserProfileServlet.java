@@ -7,16 +7,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import database.tables.EditUsersTable;
 import mainClasses.User;
+import servlets.BaseServlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-public class UserProfileServlet extends BaseUserServlet {
+public class UserProfileServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check user session
-        if (!checkUserSession(request, response)) {
+        if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
 
@@ -80,7 +81,7 @@ public class UserProfileServlet extends BaseUserServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check user session
-        if (!checkUserSession(request, response)) {
+        if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
 

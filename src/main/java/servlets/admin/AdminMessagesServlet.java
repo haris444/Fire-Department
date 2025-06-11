@@ -1,11 +1,12 @@
 package servlets.admin;
 
-import servlets.admin.BaseAdminServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
 import database.tables.EditMessagesTable;
 import mainClasses.Message;
+import servlets.BaseServlet;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,12 +14,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
-public class AdminMessagesServlet extends BaseAdminServlet {
+public class AdminMessagesServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check admin session
-        if (!checkAdminSession(request, response)) {
+        if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
 
@@ -60,7 +61,7 @@ public class AdminMessagesServlet extends BaseAdminServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check admin session
-        if (!checkAdminSession(request, response)) {
+        if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
 

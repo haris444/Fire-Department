@@ -1,12 +1,12 @@
 package servlets.admin;
 
-import servlets.admin.BaseAdminServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import database.tables.EditIncidentsTable;
 import mainClasses.Incident;
+import servlets.BaseServlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,12 +15,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AdminIncidentsServlet extends BaseAdminServlet {
+public class AdminIncidentsServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check admin session
-        if (!checkAdminSession(request, response)) {
+        if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
 
@@ -54,7 +54,7 @@ public class AdminIncidentsServlet extends BaseAdminServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check admin session
-        if (!checkAdminSession(request, response)) {
+        if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
 

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpSession;
 import com.google.gson.Gson;
 import database.tables.EditMessagesTable;
 import mainClasses.Message;
+import servlets.BaseServlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,12 +14,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class UserMessageServlet extends BaseUserServlet {
+public class UserMessageServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check user session
-        if (!checkUserSession(request, response)) {
+        if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
 
@@ -70,7 +71,7 @@ public class UserMessageServlet extends BaseUserServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check user session
-        if (!checkUserSession(request, response)) {
+        if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
 

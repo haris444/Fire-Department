@@ -1,6 +1,5 @@
 package servlets.admin;
 
-import servlets.admin.BaseAdminServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
@@ -8,6 +7,7 @@ import database.tables.EditIncidentsTable;
 import database.tables.EditUsersTable;
 import database.tables.EditVolunteersTable;
 import database.DB_Connection;
+import servlets.BaseServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -17,12 +17,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AdminStatisticsServlet extends BaseAdminServlet {
+public class AdminStatisticsServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check admin session
-        if (!checkAdminSession(request, response)) {
+        if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
 

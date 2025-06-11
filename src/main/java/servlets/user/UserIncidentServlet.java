@@ -8,17 +8,18 @@ import database.tables.EditIncidentsTable;
 import database.tables.EditUsersTable;
 import mainClasses.Incident;
 import mainClasses.User;
+import servlets.BaseServlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-public class UserIncidentServlet extends BaseUserServlet {
+public class UserIncidentServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check user session
-        if (!checkUserSession(request, response)) {
+        if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
 
@@ -52,7 +53,7 @@ public class UserIncidentServlet extends BaseUserServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check user session
-        if (!checkUserSession(request, response)) {
+        if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
 

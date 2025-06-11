@@ -1,22 +1,22 @@
 package servlets.admin;
 
-import servlets.admin.BaseAdminServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
 import database.tables.EditUsersTable;
 import mainClasses.User;
+import servlets.BaseServlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-public class AdminUsersServlet extends BaseAdminServlet {
+public class AdminUsersServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check admin session
-        if (!checkAdminSession(request, response)) {
+        if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
 
@@ -50,7 +50,7 @@ public class AdminUsersServlet extends BaseAdminServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Check admin session
-        if (!checkAdminSession(request, response)) {
+        if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
 
