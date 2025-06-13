@@ -1,13 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package database.tables;
 
 import mainClasses.User;
 import com.google.gson.Gson;
-import mainClasses.User;
+import java.util.*;
 import database.DB_Connection;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -245,45 +240,61 @@ public class EditUsersTable {
         }
     }
 
-    public boolean updateUserProfile(User userWithNewDetails) throws SQLException, ClassNotFoundException {
+    // In EditUsersTable.java - Smart update method that only updates provided fields
+    public boolean updateUserProfileSelective(String username, Map<String, Object> updates) throws SQLException, ClassNotFoundException {
+        if (updates == null || updates.isEmpty()) {
+            return false;
+        }
+
         Connection con = null;
-        Statement stmt = null;
+        java.sql.PreparedStatement stmt = null;
         boolean success = false;
 
         try {
             con = DB_Connection.getConnection();
-            stmt = con.createStatement();
 
-            String updateQuery = "UPDATE users SET " +
-                    "firstname='" + userWithNewDetails.getFirstname() + "', " +
-                    "lastname='" + userWithNewDetails.getLastname() + "', " +
-                    "birthdate='" + userWithNewDetails.getBirthdate() + "', " +
-                    "gender='" + userWithNewDetails.getGender() + "', " +
-                    "afm='" + userWithNewDetails.getAfm() + "', " +
-                    "country='" + userWithNewDetails.getCountry() + "', " +
-                    "address='" + userWithNewDetails.getAddress() + "', " +
-                    "municipality='" + userWithNewDetails.getMunicipality() + "', " +
-                    "prefecture='" + userWithNewDetails.getPrefecture() + "', " +
-                    "job='" + userWithNewDetails.getJob() + "', " +
-                    "telephone='" + userWithNewDetails.getTelephone() + "', " +
-                    "lat='" + userWithNewDetails.getLat() + "', " +
-                    "lon='" + userWithNewDetails.getLon() + "' " +
-                    "WHERE username='" + userWithNewDetails.getUsername() + "'";
+            // Build dynamic SQL with only the fields that need updating
+            StringBuilder sql = new StringBuilder("UPDATE users SET ");
+            List<Object> values = new ArrayList<>();
 
-            int rowsAffected = stmt.executeUpdate(updateQuery);
+            boolean first = true;
+            for (String field : updates.keySet()) {
+                if (!first) sql.append(", ");
+                sql.append(field).append(" = ?");
+                values.add(updates.get(field));
+                first = false;
+            }
+
+            sql.append(" WHERE username = ?");
+            values.add(username);
+
+            stmt = con.prepareStatement(sql.toString());
+
+            // Set parameters
+            for (int i = 0; i < values.size(); i++) {
+                Object value = values.get(i);
+                if (value == null) {
+                    stmt.setNull(i + 1, java.sql.Types.VARCHAR);
+                } else if (value instanceof String) {
+                    stmt.setString(i + 1, (String) value);
+                } else if (value instanceof Double) {
+                    stmt.setDouble(i + 1, (Double) value);
+                } else if (value instanceof Integer) {
+                    stmt.setInt(i + 1, (Integer) value);
+                } else {
+                    stmt.setString(i + 1, value.toString());
+                }
+            }
+
+            int rowsAffected = stmt.executeUpdate();
             success = (rowsAffected > 0);
 
         } catch (SQLException e) {
-            System.err.println("Got an exception! ");
-            System.err.println(e.getMessage());
+            System.err.println("Error updating user profile: " + e.getMessage());
             throw e;
         } finally {
-            if (stmt != null) {
-                stmt.close();
-            }
-            if (con != null) {
-                con.close();
-            }
+            if (stmt != null) stmt.close();
+            if (con != null) con.close();
         }
 
         return success;
@@ -316,6 +327,43 @@ public class EditUsersTable {
         }
 
         return null;
+    }
+
+    public int getUserIdByUsername(String username) throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT user_id FROM users WHERE username = '" + username + "'");
+            if (rs.next()) {
+                return rs.getInt("user_id");
+            }
+            return -1;
+        } finally {
+            stmt.close();
+            con.close();
+        }
+    }
+
+    public ArrayList<User> getAllVolunteers() throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<User> volunteers = new ArrayList<>();
+
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT user_id, username, firstname, lastname FROM users WHERE user_type = 'volunteer'");
+            while (rs.next()) {
+                User volunteer = new User();
+                volunteer.setUser_id(rs.getInt("user_id"));
+                volunteer.setUsername(rs.getString("username"));
+                volunteer.setFirstname(rs.getString("firstname"));
+                volunteer.setLastname(rs.getString("lastname"));
+                volunteers.add(volunteer);
+            }
+        } finally {
+            stmt.close();
+            con.close();
+        }
+        return volunteers;
     }
 
 }

@@ -142,4 +142,9 @@ public class Resources {
     static String message2 = "{\"incident_id\":\"1\","
             + "\"message\":\"Uparxei kindunos me ladia\","
             + "\"sender\":\"raphael\"," + "\"recipient\":\"public\"}";
+
+    static String assignment1 = "{\"volunteer_user_id\":6,\"incident_id\":1}";
+    static String assignment2 = "{\"volunteer_user_id\":7,\"incident_id\":1}";
+    static String assignment3 = "{\"volunteer_user_id\":6,\"incident_id\":3}";
+    static String assignment4 = "{\"volunteer_user_id\":8,\"incident_id\":2}";
 }

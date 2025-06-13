@@ -80,6 +80,9 @@ function loadSection(sectionName) {
         case 'users':
             loadUsersSection();
             break;
+        case 'assignments':
+            loadAssignmentsSection();
+            break;
         case 'messages':
             loadMessagesSection();
             break;
@@ -251,13 +254,14 @@ function loadUsersSection() {
 }
 
 function renderUsersTable(users, container) {
-    let html = '<table><thead><tr><th>Username</th><th>First Name</th><th>Last Name</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table><thead><tr><th>Username</th><th>First Name</th><th>Last Name</th><th>User Type</th><th>Actions</th></tr></thead><tbody>';
 
     users.forEach(function(user) {
         html += '<tr>';
         html += '<td>' + user.username + '</td>';
         html += '<td>' + user.firstname + '</td>';
         html += '<td>' + user.lastname + '</td>';
+        html += '<td>' + (user.user_type || 'user') + '</td>';
         html += '<td><button class="btn-small btn-delete delete-user-btn" data-username="' + user.username + '">Delete</button></td>';
         html += '</tr>';
     });
@@ -286,6 +290,179 @@ function confirmDeleteUser(username) {
             }
         });
     }
+}
+
+// Assignments Section
+function loadAssignmentsSection() {
+    contentArea.innerHTML =
+        '<div class="content-section">' +
+        '<h2>Manage Volunteer Assignments</h2>' +
+
+        '<!-- Create New Assignment Form -->' +
+        '<div class="admin-form">' +
+        '<h3>Assign Volunteer to Incident</h3>' +
+        '<form id="createAssignmentForm">' +
+        '<div class="form-group">' +
+        '<label for="volunteerSelect">Volunteer:</label>' +
+        '<select id="volunteerSelect" required>' +
+        '<option value="">Loading volunteers...</option>' +
+        '</select>' +
+        '</div>' +
+        '<div class="form-group">' +
+        '<label for="incidentSelect">Incident:</label>' +
+        '<select id="incidentSelect" required>' +
+        '<option value="">Loading incidents...</option>' +
+        '</select>' +
+        '</div>' +
+        '<button type="submit">Assign Volunteer</button>' +
+        '</form>' +
+        '<div id="assignmentResult"></div>' +
+        '</div>' +
+
+        '<!-- Current Assignments Table -->' +
+        '<div id="assignmentsTableContainer">Loading current assignments...</div>' +
+        '</div>';
+
+    // Load data for dropdowns and table
+    loadVolunteersDropdown();
+    loadIncidentsDropdown();
+    loadCurrentAssignments();
+
+    // Add form submit listener
+    document.getElementById('createAssignmentForm').addEventListener('submit', handleCreateAssignment);
+}
+
+function loadVolunteersDropdown() {
+    makeAdminAjaxRequest('../admin/users', 'GET', null, function(err, users) {
+        const select = document.getElementById('volunteerSelect');
+        if (err) {
+            select.innerHTML = '<option value="">Error loading volunteers</option>';
+        } else {
+            const volunteers = users.filter(function(user) {
+                return user.user_type === 'volunteer';
+            });
+            select.innerHTML = '<option value="">Select Volunteer</option>';
+            volunteers.forEach(function(volunteer) {
+                select.innerHTML += '<option value="' + volunteer.user_id + '">' +
+                    volunteer.firstname + ' ' + volunteer.lastname + ' (' + volunteer.username + ')</option>';
+            });
+        }
+    });
+}
+
+function loadIncidentsDropdown() {
+    makeAdminAjaxRequest('../admin/incidents', 'GET', null, function(err, incidents) {
+        const select = document.getElementById('incidentSelect');
+        if (err) {
+            select.innerHTML = '<option value="">Error loading incidents</option>';
+        } else {
+            select.innerHTML = '<option value="">Select Incident</option>';
+            incidents.forEach(function(incident) {
+                select.innerHTML += '<option value="' + incident.incident_id + '">ID: ' +
+                    incident.incident_id + ' - ' + incident.incident_type + ' (' + incident.status + ')</option>';
+            });
+        }
+    });
+}
+
+function loadCurrentAssignments() {
+    makeAdminAjaxRequest('../admin/assignments', 'GET', null, function(err, assignments) {
+        const container = document.getElementById('assignmentsTableContainer');
+        if (err) {
+            container.innerHTML = '<div class="error-message">Error loading assignments: ' + err.message + '</div>';
+        } else {
+            renderAssignmentsTable(assignments);
+        }
+    });
+}
+
+function renderAssignmentsTable(assignments) {
+    const container = document.getElementById('assignmentsTableContainer');
+
+    if (!assignments || assignments.length === 0) {
+        container.innerHTML = '<h3>Current Assignments</h3><p>No assignments found.</p>';
+        return;
+    }
+
+    let html = '<h3>Current Assignments</h3>' +
+        '<table>' +
+        '<thead>' +
+        '<tr>' +
+        '<th>Volunteer ID</th>' +
+        '<th>Incident ID</th>' +
+        '<th>Assignment Date</th>' +
+        '<th>Actions</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>';
+
+    assignments.forEach(function(assignment) {
+        html += '<tr>' +
+            '<td>' + assignment.volunteer_user_id + '</td>' +
+            '<td>' + assignment.incident_id + '</td>' +
+            '<td>' + (assignment.assignment_date || 'N/A') + '</td>' +
+            '<td>' +
+            '<button class="btn-small btn-delete" ' +
+            'onclick="removeAssignment(' + assignment.volunteer_user_id + ', ' + assignment.incident_id + ')">' +
+            'Remove' +
+            '</button>' +
+            '</td>' +
+            '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function handleCreateAssignment(event) {
+    event.preventDefault();
+
+    const volunteerUserId = document.getElementById('volunteerSelect').value;
+    const incidentId = document.getElementById('incidentSelect').value;
+
+    if (!volunteerUserId || !incidentId) {
+        document.getElementById('assignmentResult').innerHTML =
+            '<div class="error-message">Please select both volunteer and incident</div>';
+        return;
+    }
+
+    const data = {
+        action: 'assign',
+        volunteer_user_id: parseInt(volunteerUserId),
+        incident_id: parseInt(incidentId)
+    };
+
+    makeAdminAjaxRequest('../admin/assignments', 'POST', data, function(err, response) {
+        const resultDiv = document.getElementById('assignmentResult');
+        if (err) {
+            resultDiv.innerHTML = '<div class="error-message">Error creating assignment: ' + err.message + '</div>';
+        } else {
+            resultDiv.innerHTML = '<div class="success-message">Assignment created successfully!</div>';
+            document.getElementById('createAssignmentForm').reset();
+            loadCurrentAssignments(); // Refresh the table
+        }
+    });
+}
+
+function removeAssignment(volunteerUserId, incidentId) {
+    if (!confirm('Are you sure you want to remove this assignment?')) {
+        return;
+    }
+
+    const data = {
+        action: 'remove',
+        volunteer_user_id: volunteerUserId,
+        incident_id: incidentId
+    };
+
+    makeAdminAjaxRequest('../admin/assignments', 'POST', data, function(err, response) {
+        if (err) {
+            contentArea.insertAdjacentHTML('afterbegin', '<div class="error-message">Error removing assignment: ' + err.message + '</div>');
+        } else {
+            loadCurrentAssignments(); // Refresh the table
+            contentArea.insertAdjacentHTML('afterbegin', '<div class="success-message">Assignment removed successfully!</div>');
+        }
+    });
 }
 
 // Messages Section

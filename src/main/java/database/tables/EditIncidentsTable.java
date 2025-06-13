@@ -317,4 +317,28 @@ public class EditIncidentsTable {
         return incidents;
     }
 
+    public ArrayList<Incident> getIncidentsByVolunteerId(int volunteerUserId) throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<Incident> incidents = new ArrayList<>();
+
+        try {
+            String query = "SELECT i.* FROM incidents i " +
+                    "INNER JOIN volunteer_assignments va ON i.incident_id = va.incident_id " +
+                    "WHERE va.volunteer_user_id = " + volunteerUserId;
+
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                String json = DB_Connection.getResultsToJSON(rs);
+                Gson gson = new Gson();
+                Incident incident = gson.fromJson(json, Incident.class);
+                incidents.add(incident);
+            }
+        } finally {
+            stmt.close();
+            con.close();
+        }
+        return incidents;
+    }
+
 }

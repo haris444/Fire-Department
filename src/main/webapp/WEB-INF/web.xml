@@ -180,4 +180,14 @@
         <url-pattern>/guest/incident</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>AdminAssignmentsServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminAssignmentsServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AdminAssignmentsServlet</servlet-name>
+        <url-pattern>/admin/assignments</url-pattern>
+    </servlet-mapping>
+
 </web-app>

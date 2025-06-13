@@ -9,7 +9,10 @@ import mainClasses.User;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
+import java.util.*;
 /**
  * Universal Profile Servlet for handling user profile operations.
  * This servlet serves all user types (users and volunteers) from the consolidated users table.
@@ -115,7 +118,6 @@ public class ProfileServlet extends BaseServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check user session - allow both REGULAR_USER and VOLUNTEER roles
         if (!isUserAuthenticated(request, response)) {
             return;
         }
@@ -124,12 +126,10 @@ public class ProfileServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Get logged in username from session
             HttpSession session = request.getSession(false);
-            // FIX: Corrected the session attribute key from "loggedInUserUsername" to "loggedInUsername"
             String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
-            // Read JSON payload from request body
+            // Read JSON payload
             StringBuilder jsonBuffer = new StringBuilder();
             BufferedReader reader = request.getReader();
             String line;
@@ -137,25 +137,57 @@ public class ProfileServlet extends BaseServlet {
                 jsonBuffer.append(line);
             }
 
-            // Parse JSON to User object (includes all fields: basic + optional volunteer fields)
-            Gson gson = new Gson();
-            User userUpdate = gson.fromJson(jsonBuffer.toString(), User.class);
+            // Parse JSON and build update map
+            JsonObject jsonObject = new JsonParser().parse(jsonBuffer.toString()).getAsJsonObject();
+            Map<String, Object> updates = new HashMap<>();
 
-            // Ensure the username matches the logged-in user (security measure)
-            userUpdate.setUsername(loggedInUsername);
+            // Define allowed fields for security
+            Set<String> allowedFields = Set.of(
+                    "firstname", "lastname", "birthdate", "gender", "afm",
+                    "country", "address", "municipality", "prefecture",
+                    "job", "telephone", "lat", "lon",
+                    "volunteer_type", "height", "weight"
+            );
 
-            // Update the complete user profile in the consolidated users table
+            // Extract only allowed fields that are present in JSON
+            for (String field : allowedFields) {
+                if (jsonObject.has(field)) {
+                    JsonElement element = jsonObject.get(field);
+                    if (element.isJsonNull()) {
+                        updates.put(field, null);
+                    } else {
+                        switch (field) {
+                            case "lat":
+                            case "lon":
+                            case "height":
+                            case "weight":
+                                updates.put(field, element.getAsDouble());
+                                break;
+                            default:
+                                updates.put(field, element.getAsString());
+                        }
+                    }
+                }
+            }
+
+            if (updates.isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                PrintWriter out = response.getWriter();
+                out.print("{\"success\": false, \"message\": \"No valid fields to update\"}");
+                out.flush();
+                return;
+            }
+
+            // Update only the provided fields
             EditUsersTable editUsersTable = new EditUsersTable();
-            boolean success = editUsersTable.updateUserProfile(userUpdate);
+            boolean success = editUsersTable.updateUserProfileSelective(loggedInUsername, updates);
 
             if (success) {
-                // Profile update successful
                 response.setStatus(HttpServletResponse.SC_OK);
                 PrintWriter out = response.getWriter();
                 out.print("{\"success\": true, \"message\": \"Profile updated successfully\"}");
                 out.flush();
             } else {
-                // Profile update failed
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 PrintWriter out = response.getWriter();
                 out.print("{\"success\": false, \"message\": \"Profile update failed\"}");
@@ -163,7 +195,6 @@ public class ProfileServlet extends BaseServlet {
             }
 
         } catch (Exception e) {
-            // Handle JSON parsing, database, or other errors
             System.err.println("Error updating user profile: " + e.getMessage());
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

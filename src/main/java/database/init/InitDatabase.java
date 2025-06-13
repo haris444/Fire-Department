@@ -7,13 +7,10 @@ package database.init;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import database.tables.EditIncidentsTable;
-import static database.DB_Connection.getInitialConnection;
-import database.tables.CheckForDuplicatesExample;
-import database.tables.EditMessagesTable;
-import database.tables.EditParticipantsTable;
+import database.tables.*;
 
-import database.tables.EditUsersTable;
+import static database.DB_Connection.getInitialConnection;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -63,11 +60,12 @@ public class InitDatabase {
         EditIncidentsTable editIncidents = new EditIncidentsTable();
         editIncidents.createIncidentsTable();
 
-        //EditParticipantsTable editParticipants = new EditParticipantsTable();
-        //editParticipants.createParticipantTable();
-
         EditMessagesTable editMsgs = new EditMessagesTable();
         editMsgs.createMessageTable();
+
+        // Add the new assignments table
+        EditVolunteerAssignmentsTable editAssignments = new EditVolunteerAssignmentsTable();
+        editAssignments.createAssignmentsTable();
     }
 
     public void addToDatabaseExamples() throws ClassNotFoundException, SQLException {
@@ -93,13 +91,14 @@ public class InitDatabase {
         editIncidents.addIncidentFromJSON(Resources.incident3);
         editIncidents.addIncidentFromJSON(Resources.incident4);
         editIncidents.addIncidentFromJSON(Resources.incident5);
-        //participants
-        /*
-        EditParticipantsTable editParticipants = new EditParticipantsTable();
-        editParticipants.addParticipantFromJSON(Resources.participant1);
-        editParticipants.addParticipantFromJSON(Resources.participant2);
-        editParticipants.addParticipantFromJSON(Resources.participant3);
-        */
+
+        EditVolunteerAssignmentsTable editAssignments = new EditVolunteerAssignmentsTable();
+        editAssignments.addAssignmentFromJSON(Resources.assignment1);
+        editAssignments.addAssignmentFromJSON(Resources.assignment2);
+        editAssignments.addAssignmentFromJSON(Resources.assignment3);
+        editAssignments.addAssignmentFromJSON(Resources.assignment4);
+
+
         EditMessagesTable editmessages = new EditMessagesTable();
         editmessages.addMessageFromJSON(Resources.message1);
         editmessages.addMessageFromJSON(Resources.message2);

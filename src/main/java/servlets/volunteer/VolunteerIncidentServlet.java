@@ -3,6 +3,7 @@ package servlets.volunteer;
 import com.google.gson.Gson;
 import database.tables.EditIncidentsTable;
 import database.tables.EditParticipantsTable;
+import database.tables.EditUsersTable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -23,13 +24,14 @@ public class VolunteerIncidentServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check for a valid volunteer session
         if (!checkSession(request, response, "userRole", "VOLUNTEER")) {
             return;
         }
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        String requestType = request.getParameter("type"); // "all" or "assigned"
 
         HttpSession session = request.getSession(false);
         String volunteerUsername = (String) session.getAttribute("loggedInUsername");
@@ -38,31 +40,25 @@ public class VolunteerIncidentServlet extends BaseServlet {
             EditIncidentsTable incidentsTable = new EditIncidentsTable();
             ArrayList<Incident> incidents;
 
-            /*
-             * === TEMPORARY CHANGE ===
-             * The following lines for fetching assigned incidents are commented out.
-             * Instead, we will fetch all incidents.
-             */
-            // EditParticipantsTable participantsTable = new EditParticipantsTable();
-            // ArrayList<Integer> incidentIds = participantsTable.getIncidentIdsByVolunteer(volunteerUsername);
-            //
-            // if (incidentIds != null && !incidentIds.isEmpty()) {
-            //     incidents = incidentsTable.getIncidentsByIds(incidentIds);
-            // } else {
-            //     incidents = new ArrayList<>();
-            // }
+            if ("assigned".equals(requestType)) {
+                EditUsersTable usersTable = new EditUsersTable();
+                int volunteerUserId = usersTable.getUserIdByUsername(volunteerUsername);
+                if (volunteerUserId == -1) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    out.print("{\"success\": false, \"message\": \"Volunteer not found\"}");
+                    return;
+                }
+                incidents = incidentsTable.getIncidentsByVolunteerId(volunteerUserId);
+            } else {
+                incidents = incidentsTable.databaseToIncidents();
+            }
 
-            // MODIFIED: Fetch all incidents from the database.
-            incidents = incidentsTable.databaseToIncidents();
-
-
-            // Convert the list of incidents to JSON and send the response.
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(incidents);
             response.setStatus(HttpServletResponse.SC_OK);
             out.print(jsonResponse);
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             PrintWriter out = response.getWriter();
             out.print("{\"success\": false, \"message\": \"Database error occurred.\"}");
