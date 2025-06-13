@@ -167,4 +167,17 @@
         <session-timeout>30</session-timeout>
     </session-config>
 
+
+    <!-- Guest Servlet -->
+    <servlet>
+        <servlet-name>GuestIncidentServlet</servlet-name>
+        <servlet-class>servlets.GuestIncidentServlet</servlet-class>
+    </servlet>
+
+    <!-- Guest Mapping -->
+    <servlet-mapping>
+        <servlet-name>GuestIncidentServlet</servlet-name>
+        <url-pattern>/guest/incident</url-pattern>
+    </servlet-mapping>
+
 </web-app>
