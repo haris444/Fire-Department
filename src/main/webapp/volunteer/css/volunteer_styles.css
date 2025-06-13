@@ -153,7 +153,140 @@
     }
 }
 
-/* Responsive Design for Tabs */
+/* Message-specific styles */
+.message-compose {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    margin: 25px 0;
+    border: 2px solid #e9ecef;
+}
+
+.message-info {
+    background-color: #e3f2fd;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 4px solid #2196f3;
+}
+
+.message-info ul {
+    margin: 10px 0 0 20px;
+    color: #1565c0;
+}
+
+.message-info ul li {
+    margin-bottom: 5px;
+}
+
+.field-note {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+.message-list {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #fafafa;
+    margin-bottom: 20px;
+}
+
+.messages-info {
+    background-color: #fff3cd;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    font-size: 14px;
+}
+
+.message-item {
+    background-color: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #e9ecef;
+}
+
+.message-item.public {
+    border-left-color: #2196f3;
+    background-color: #f3f8ff;
+}
+
+.message-item.from-admin {
+    border-left-color: #ff9800;
+    background-color: #fff8f0;
+}
+
+.message-item.volunteer-group {
+    border-left-color: #4caf50;
+    background-color: #f8fff8;
+}
+
+.message-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.message-sender, .message-recipient, .message-incident {
+    font-weight: 600;
+}
+
+.message-type-badge {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.message-type-badge.public {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.message-type-badge.from-admin {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.message-type-badge.volunteer-group {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+.message-content {
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.message-time {
+    font-size: 12px;
+    color: #999;
+    text-align: right;
+}
+
+/* Form enhancements */
+.form-group select:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Responsive Design for Tabs and Messages */
 @media (max-width: 768px) {
     .tab-navigation {
         flex-direction: column;
@@ -173,5 +306,19 @@
     .btn-small {
         padding: 6px 10px;
         font-size: 12px;
+    }
+
+    .message-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .message-compose {
+        padding: 15px;
+    }
+
+    .message-list {
+        max-height: 400px;
     }
 }

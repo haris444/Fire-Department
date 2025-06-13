@@ -544,28 +544,42 @@ function loadMessagesSection() {
         <div id="messagesContainer">Loading messages...</div>
         <div class="message-compose">
             <h3>Send New Message</h3>
+            <div class="message-info">
+                <p><strong>Messaging Rules:</strong></p>
+                <ul>
+                    <li>You can send messages to: Admin, Public, or Volunteers</li>
+                    <li>Incident ID is required for all messages</li>
+                    <li>You can only send messages for incidents you are assigned to</li>
+                </ul>
+            </div>
             <form id="sendMessageForm">
                 <div class="form-group">
-                    <label for="recipient">Recipient:</label>
+                    <label for="recipient">Recipient: *</label>
                     <select id="recipient" name="recipient" required>
+                        <option value="">Select Recipient</option>
                         <option value="admin">Admin</option>
-                        <option value="volunteers">All Volunteers (on an incident)</option>
+                        <option value="volunteers">All Volunteers (on incident)</option>
                         <option value="public">Public</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="incident_id">Incident ID (Required for volunteer messages):</label>
-                    <input type="number" id="incident_id" name="incident_id" placeholder="Enter incident ID">
+                    <label for="incident_id">Incident ID: * <span class="field-note">(Must be an incident you're assigned to)</span></label>
+                    <select id="incident_id" name="incident_id" required>
+                        <option value="">Loading your assigned incidents...</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="message_text">Message:</label>
-                    <textarea id="message_text" name="message_text" required></textarea>
+                    <label for="message_text">Message: *</label>
+                    <textarea id="message_text" name="message_text" required placeholder="Type your message here..."></textarea>
                 </div>
-                <button type="submit" class="btn-send">Send</button>
+                <button type="submit" class="btn-send">Send Message</button>
             </form>
             <div id="sendMessageResult"></div>
         </div>
     </div>`;
+
+    // Load assigned incidents for the dropdown
+    loadAssignedIncidentsForMessaging();
 
     // Fetch and render messages
     makeVolunteerAjaxRequest('../volunteer/messages', 'GET', null, (err, messages) => {
@@ -609,32 +623,141 @@ function renderMessages(messages, container) {
 }
 
 /**
+ * Loads assigned incidents for the messaging dropdown.
+ */
+function loadAssignedIncidentsForMessaging() {
+    makeVolunteerAjaxRequest('../volunteer/incidents?type=assigned', 'GET', null, (err, incidents) => {
+        const select = document.getElementById('incident_id');
+        if (err || !incidents || incidents.length === 0) {
+            select.innerHTML = '<option value="">No assigned incidents found</option>';
+            select.disabled = true;
+            return;
+        }
+
+        select.innerHTML = '<option value="">Select an incident</option>';
+        incidents.forEach(incident => {
+            select.innerHTML += `<option value="${incident.incident_id}">
+                ID: ${incident.incident_id} - ${incident.incident_type} (${incident.status})
+            </option>`;
+        });
+        select.disabled = false;
+    });
+}
+
+/**
+ * Renders messages in the message list with better categorization.
+ * @param {Array<object>} messages - Array of message objects.
+ * @param {HTMLElement} container - The container to render into.
+ */
+function renderMessages(messages, container) {
+    let html = '<div class="message-list">';
+
+    if (messages && messages.length > 0) {
+        html += '<h3>Your Messages</h3>';
+        html += '<div class="messages-info"><p>You can see: Public messages, messages from admin for your incidents, and messages between volunteers on your incidents.</p></div>';
+
+        messages.forEach(message => {
+            const messageType = getMessageType(message);
+            html += `
+                <div class="message-item ${messageType}">
+                    <div class="message-header">
+                        <span class="message-sender">From: ${message.sender}</span>
+                        <span class="message-recipient">To: ${message.recipient}</span>
+                        <span class="message-incident">Incident: ${message.incident_id || 'N/A'}</span>
+                        <span class="message-type-badge ${messageType}">${getMessageTypeLabel(messageType)}</span>
+                    </div>
+                    <div class="message-content">${message.message}</div>
+                    <div class="message-time">${message.date_time}</div>
+                </div>
+            `;
+        });
+    } else {
+        html += '<p>No messages available.</p>';
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+/**
+ * Determines the type of message for styling purposes.
+ * @param {object} message - The message object.
+ * @returns {string} The message type.
+ */
+function getMessageType(message) {
+    if (message.recipient === 'public') return 'public';
+    if (message.sender === 'admin') return 'from-admin';
+    if (message.recipient === 'volunteers') return 'volunteer-group';
+    return 'regular';
+}
+
+/**
+ * Gets a user-friendly label for the message type.
+ * @param {string} messageType - The message type.
+ * @returns {string} The label.
+ */
+function getMessageTypeLabel(messageType) {
+    switch (messageType) {
+        case 'public': return 'Public';
+        case 'from-admin': return 'From Admin';
+        case 'volunteer-group': return 'Volunteer Group';
+        default: return 'Regular';
+    }
+}
+
+/**
  * Handles sending a message from the volunteer.
  */
 function handleSendMessage() {
     const messageData = {
         recipient: document.getElementById('recipient').value,
         message_text: document.getElementById('message_text').value,
-        incident_id: document.getElementById('incident_id').value,
+        incident_id: parseInt(document.getElementById('incident_id').value),
     };
 
-    if (!messageData.incident_id && messageData.recipient === 'volunteers') {
-        const resultDiv = document.getElementById('sendMessageResult');
-        resultDiv.innerHTML = `<div class="error-message">Incident ID is required to send a message to other volunteers.</div>`;
+    // Validate all required fields
+    if (!messageData.recipient) {
+        showMessageResult('Please select a recipient.', 'error');
+        return;
+    }
+
+    if (!messageData.incident_id) {
+        showMessageResult('Please select an incident ID.', 'error');
+        return;
+    }
+
+    if (!messageData.message_text.trim()) {
+        showMessageResult('Please enter a message.', 'error');
         return;
     }
 
     makeVolunteerAjaxRequest('../volunteer/messages', 'POST', messageData, (err, response) => {
-        const resultDiv = document.getElementById('sendMessageResult');
         if (err) {
-            resultDiv.innerHTML = `<div class="error-message">Error sending message: ${err.message}</div>`;
+            showMessageResult(`Error sending message: ${err.message}`, 'error');
         } else {
-            resultDiv.innerHTML = `<div class="success-message">Message sent successfully!</div>`;
+            showMessageResult('Message sent successfully!', 'success');
             document.getElementById('sendMessageForm').reset();
             // Refresh messages after sending
             loadMessagesSection();
         }
     });
+}
+
+/**
+ * Shows a result message for the send message form.
+ * @param {string} message - The message to show.
+ * @param {string} type - The type of message (success/error).
+ */
+function showMessageResult(message, type) {
+    const resultDiv = document.getElementById('sendMessageResult');
+    resultDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
+
+    // Auto-clear after 5 seconds
+    setTimeout(() => {
+        if (resultDiv) {
+            resultDiv.innerHTML = '';
+        }
+    }, 5000);
 }
 
 // Initialize the panel when the DOM is ready
