@@ -106,21 +106,118 @@ function loadDashboardSection() {
 }
 
 function renderStatistics(stats, container) {
-    let html = '<h3>Incidents by Type:</h3><ul>';
-    if (stats.incidentsByType) {
+    let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">';
+
+    // Left column - Summary statistics
+    html += '<div>';
+    html += '<h3>System Overview</h3>';
+    html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db;">';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
+    html += '<div><strong>Total Users:</strong> ' + (stats.userCount || 0) + '</div>';
+    html += '<div><strong>Total Volunteers:</strong> ' + (stats.volunteerCount || 0) + '</div>';
+    html += '<div><strong>Total Vehicles:</strong> ' + (stats.totalVehicleCount || 0) + '</div>';
+    html += '<div><strong>Total People:</strong> ' + ((stats.userCount || 0) + (stats.volunteerCount || 0)) + '</div>';
+    html += '</div></div></div>';
+
+    // Right column - Incidents by type table
+    html += '<div>';
+    html += '<h3>Incidents by Type</h3>';
+    if (stats.incidentsByType && stats.incidentsByType.length > 0) {
+        html += '<table style="width: 100%; border-collapse: collapse;">';
+        html += '<thead><tr style="background: #34495e; color: white;">';
+        html += '<th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Incident Type</th>';
+        html += '<th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Count</th>';
+        html += '</tr></thead><tbody>';
+
+        let totalIncidents = 0;
         stats.incidentsByType.forEach(function(item) {
-            html += '<li>' + item.type + ': ' + item.count + '</li>';
+            totalIncidents += item.count;
+            html += '<tr style="border-bottom: 1px solid #eee;">';
+            html += '<td style="padding: 10px; border: 1px solid #ddd; text-transform: capitalize;">' + item.type + '</td>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">' + item.count + '</td>';
+            html += '</tr>';
         });
-    }
-    html += '</ul>';
 
-    if (stats.totalIncidents) {
-        html += '<h3>Total Incidents: ' + stats.totalIncidents + '</h3>';
+        // Total row
+        html += '<tr style="background: #ecf0f1; font-weight: bold;">';
+        html += '<td style="padding: 10px; border: 1px solid #ddd;">TOTAL</td>';
+        html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + totalIncidents + '</td>';
+        html += '</tr>';
+        html += '</tbody></table>';
+    } else {
+        html += '<p style="color: #7f8c8d; font-style: italic;">No incidents found.</p>';
+    }
+    html += '</div>';
+    html += '</div>'; // End grid container
+
+    // Full width - Volunteers per incident type table
+    html += '<div style="margin-top: 30px;">';
+    html += '<h3>Volunteer Assignments by Incident Type</h3>';
+    if (stats.volunteersPerIncidentType && stats.volunteersPerIncidentType.length > 0) {
+        html += '<table style="width: 100%; border-collapse: collapse;">';
+        html += '<thead><tr style="background: #27ae60; color: white;">';
+        html += '<th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Incident Type</th>';
+        html += '<th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Assigned Volunteers</th>';
+        html += '<th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Volunteers per Incident</th>';
+        html += '</tr></thead><tbody>';
+
+        let totalVolunteerAssignments = 0;
+        stats.volunteersPerIncidentType.forEach(function(item) {
+            totalVolunteerAssignments += item.volunteer_count;
+            // Find corresponding incident count to calculate volunteers per incident
+            let incidentCount = 0;
+            if (stats.incidentsByType) {
+                const incidentData = stats.incidentsByType.find(inc => inc.type === item.incident_type);
+                incidentCount = incidentData ? incidentData.count : 0;
+            }
+            const volunteersPerIncident = incidentCount > 0 ? (item.volunteer_count / incidentCount).toFixed(1) : '0';
+
+            html += '<tr style="border-bottom: 1px solid #eee;">';
+            html += '<td style="padding: 10px; border: 1px solid #ddd; text-transform: capitalize;">' + item.incident_type + '</td>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">' + item.volunteer_count + '</td>';
+            html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + volunteersPerIncident + '</td>';
+            html += '</tr>';
+        });
+
+        // Total row
+        html += '<tr style="background: #ecf0f1; font-weight: bold;">';
+        html += '<td style="padding: 10px; border: 1px solid #ddd;">TOTAL</td>';
+        html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">' + totalVolunteerAssignments + '</td>';
+        html += '<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">-</td>';
+        html += '</tr>';
+        html += '</tbody></table>';
+    } else {
+        html += '<p style="color: #7f8c8d; font-style: italic;">No volunteer assignments found.</p>';
+    }
+    html += '</div>';
+
+    // Additional insights section
+    html += '<div style="margin-top: 30px; background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">';
+    html += '<h3 style="margin-top: 0; color: #856404;">Key Insights</h3>';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
+
+    // Calculate some insights
+    const totalPeople = (stats.userCount || 0) + (stats.volunteerCount || 0);
+    const volunteerPercentage = totalPeople > 0 ? ((stats.volunteerCount || 0) / totalPeople * 100).toFixed(1) : 0;
+
+    let totalIncidents = 0;
+    if (stats.incidentsByType) {
+        totalIncidents = stats.incidentsByType.reduce((sum, item) => sum + item.count, 0);
     }
 
-    if (stats.totalUsers) {
-        html += '<h3>Total Users: ' + stats.totalUsers + '</h3>';
+    let totalVolunteerAssignments = 0;
+    if (stats.volunteersPerIncidentType) {
+        totalVolunteerAssignments = stats.volunteersPerIncidentType.reduce((sum, item) => sum + item.volunteer_count, 0);
     }
+
+    const avgVolunteersPerIncident = totalIncidents > 0 ? (totalVolunteerAssignments / totalIncidents).toFixed(1) : 0;
+    const vehiclesPerIncident = totalIncidents > 0 ? ((stats.totalVehicleCount || 0) / totalIncidents).toFixed(1) : 0;
+
+    html += '<div><strong>Volunteer Participation Rate:</strong> ' + volunteerPercentage + '%</div>';
+    html += '<div><strong>Avg Volunteers per Incident:</strong> ' + avgVolunteersPerIncident + '</div>';
+    html += '<div><strong>Avg Vehicles per Incident:</strong> ' + vehiclesPerIncident + '</div>';
+    html += '<div><strong>Total Assignments:</strong> ' + totalVolunteerAssignments + '</div>';
+    html += '</div></div>';
 
     container.innerHTML = html;
 }

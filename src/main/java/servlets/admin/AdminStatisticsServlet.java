@@ -16,11 +16,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * AdminStatisticsServlet (Refactored)
+ * AdminStatisticsServlet
  *
- * This servlet has been updated to work with the consolidated 'users' table.
- * It now correctly queries the single table to count users and volunteers
- * based on the 'user_type' field.
+ * Returns comprehensive statistics for the admin dashboard:
+ * - Incidents by type
+ * - Total user count
+ * - Total volunteer count
+ * - Total vehicle count
+ * - Total number of volunteers per incident type
  */
 public class AdminStatisticsServlet extends BaseServlet {
 
@@ -38,20 +41,20 @@ public class AdminStatisticsServlet extends BaseServlet {
             // Initialize database table objects
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
 
-            // Fetch statistics data using updated methods
+            // Fetch all required statistics
             ArrayList<HashMap<String, Object>> incidentsByType = editIncidentsTable.countIncidentsByType();
-            int userCount = getUserCount(); // This now correctly counts only 'user' types
-            int volunteerCount = getVolunteerCount(); // This now correctly counts 'volunteer' types
-            int totalVehiclesInvolved = editIncidentsTable.getTotalVehiclesInvolved();
-            int totalFiremenInvolved = editIncidentsTable.getTotalFiremenInvolved();
+            int userCount = getUserCount();
+            int volunteerCount = getVolunteerCount();
+            int totalVehicleCount = getTotalVehicleCount();
+            ArrayList<HashMap<String, Object>> volunteersPerIncidentType = getVolunteersPerIncidentType();
 
             // Construct statistics object
             Map<String, Object> statistics = new HashMap<>();
             statistics.put("incidentsByType", incidentsByType);
             statistics.put("userCount", userCount);
             statistics.put("volunteerCount", volunteerCount);
-            statistics.put("totalVehiclesInvolved", totalVehiclesInvolved);
-            statistics.put("totalFiremenInvolved", totalFiremenInvolved);
+            statistics.put("totalVehicleCount", totalVehicleCount);
+            statistics.put("volunteersPerIncidentType", volunteersPerIncidentType);
 
             // Convert to JSON
             Gson gson = new Gson();
@@ -67,7 +70,7 @@ public class AdminStatisticsServlet extends BaseServlet {
             // Handle database errors
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             PrintWriter out = response.getWriter();
-            out.print("{\"success\": false, \"message\": \"Error fetching statistics\"}");
+            out.print("{\"success\": false, \"message\": \"Error fetching statistics: " + e.getMessage() + "\"}");
             out.flush();
         }
     }
@@ -81,16 +84,17 @@ public class AdminStatisticsServlet extends BaseServlet {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
-        // MODIFIED: Query now filters by user_type = 'user'
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'user'");
-        int count = 0;
-        if (rs.next()) {
-            count = rs.getInt("count");
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'user'");
+            int count = 0;
+            if (rs.next()) {
+                count = rs.getInt("count");
+            }
+            return count;
+        } finally {
+            stmt.close();
+            con.close();
         }
-
-        stmt.close();
-        con.close();
-        return count;
     }
 
     /**
@@ -102,15 +106,72 @@ public class AdminStatisticsServlet extends BaseServlet {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
-        // MODIFIED: Query now checks the consolidated 'users' table for user_type = 'volunteer'
-        ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'volunteer'");
-        int count = 0;
-        if (rs.next()) {
-            count = rs.getInt("count");
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'volunteer'");
+            int count = 0;
+            if (rs.next()) {
+                count = rs.getInt("count");
+            }
+            return count;
+        } finally {
+            stmt.close();
+            con.close();
         }
+    }
 
-        stmt.close();
-        con.close();
-        return count;
+    /**
+     * Gets the total count of vehicles across all incidents.
+     * @return The total number of vehicles involved in all incidents.
+     * @throws Exception
+     */
+    private int getTotalVehicleCount() throws Exception {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT SUM(vehicles) as total FROM incidents WHERE vehicles IS NOT NULL");
+            int total = 0;
+            if (rs.next()) {
+                total = rs.getInt("total");
+            }
+            return total;
+        } finally {
+            stmt.close();
+            con.close();
+        }
+    }
+
+    /**
+     * Gets the number of volunteers assigned to each incident type.
+     * @return ArrayList of HashMaps containing incident_type and volunteer_count.
+     * @throws Exception
+     */
+    private ArrayList<HashMap<String, Object>> getVolunteersPerIncidentType() throws Exception {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<HashMap<String, Object>> results = new ArrayList<>();
+
+        try {
+            // Query to count volunteers per incident type using the volunteer_assignments table
+            String query = "SELECT i.incident_type, COUNT(va.volunteer_user_id) as volunteer_count " +
+                    "FROM incidents i " +
+                    "LEFT JOIN volunteer_assignments va ON i.incident_id = va.incident_id " +
+                    "GROUP BY i.incident_type " +
+                    "ORDER BY i.incident_type";
+
+            ResultSet rs = stmt.executeQuery(query);
+
+            while (rs.next()) {
+                HashMap<String, Object> typeVolunteerCount = new HashMap<>();
+                typeVolunteerCount.put("incident_type", rs.getString("incident_type"));
+                typeVolunteerCount.put("volunteer_count", rs.getInt("volunteer_count"));
+                results.add(typeVolunteerCount);
+            }
+
+            return results;
+        } finally {
+            stmt.close();
+            con.close();
+        }
     }
 }
