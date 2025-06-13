@@ -100,8 +100,8 @@ public class UserIncidentServlet extends BaseServlet {
             newIncident.setLon(incidentData.getLon());
             newIncident.setMunicipality(incidentData.getMunicipality());
             newIncident.setPrefecture(incidentData.getPrefecture());
-            newIncident.setStart_datetime(); // This sets current datetime
-            newIncident.setStatus("submitted");
+            newIncident.setStart_datetime();
+            newIncident.setStatus("running");
             newIncident.setDanger(incidentData.getDanger());
 
             // Optional fields

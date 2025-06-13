@@ -44,7 +44,7 @@ public class GuestIncidentServlet extends HttpServlet {
             incident.setUser_type("guest");
             incident.setStatus("submitted");
             incident.setStart_datetime(); // This will set current timestamp
-
+            incident.setDanger("Unknown");
             // Save to database
             EditIncidentsTable editTable = new EditIncidentsTable();
             editTable.createNewIncident(incident);

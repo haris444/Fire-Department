@@ -152,7 +152,7 @@
             if (lon) formData.lon = parseFloat(lon);
 
             // Send data to server
-            fetch('/guest/incident', {
+            fetch('guest/incident', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -192,5 +192,7 @@
         }
     });
 </script>
+<script src="js/common.js" defer></script>
+<div id="footer-placeholder"></div>
 </body>
 </html>
