@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class AdminAssignmentsServlet extends BaseServlet {
 
@@ -27,7 +28,8 @@ public class AdminAssignmentsServlet extends BaseServlet {
 
         try {
             EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
-            ArrayList<VolunteerAssignment> assignments = assignmentsTable.getAllAssignments();
+            // Use the new method that returns enriched data
+            ArrayList<HashMap<String, Object>> assignments = assignmentsTable.getAllAssignmentsWithDetails();
 
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(assignments);

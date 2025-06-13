@@ -333,14 +333,13 @@ function loadAssignmentsSection() {
 }
 
 function loadVolunteersDropdown() {
-    makeAdminAjaxRequest('../admin/users', 'GET', null, function(err, users) {
+    // Use the dedicated volunteers endpoint instead of filtering all users
+    makeAdminAjaxRequest('../admin/volunteers', 'GET', null, function(err, volunteers) {
         const select = document.getElementById('volunteerSelect');
         if (err) {
             select.innerHTML = '<option value="">Error loading volunteers</option>';
         } else {
-            const volunteers = users.filter(function(user) {
-                return user.user_type === 'volunteer';
-            });
+            // No filtering needed - we already have only volunteers
             select.innerHTML = '<option value="">Select Volunteer</option>';
             volunteers.forEach(function(volunteer) {
                 select.innerHTML += '<option value="' + volunteer.user_id + '">' +
@@ -388,8 +387,8 @@ function renderAssignmentsTable(assignments) {
         '<table>' +
         '<thead>' +
         '<tr>' +
-        '<th>Volunteer ID</th>' +
-        '<th>Incident ID</th>' +
+        '<th>Volunteer</th>' +
+        '<th>Incident</th>' +
         '<th>Assignment Date</th>' +
         '<th>Actions</th>' +
         '</tr>' +
@@ -398,8 +397,8 @@ function renderAssignmentsTable(assignments) {
 
     assignments.forEach(function(assignment) {
         html += '<tr>' +
-            '<td>' + assignment.volunteer_user_id + '</td>' +
-            '<td>' + assignment.incident_id + '</td>' +
+            '<td>' + assignment.volunteer_name + '</td>' +
+            '<td>' + assignment.incident_description + '</td>' +
             '<td>' + (assignment.assignment_date || 'N/A') + '</td>' +
             '<td>' +
             '<button class="btn-small btn-delete" ' +

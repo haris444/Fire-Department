@@ -174,7 +174,6 @@
         <servlet-class>servlets.GuestIncidentServlet</servlet-class>
     </servlet>
 
-    <!-- Guest Mapping -->
     <servlet-mapping>
         <servlet-name>GuestIncidentServlet</servlet-name>
         <url-pattern>/guest/incident</url-pattern>
@@ -188,6 +187,16 @@
     <servlet-mapping>
         <servlet-name>AdminAssignmentsServlet</servlet-name>
         <url-pattern>/admin/assignments</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminVolunteersServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminVolunteersServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AdminVolunteersServlet</servlet-name>
+        <url-pattern>/admin/volunteers</url-pattern>
     </servlet-mapping>
 
 </web-app>

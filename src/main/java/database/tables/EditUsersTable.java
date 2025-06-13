@@ -101,14 +101,14 @@ public class EditUsersTable {
         Statement stmt = con.createStatement();
 
         try {
-            ResultSet rs = stmt.executeQuery("SELECT user_id, username, firstname, lastname FROM users");
-
+            ResultSet rs = stmt.executeQuery("SELECT user_id, username, firstname, lastname, user_type FROM users");
             while (rs.next()) {
                 User user = new User();
                 user.setUser_id(rs.getInt("user_id"));
                 user.setUsername(rs.getString("username"));
                 user.setFirstname(rs.getString("firstname"));
                 user.setLastname(rs.getString("lastname"));
+                user.setUser_type(rs.getString("user_type"));
                 userList.add(user);
             }
 

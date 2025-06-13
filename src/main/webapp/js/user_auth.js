@@ -180,7 +180,7 @@ function logoutUser() {
     xhr.onload = xhr.onerror = function() {
         clearUserSession();
         // Redirect to the main index page after logout
-        window.location.href = '../index.html';
+        window.location.href = '../user/login.html';
     };
 
     xhr.send();

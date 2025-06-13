@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class EditVolunteerAssignmentsTable {
 
@@ -119,6 +120,38 @@ public class EditVolunteerAssignmentsTable {
                 String json = DB_Connection.getResultsToJSON(rs);
                 Gson gson = new Gson();
                 VolunteerAssignment assignment = gson.fromJson(json, VolunteerAssignment.class);
+                assignments.add(assignment);
+            }
+        } finally {
+            stmt.close();
+            con.close();
+        }
+        return assignments;
+    }
+
+    public ArrayList<HashMap<String, Object>> getAllAssignmentsWithDetails() throws SQLException, ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+        ArrayList<HashMap<String, Object>> assignments = new ArrayList<>();
+
+        try {
+            // Join with users and incidents tables to get meaningful data
+            String query = "SELECT va.volunteer_user_id, va.incident_id, va.assignment_date, " +
+                    "u.username, u.firstname, u.lastname, " +
+                    "i.incident_type, i.description " +
+                    "FROM volunteer_assignments va " +
+                    "JOIN users u ON va.volunteer_user_id = u.user_id " +
+                    "JOIN incidents i ON va.incident_id = i.incident_id";
+
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                HashMap<String, Object> assignment = new HashMap<>();
+                assignment.put("volunteer_user_id", rs.getInt("volunteer_user_id"));
+                assignment.put("incident_id", rs.getInt("incident_id"));
+                assignment.put("assignment_date", rs.getString("assignment_date"));
+                assignment.put("volunteer_name", rs.getString("firstname") + " " + rs.getString("lastname") + " (" + rs.getString("username") + ")");
+                assignment.put("incident_description", rs.getString("incident_type") + ": " + rs.getString("description"));
+
                 assignments.add(assignment);
             }
         } finally {
