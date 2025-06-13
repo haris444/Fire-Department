@@ -44,7 +44,6 @@ function makeVolunteerAjaxRequest(url, method, data, callback) {
     xhr.send(data ? JSON.stringify(data) : null);
 }
 
-
 /**
  * Initializes the volunteer panel when the DOM is fully loaded.
  */
@@ -90,7 +89,7 @@ function loadVolunteerSection(sectionName) {
             loadUserProfileSection();
             break;
         case 'incidents':
-            loadAssignedIncidentsSection();
+            loadIncidentsSection();
             break;
         case 'messages':
             loadMessagesSection();
@@ -98,6 +97,288 @@ function loadVolunteerSection(sectionName) {
         default:
             contentArea.innerHTML = `<div class="content-section"><h2>Section not found</h2></div>`;
     }
+}
+
+/**
+ * Loads the incidents section with two tabs.
+ */
+function loadIncidentsSection() {
+    let html = `
+        <div class="content-section">
+            <h2>Incidents</h2>
+            
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="available">Available Incidents</button>
+                <button class="tab-btn" data-tab="assigned">My Assigned Incidents</button>
+            </div>
+            
+            <!-- Tab Content Areas -->
+            <div id="availableIncidentsTab" class="tab-content active">
+                <h3>Available Incidents - Apply to Help</h3>
+                <div id="availableIncidentsContainer">Loading available incidents...</div>
+            </div>
+            
+            <div id="assignedIncidentsTab" class="tab-content">
+                <h3>My Assigned Incidents</h3>
+                <div id="assignedIncidentsContainer">Loading assigned incidents...</div>
+            </div>
+        </div>
+    `;
+
+    contentArea.innerHTML = html;
+
+    // Add tab switching functionality
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    // Load initial data for both tabs
+    loadAvailableIncidents();
+    loadAssignedIncidents();
+}
+
+/**
+ * Switches between tabs in the incidents section.
+ * @param {string} tabName - The name of the tab to switch to.
+ */
+function switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}IncidentsTab`).classList.add('active');
+}
+
+/**
+ * Loads all available incidents for the volunteer to apply to.
+ */
+function loadAvailableIncidents() {
+    // Get all incidents (not just assigned ones)
+    makeVolunteerAjaxRequest('../volunteer/incidents?type=all', 'GET', null, (err, incidentsData) => {
+        const container = document.getElementById('availableIncidentsContainer');
+        if (err || !incidentsData) {
+            container.innerHTML = `<div class="error-message">Error loading incidents: ${err ? err.message : 'No data returned'}</div>`;
+        } else {
+            renderAvailableIncidentsTable(incidentsData, container);
+        }
+    });
+}
+
+/**
+ * Loads incidents assigned to this volunteer.
+ */
+function loadAssignedIncidents() {
+    // Get only assigned incidents
+    makeVolunteerAjaxRequest('../volunteer/incidents?type=assigned', 'GET', null, (err, incidentsData) => {
+        const container = document.getElementById('assignedIncidentsContainer');
+        if (err || !incidentsData) {
+            container.innerHTML = `<div class="error-message">Error loading assigned incidents: ${err ? err.message : 'No data returned'}</div>`;
+        } else {
+            renderAssignedIncidentsTable(incidentsData, container);
+        }
+    });
+}
+
+/**
+ * Renders a table of available incidents with apply buttons.
+ * @param {Array<object>} incidents - The array of incident objects.
+ * @param {HTMLElement} container - The container to render the table in.
+ */
+function renderAvailableIncidentsTable(incidents, container) {
+    if (!incidents.length) {
+        container.innerHTML = '<p>No incidents available at this time.</p>';
+        return;
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Danger</th>
+                    <th>Location</th>
+                    <th>Start Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    incidents.forEach(incident => {
+        html += `
+            <tr>
+                <td>${incident.incident_id}</td>
+                <td>${incident.incident_type || 'N/A'}</td>
+                <td>${incident.description || 'N/A'}</td>
+                <td><span class="status-badge status-${(incident.status || '').toLowerCase()}">${incident.status || 'N/A'}</span></td>
+                <td><span class="danger-badge danger-${(incident.danger || '').toLowerCase()}">${incident.danger || 'N/A'}</span></td>
+                <td>${incident.municipality || 'N/A'}, ${incident.prefecture || 'N/A'}</td>
+                <td>${incident.start_datetime || 'N/A'}</td>
+                <td>
+                    <button class="btn-small btn-apply" onclick="applyToIncident(${incident.incident_id})">
+                        Apply to Help
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+/**
+ * Renders a table of assigned incidents.
+ * @param {Array<object>} incidents - The array of incident objects.
+ * @param {HTMLElement} container - The container to render the table in.
+ */
+function renderAssignedIncidentsTable(incidents, container) {
+    if (!incidents.length) {
+        container.innerHTML = '<p>You are not currently assigned to any incidents.</p>';
+        return;
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Danger</th>
+                    <th>Location</th>
+                    <th>Start Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    incidents.forEach(incident => {
+        html += `
+            <tr>
+                <td>${incident.incident_id}</td>
+                <td>${incident.incident_type || 'N/A'}</td>
+                <td>${incident.description || 'N/A'}</td>
+                <td><span class="status-badge status-${(incident.status || '').toLowerCase()}">${incident.status || 'N/A'}</span></td>
+                <td><span class="danger-badge danger-${(incident.danger || '').toLowerCase()}">${incident.danger || 'N/A'}</span></td>
+                <td>${incident.municipality || 'N/A'}, ${incident.prefecture || 'N/A'}</td>
+                <td>${incident.start_datetime || 'N/A'}</td>
+                <td>
+                    <button class="btn-small btn-leave" onclick="leaveIncident(${incident.incident_id})">
+                        Leave Assignment
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+/**
+ * Handles volunteer applying to an incident.
+ * @param {number} incidentId - The ID of the incident to apply to.
+ */
+function applyToIncident(incidentId) {
+    if (!confirm('Are you sure you want to apply to help with this incident?')) {
+        return;
+    }
+
+    const requestData = {
+        action: 'apply',
+        incident_id: incidentId
+    };
+
+    // This would need a new endpoint or modify existing volunteer servlet
+    makeVolunteerAjaxRequest('../volunteer/incidents', 'POST', requestData, (err, response) => {
+        if (err) {
+            showMessage('Error applying to incident: ' + err.message, 'error');
+        } else {
+            showMessage('Successfully applied to incident! Admin will review your application.', 'success');
+            // Refresh the assigned incidents tab
+            loadAssignedIncidents();
+        }
+    });
+}
+
+/**
+ * Handles volunteer leaving an incident assignment.
+ * @param {number} incidentId - The ID of the incident to leave.
+ */
+function leaveIncident(incidentId) {
+    if (!confirm('Are you sure you want to leave this incident assignment?')) {
+        return;
+    }
+
+    const requestData = {
+        action: 'leave',
+        incident_id: incidentId
+    };
+
+    makeVolunteerAjaxRequest('../volunteer/incidents', 'POST', requestData, (err, response) => {
+        if (err) {
+            showMessage('Error leaving incident: ' + err.message, 'error');
+        } else {
+            showMessage('Successfully left the incident assignment.', 'success');
+            // Refresh both tabs
+            loadAvailableIncidents();
+            loadAssignedIncidents();
+        }
+    });
+}
+
+/**
+ * Shows a temporary message to the user.
+ * @param {string} message - The message to show.
+ * @param {string} type - The type of message (success, error, info).
+ */
+function showMessage(message, type) {
+    // Remove any existing messages
+    const existingMessage = document.querySelector('.temp-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+
+    // Create new message element
+    const messageElement = document.createElement('div');
+    messageElement.className = `temp-message ${type}-message`;
+    messageElement.textContent = message;
+    messageElement.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+        color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+        border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+        padding: 15px;
+        border-radius: 5px;
+        z-index: 1000;
+        max-width: 300px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    `;
+
+    document.body.appendChild(messageElement);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (messageElement.parentNode) {
+            messageElement.remove();
+        }
+    }, 5000);
 }
 
 /**
@@ -109,7 +390,7 @@ function loadUserProfileSection() {
     contentArea.innerHTML = `<div class="content-section"><h2>My Profile</h2><div id="profileContainer">Loading profile...</div></div>`;
 
     // The endpoint is the universal profile servlet we planned
-    makeVolunteerAjaxRequest('../user/profile', 'GET', null, (err, userData) => {
+    makeVolunteerAjaxRequest('../volunteer/profile', 'GET', null, (err, userData) => {
         const profileContainer = document.getElementById('profileContainer');
         if (err) {
             profileContainer.innerHTML = `<div class="error-message">Error loading profile: ${err.message}</div>`;
@@ -127,23 +408,48 @@ function loadUserProfileSection() {
 function renderUserProfileForm(user) {
     const profileContainer = document.getElementById('profileContainer');
 
-    // Base form fields (same as regular user)
     let html = `
         <form id="userProfileForm" class="user-form">
             <h3>Profile Information</h3>
             <div class="form-row">
-                <div class="form-group"><label>Username:</label><input type="text" value="${user.username}" readonly></div>
-                <div class="form-group"><label>Email:</label><input type="email" value="${user.email}" readonly></div>
+                <div class="form-group"><label>Username:</label><input type="text" value="${user.username || ''}" readonly></div>
+                <div class="form-group"><label>Email:</label><input type="email" value="${user.email || ''}" readonly></div>
             </div>
-            <!-- Other user fields like name, birthdate, etc. -->
             <div class="form-row">
-                <div class="form-group"><label for="firstname">First Name:</label><input type="text" id="firstname" name="firstname" value="${user.firstname}" required></div>
-                <div class="form-group"><label for="lastname">Last Name:</label><input type="text" id="lastname" name="lastname" value="${user.lastname}" required></div>
+                <div class="form-group"><label>Account Type:</label><input type="text" value="${user.user_type || 'volunteer'}" readonly></div>
             </div>
-            <!-- ... other common fields ... -->
+            <div class="form-row">
+                <div class="form-group"><label for="firstname">First Name:</label><input type="text" id="firstname" name="firstname" value="${user.firstname || ''}" required></div>
+                <div class="form-group"><label for="lastname">Last Name:</label><input type="text" id="lastname" name="lastname" value="${user.lastname || ''}" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="birthdate">Birth Date:</label><input type="date" id="birthdate" name="birthdate" value="${user.birthdate || ''}" required></div>
+                <div class="form-group"><label for="gender">Gender:</label><select id="gender" name="gender" required>
+                    <option value="Male"${user.gender === 'Male' ? ' selected' : ''}>Male</option>
+                    <option value="Female"${user.gender === 'Female' ? ' selected' : ''}>Female</option>
+                    <option value="Other"${user.gender === 'Other' ? ' selected' : ''}>Other</option>
+                </select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="afm">AFM:</label><input type="text" id="afm" name="afm" value="${user.afm || ''}" required></div>
+                <div class="form-group"><label for="country">Country:</label><input type="text" id="country" name="country" value="${user.country || ''}" required></div>
+            </div>
+            <div class="form-group"><label for="address">Address:</label><input type="text" id="address" name="address" value="${user.address || ''}" required></div>
+            <div class="form-row">
+                <div class="form-group"><label for="municipality">Municipality:</label><input type="text" id="municipality" name="municipality" value="${user.municipality || ''}" required></div>
+                <div class="form-group"><label for="prefecture">Prefecture:</label><input type="text" id="prefecture" name="prefecture" value="${user.prefecture || ''}" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="job">Job:</label><input type="text" id="job" name="job" value="${user.job || ''}" required></div>
+                <div class="form-group"><label for="telephone">Telephone:</label><input type="tel" id="telephone" name="telephone" value="${user.telephone || ''}" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="lat">Latitude:</label><input type="number" id="lat" name="lat" value="${user.lat || ''}" step="any"></div>
+                <div class="form-group"><label for="lon">Longitude:</label><input type="number" id="lon" name="lon" value="${user.lon || ''}" step="any"></div>
+            </div>
     `;
 
-    // Conditionally add volunteer-specific fields
+    // Add volunteer-specific fields
     if (user.user_type === 'volunteer') {
         html += `
             <h3>Volunteer Information</h3>
@@ -151,19 +457,20 @@ function renderUserProfileForm(user) {
                 <div class="form-group">
                     <label for="volunteer_type">Volunteer Type:</label>
                     <select id="volunteer_type" name="volunteer_type">
-                        <option value="simple" ${user.volunteer_type === 'simple' ? 'selected' : ''}>Simple</option>
-                        <option value="driver" ${user.volunteer_type === 'driver' ? 'selected' : ''}>Driver</option>
+                        <option value="">Select Type</option>
+                        <option value="simple"${user.volunteer_type === 'simple' ? ' selected' : ''}>Simple</option>
+                        <option value="driver"${user.volunteer_type === 'driver' ? ' selected' : ''}>Driver</option>
                     </select>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="height">Height (m):</label>
-                    <input type="number" id="height" name="height" step="0.01" value="${user.height || ''}">
+                    <input type="number" id="height" name="height" step="0.01" value="${user.height || ''}" placeholder="e.g., 1.75">
                 </div>
                 <div class="form-group">
                     <label for="weight">Weight (kg):</label>
-                    <input type="number" id="weight" name="weight" step="0.1" value="${user.weight || ''}">
+                    <input type="number" id="weight" name="weight" step="0.1" value="${user.weight || ''}" placeholder="e.g., 70.5">
                 </div>
             </div>
         `;
@@ -184,26 +491,42 @@ function renderUserProfileForm(user) {
     });
 }
 
-
 /**
  * Submits the updated profile data to the server.
  */
 function submitUserProfileUpdate() {
-    // This is the same as the user's profile update, but we include volunteer fields.
     const formData = {
         firstname: document.getElementById('firstname').value,
         lastname: document.getElementById('lastname').value,
-        // ... include all other common fields
+        birthdate: document.getElementById('birthdate').value,
+        gender: document.getElementById('gender').value,
+        afm: document.getElementById('afm').value,
+        country: document.getElementById('country').value,
+        address: document.getElementById('address').value,
+        municipality: document.getElementById('municipality').value,
+        prefecture: document.getElementById('prefecture').value,
+        job: document.getElementById('job').value,
+        telephone: document.getElementById('telephone').value,
+        lat: document.getElementById('lat').value || null,
+        lon: document.getElementById('lon').value || null
     };
 
     // Add volunteer fields if they exist in the form
-    if (document.getElementById('volunteer_type')) {
-        formData.volunteer_type = document.getElementById('volunteer_type').value;
-        formData.height = document.getElementById('height').value || null;
-        formData.weight = document.getElementById('weight').value || null;
+    const volunteerTypeField = document.getElementById('volunteer_type');
+    const heightField = document.getElementById('height');
+    const weightField = document.getElementById('weight');
+
+    if (volunteerTypeField) {
+        formData.volunteer_type = volunteerTypeField.value || null;
+    }
+    if (heightField) {
+        formData.height = heightField.value || null;
+    }
+    if (weightField) {
+        formData.weight = weightField.value || null;
     }
 
-    makeVolunteerAjaxRequest('../user/profile', 'POST', formData, (err, response) => {
+    makeVolunteerAjaxRequest('../volunteer/profile', 'POST', formData, (err, response) => {
         const messageDiv = document.getElementById('profileUpdateMessage');
         if (err) {
             messageDiv.innerHTML = `<div class="error-message">Error updating profile: ${err.message}</div>`;
@@ -211,62 +534,6 @@ function submitUserProfileUpdate() {
             messageDiv.innerHTML = `<div class="success-message">Profile updated successfully!</div>`;
         }
     });
-}
-
-
-/**
- * Loads the incidents assigned to the volunteer.
- */
-function loadAssignedIncidentsSection() {
-    contentArea.innerHTML = `<div class="content-section"><h2>My Assigned Incidents</h2><div id="incidentsContainer">Loading incidents...</div></div>`;
-
-    makeVolunteerAjaxRequest('../volunteer/incidents', 'GET', null, (err, incidentsData) => {
-        const incidentsContainer = document.getElementById('incidentsContainer');
-        if (err || !incidentsData) {
-            incidentsContainer.innerHTML = `<div class="error-message">Error loading incidents: ${err ? err.message : 'No data returned'}</div>`;
-        } else {
-            renderIncidentsTable(incidentsData, incidentsContainer);
-        }
-    });
-}
-
-
-/**
- * Renders a table of incidents.
- * @param {Array<object>} incidents - The array of incident objects.
- * @param {HTMLElement} container - The container to render the table in.
- */
-function renderIncidentsTable(incidents, container) {
-    if (!incidents.length) {
-        container.innerHTML = '<p>You are not currently assigned to any incidents.</p>';
-        return;
-    }
-
-    let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th><th>Type</th><th>Description</th><th>Status</th><th>Danger</th><th>Address</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    incidents.forEach(incident => {
-        html += `
-            <tr>
-                <td>${incident.incident_id}</td>
-                <td>${incident.incident_type || 'N/A'}</td>
-                <td>${incident.description || 'N/A'}</td>
-                <td>${incident.status || 'N/A'}</td>
-                <td>${incident.danger || 'N/A'}</td>
-                <td>${incident.address || 'N/A'}</td>
-            </tr>
-        `;
-    });
-
-    html += `</tbody></table>`;
-    container.innerHTML = html;
 }
 
 /**
@@ -357,7 +624,6 @@ function handleSendMessage() {
         return;
     }
 
-
     makeVolunteerAjaxRequest('../volunteer/messages', 'POST', messageData, (err, response) => {
         const resultDiv = document.getElementById('sendMessageResult');
         if (err) {
@@ -370,7 +636,6 @@ function handleSendMessage() {
         }
     });
 }
-
 
 // Initialize the panel when the DOM is ready
 document.addEventListener('DOMContentLoaded', initVolunteerPanel);
