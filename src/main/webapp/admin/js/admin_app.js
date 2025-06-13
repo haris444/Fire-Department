@@ -562,80 +562,268 @@ function removeAssignment(volunteerUserId, incidentId) {
 }
 
 // Messages Section
+// Messages Section - Updated implementation
 function loadMessagesSection() {
-    contentArea.innerHTML = '<div class="content-section"><h2>View Messages</h2>' +
-        '<div id="messagesTableContainer">Loading...</div>' +
+    contentArea.innerHTML = '<div class="content-section">' +
+        '<h2>Messages Management</h2>' +
+        '<div id="messagesContainer">Loading messages...</div>' +
+
+        // Send message form with better layout
         '<div class="admin-form">' +
         '<h3>Send New Message</h3>' +
+        '<div class="message-info">' +
+        '<p><strong>Admin Messaging Rules:</strong></p>' +
+        '<ul>' +
+        '<li>Send to <strong>Public</strong>: Visible to all users (incident ID optional)</li>' +
+        '<li>Send to <strong>Volunteers</strong>: Only volunteers assigned to the specified incident (incident ID required)</li>' +
+        '</ul>' +
+        '</div>' +
         '<form id="sendMessageForm">' +
         '<div class="form-group">' +
-        '<label for="messageText">Message:</label>' +
-        '<textarea id="messageText" name="message_text" required></textarea>' +
-        '</div>' +
-        '<div class="form-group">' +
-        '<label for="recipient">Recipient:</label>' +
+        '<label for="recipient">Recipient: *</label>' +
         '<select id="recipient" name="recipient" required>' +
-        '<option value="Public">Public</option>' +
-        '<option value="All Users">All Users</option>' +
+        '<option value="">Select Recipient</option>' +
+        '<option value="public">Public (All Users)</option>' +
+        '<option value="volunteers">Volunteers (Specific Incident)</option>' +
+        '</select>' +
+        '</div>' +
+        '<div class="form-group" id="incidentGroup" style="display: none;">' +
+        '<label for="incidentId">Incident: * <span class="field-note">(Required for volunteer messages)</span></label>' +
+        '<select id="incidentId" name="incident_id">' +
+        '<option value="">Loading incidents...</option>' +
         '</select>' +
         '</div>' +
         '<div class="form-group">' +
-        '<label for="incidentId">Incident ID (optional):</label>' +
-        '<input type="number" id="incidentId" name="incident_id">' +
+        '<label for="messageText">Message: *</label>' +
+        '<textarea id="messageText" name="message_text" required placeholder="Type your message here..." rows="4"></textarea>' +
         '</div>' +
         '<button type="submit">Send Message</button>' +
         '</form>' +
-        '</div></div>';
+        '<div id="sendMessageResult"></div>' +
+        '</div>' +
+        '</div>';
 
-    // Load existing messages
-    makeAdminAjaxRequest('../admin/messages', 'GET', null, function(err, messages) {
-        const messagesContainer = document.getElementById('messagesTableContainer');
+    // Load messages and incidents data
+    makeAdminAjaxRequest('../admin/messages', 'GET', null, function(err, responseData) {
+        const messagesContainer = document.getElementById('messagesContainer');
         if (err) {
             messagesContainer.innerHTML = '<div class="error-message">Error loading messages: ' + err.message + '</div>';
         } else {
-            renderMessagesTable(messages, messagesContainer);
+            // Render messages table
+            renderMessagesTable(responseData.messages, messagesContainer);
+
+            // Populate incidents dropdown
+            populateIncidentsDropdown(responseData.incidents);
+        }
+    });
+
+    // Add recipient change listener to show/hide incident dropdown
+    document.getElementById('recipient').addEventListener('change', function() {
+        const incidentGroup = document.getElementById('incidentGroup');
+        const incidentSelect = document.getElementById('incidentId');
+
+        if (this.value === 'volunteers') {
+            incidentGroup.style.display = 'block';
+            incidentSelect.required = true;
+        } else {
+            incidentGroup.style.display = 'none';
+            incidentSelect.required = false;
+            incidentSelect.value = '';
         }
     });
 
     // Add form submit listener
     document.getElementById('sendMessageForm').addEventListener('submit', function(event) {
         event.preventDefault();
-        const formData = {
-            message_text: document.getElementById('messageText').value,
-            recipient: document.getElementById('recipient').value,
-            incident_id: document.getElementById('incidentId').value || null
-        };
-        sendAdminMessage(formData);
+        handleSendAdminMessage();
+    });
+}
+
+function populateIncidentsDropdown(incidents) {
+    const select = document.getElementById('incidentId');
+    if (!incidents || incidents.length === 0) {
+        select.innerHTML = '<option value="">No incidents available</option>';
+        return;
+    }
+
+    select.innerHTML = '<option value="">Select an incident</option>';
+    incidents.forEach(function(incident) {
+        // Only show active incidents (running or submitted)
+        if (incident.status === 'running' || incident.status === 'submitted') {
+            select.innerHTML += '<option value="' + incident.incident_id + '">' +
+                'ID: ' + incident.incident_id + ' - ' +
+                incident.incident_type + ' (' + incident.status + ') - ' +
+                (incident.municipality || 'Unknown location') +
+                '</option>';
+        }
     });
 }
 
 function renderMessagesTable(messages, container) {
-    let html = '<h3>Recent Messages</h3><table><thead><tr><th>Sender</th><th>Recipient</th><th>Date</th><th>Text</th><th>Incident ID</th></tr></thead><tbody>';
+    if (!messages || messages.length === 0) {
+        container.innerHTML = '<h3>All Messages</h3><p>No messages found.</p>';
+        return;
+    }
+
+    let html = '<h3>All Messages in System (' + messages.length + ' total)</h3>';
+
+    // Add filter buttons
+    html += '<div style="margin-bottom: 20px;">' +
+        '<button class="btn-small" onclick="filterMessages(\'all\')">All Messages</button>' +
+        '<button class="btn-small" onclick="filterMessages(\'admin\')">From Admin</button>' +
+        '<button class="btn-small" onclick="filterMessages(\'public\')">Public Messages</button>' +
+        '<button class="btn-small" onclick="filterMessages(\'volunteers\')">To Volunteers</button>' +
+        '</div>';
+
+    html += '<div style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px;">';
+    html += '<table id="messagesTable">';
+    html += '<thead><tr style="position: sticky; top: 0; background: #34495e; z-index: 10;">';
+    html += '<th>Time</th><th>From</th><th>To</th><th>Message</th><th>Incident</th><th>Type</th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+
+    // Sort messages by date (newest first)
+    messages.sort(function(a, b) {
+        return new Date(b.date_time) - new Date(a.date_time);
+    });
 
     messages.forEach(function(message) {
-        html += '<tr>';
-        html += '<td>' + message.sender + '</td>';
-        html += '<td>' + message.recipient + '</td>';
-        html += '<td>' + message.date_time + '</td>';
-        html += '<td>' + message.message + '</td>';
-        html += '<td>' + (message.incident_id || 'N/A') + '</td>';
+        const messageType = getMessageTypeClass(message);
+        const incidentInfo = message.incident_id ? 'ID: ' + message.incident_id : 'N/A';
+
+        html += '<tr class="message-row ' + messageType + '" data-sender="' + message.sender + '" data-recipient="' + message.recipient + '">';
+        html += '<td style="white-space: nowrap; font-size: 12px;">' + formatDateTime(message.date_time) + '</td>';
+        html += '<td><span class="sender-badge sender-' + message.sender + '">' + message.sender + '</span></td>';
+        html += '<td><span class="recipient-badge recipient-' + message.recipient + '">' + message.recipient + '</span></td>';
+        html += '<td style="max-width: 300px; word-wrap: break-word;">' + escapeHtml(message.message) + '</td>';
+        html += '<td style="text-align: center;">' + incidentInfo + '</td>';
+        html += '<td><span class="message-type-badge ' + messageType + '">' + getMessageTypeLabel(messageType) + '</span></td>';
         html += '</tr>';
     });
 
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     container.innerHTML = html;
 }
 
-function sendAdminMessage(formDataJson) {
-    makeAdminAjaxRequest('../admin/messages', 'POST', formDataJson, function(err, response) {
+function getMessageTypeClass(message) {
+    if (message.sender === 'admin' && message.recipient === 'public') return 'admin-public';
+    if (message.sender === 'admin' && message.recipient === 'volunteers') return 'admin-volunteers';
+    if (message.sender === 'admin') return 'admin-other';
+    if (message.recipient === 'public') return 'public-message';
+    if (message.recipient === 'volunteers') return 'volunteer-group';
+    return 'regular';
+}
+
+function getMessageTypeLabel(messageType) {
+    switch (messageType) {
+        case 'admin-public': return 'Admin → Public';
+        case 'admin-volunteers': return 'Admin → Volunteers';
+        case 'admin-other': return 'Admin Message';
+        case 'public-message': return 'Public';
+        case 'volunteer-group': return 'Volunteer Group';
+        default: return 'Regular';
+    }
+}
+
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return 'N/A';
+    try {
+        const date = new Date(dateTimeStr);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch (e) {
+        return dateTimeStr;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function filterMessages(filter) {
+    const rows = document.querySelectorAll('.message-row');
+
+    rows.forEach(function(row) {
+        let show = false;
+
+        switch (filter) {
+            case 'all':
+                show = true;
+                break;
+            case 'admin':
+                show = row.dataset.sender === 'admin';
+                break;
+            case 'public':
+                show = row.dataset.recipient === 'public';
+                break;
+            case 'volunteers':
+                show = row.dataset.recipient === 'volunteers';
+                break;
+        }
+
+        row.style.display = show ? '' : 'none';
+    });
+
+    // Update active filter button
+    document.querySelectorAll('.btn-small').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function handleSendAdminMessage() {
+    const recipient = document.getElementById('recipient').value;
+    const messageText = document.getElementById('messageText').value;
+    const incidentId = document.getElementById('incidentId').value;
+
+    // Validation
+    if (!recipient) {
+        showMessageResult('Please select a recipient.', 'error');
+        return;
+    }
+
+    if (!messageText.trim()) {
+        showMessageResult('Please enter a message.', 'error');
+        return;
+    }
+
+    if (recipient === 'volunteers' && !incidentId) {
+        showMessageResult('Please select an incident when sending to volunteers.', 'error');
+        return;
+    }
+
+    const messageData = {
+        recipient: recipient,
+        message_text: messageText.trim()
+    };
+
+    // Add incident_id if selected
+    if (incidentId) {
+        messageData.incident_id = parseInt(incidentId);
+    }
+
+    makeAdminAjaxRequest('../admin/messages', 'POST', messageData, function(err, response) {
         if (err) {
-            contentArea.insertAdjacentHTML('afterbegin', '<div class="error-message">Error sending message: ' + err.message + '</div>');
+            showMessageResult('Error sending message: ' + err.message, 'error');
         } else {
+            showMessageResult('Message sent successfully!', 'success');
             document.getElementById('sendMessageForm').reset();
+            document.getElementById('incidentGroup').style.display = 'none';
+            // Refresh messages view
             loadMessagesSection();
-            contentArea.insertAdjacentHTML('afterbegin', '<div class="success-message">Message sent successfully!</div>');
         }
     });
+}
+
+function showMessageResult(message, type) {
+    const resultDiv = document.getElementById('sendMessageResult');
+    resultDiv.innerHTML = '<div class="' + type + '-message">' + message + '</div>';
+
+    // Auto-clear after 5 seconds
+    setTimeout(function() {
+        if (resultDiv) {
+            resultDiv.innerHTML = '';
+        }
+    }, 5000);
 }
 
 // Initialize when DOM is loaded
