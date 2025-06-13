@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd">
+<web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+         http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd">
 
     <!-- Utility Servlets -->
     <servlet>
@@ -19,25 +22,27 @@
         <servlet-class>servlets.NewServlet</servlet-class>
     </servlet>
 
-    <!-- UPDATED: Consolidated Login Servlet (handles both admin and user login) -->
+    <!-- Authentication Servlets -->
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>servlets.LoginServlet</servlet-class>
     </servlet>
-
-    <!-- UPDATED: Consolidated Logout Servlet (handles both admin and user logout) -->
     <servlet>
         <servlet-name>LogoutServlet</servlet-name>
         <servlet-class>servlets.LogoutServlet</servlet-class>
     </servlet>
-
-    <!-- Unified Registration Servlet (handles both user and volunteer registration) -->
     <servlet>
         <servlet-name>UnifiedRegisterServlet</servlet-name>
         <servlet-class>servlets.UnifiedRegisterServlet</servlet-class>
     </servlet>
 
-    <!-- Admin Servlet Declarations -->
+    <!-- Universal Profile Servlet (ADDED) -->
+    <servlet>
+        <servlet-name>ProfileServlet</servlet-name>
+        <servlet-class>servlets.ProfileServlet</servlet-class>
+    </servlet>
+
+    <!-- Admin Servlets -->
     <servlet>
         <servlet-name>AdminIncidentsServlet</servlet-name>
         <servlet-class>servlets.admin.AdminIncidentsServlet</servlet-class>
@@ -55,21 +60,7 @@
         <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
     </servlet>
 
-    <!-- Volunteer Servlet Declarations -->
-    <servlet>
-        <servlet-name>VolunteerIncidentServlet</servlet-name>
-        <servlet-class>servlets.volunteer.VolunteerIncidentServlet</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>VolunteerMessageServlet</servlet-name>
-        <servlet-class>servlets.volunteer.VolunteerMessageServlet</servlet-class>
-    </servlet>
-
-    <!-- UPDATED: User Servlet Declarations (now using unified profile servlet) -->
-    <servlet>
-        <servlet-name>UserProfileServlet</servlet-name>
-        <servlet-class>servlets.user.UserProfileServlet</servlet-class>
-    </servlet>
+    <!-- User Servlets -->
     <servlet>
         <servlet-name>UserIncidentServlet</servlet-name>
         <servlet-class>servlets.user.UserIncidentServlet</servlet-class>
@@ -79,11 +70,19 @@
         <servlet-class>servlets.user.UserMessageServlet</servlet-class>
     </servlet>
 
-    <!-- Utility Servlet Mappings -->
-    <servlet-mapping>
-        <servlet-name>NewServlet</servlet-name>
-        <url-pattern>/NewServlet</url-pattern>
-    </servlet-mapping>
+    <!-- Volunteer Servlets -->
+    <servlet>
+        <servlet-name>VolunteerIncidentServlet</servlet-name>
+        <servlet-class>servlets.volunteer.VolunteerIncidentServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VolunteerMessageServlet</servlet-name>
+        <servlet-class>servlets.volunteer.VolunteerMessageServlet</servlet-class>
+    </servlet>
+
+    <!-- SERVLET MAPPINGS -->
+
+    <!-- Utility Mappings -->
     <servlet-mapping>
         <servlet-name>GetUser</servlet-name>
         <url-pattern>/GetUser</url-pattern>
@@ -96,30 +95,36 @@
         <servlet-name>DeleteDB</servlet-name>
         <url-pattern>/DeleteDB</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>NewServlet</servlet-name>
+        <url-pattern>/NewServlet</url-pattern>
+    </servlet-mapping>
 
-    <!-- UPDATED: Consolidated Login Servlet Mapping (single endpoint for all logins) -->
+    <!-- Authentication Mappings -->
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
     </servlet-mapping>
-
-    <!-- UPDATED: Consolidated Logout Servlet Mappings (handles both admin and user) -->
     <servlet-mapping>
         <servlet-name>LogoutServlet</servlet-name>
-        <url-pattern>/admin/logout</url-pattern>
+        <url-pattern>/logout</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>LogoutServlet</servlet-name>
-        <url-pattern>/user/logout</url-pattern>
-    </servlet-mapping>
-
-    <!-- Unified Registration Servlet Mapping -->
     <servlet-mapping>
         <servlet-name>UnifiedRegisterServlet</servlet-name>
         <url-pattern>/register</url-pattern>
     </servlet-mapping>
 
-    <!-- Admin Servlet Mappings -->
+    <!-- Universal Profile Mappings (FIXED) -->
+    <servlet-mapping>
+        <servlet-name>ProfileServlet</servlet-name>
+        <url-pattern>/user/profile</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProfileServlet</servlet-name>
+        <url-pattern>/volunteer/profile</url-pattern>
+    </servlet-mapping>
+
+    <!-- Admin Mappings -->
     <servlet-mapping>
         <servlet-name>AdminIncidentsServlet</servlet-name>
         <url-pattern>/admin/incidents</url-pattern>
@@ -137,11 +142,7 @@
         <url-pattern>/admin/statistics</url-pattern>
     </servlet-mapping>
 
-    <!-- UPDATED: User Servlet Mappings (unified profile servlet handles both users and volunteers) -->
-    <servlet-mapping>
-        <servlet-name>UserProfileServlet</servlet-name>
-        <url-pattern>/user/profile</url-pattern>
-    </servlet-mapping>
+    <!-- User Mappings -->
     <servlet-mapping>
         <servlet-name>UserIncidentServlet</servlet-name>
         <url-pattern>/user/incidents</url-pattern>
@@ -151,7 +152,7 @@
         <url-pattern>/user/messages</url-pattern>
     </servlet-mapping>
 
-    <!-- Volunteer Servlet Mappings -->
+    <!-- Volunteer Mappings -->
     <servlet-mapping>
         <servlet-name>VolunteerIncidentServlet</servlet-name>
         <url-pattern>/volunteer/incidents</url-pattern>

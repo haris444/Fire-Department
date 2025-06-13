@@ -43,7 +43,8 @@ public class ProfileServlet extends BaseServlet {
         try {
             // Get logged in username from session
             HttpSession session = request.getSession(false);
-            String loggedInUsername = (String) session.getAttribute("loggedInUserUsername");
+            // FIX: Corrected the session attribute key from "loggedInUserUsername" to "loggedInUsername"
+            String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
             // Fetch complete user profile from consolidated users table
             EditUsersTable editUsersTable = new EditUsersTable();
@@ -88,7 +89,7 @@ public class ProfileServlet extends BaseServlet {
                 // User not found in database
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"User profile not found\"}");
+                out.print("{\"success\": false, \"message\": \"User profile not found for username: " + loggedInUsername + "\"}");
                 out.flush();
             }
 
@@ -125,7 +126,8 @@ public class ProfileServlet extends BaseServlet {
         try {
             // Get logged in username from session
             HttpSession session = request.getSession(false);
-            String loggedInUsername = (String) session.getAttribute("loggedInUserUsername");
+            // FIX: Corrected the session attribute key from "loggedInUserUsername" to "loggedInUsername"
+            String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
             // Read JSON payload from request body
             StringBuilder jsonBuffer = new StringBuilder();
@@ -134,8 +136,6 @@ public class ProfileServlet extends BaseServlet {
             while ((line = reader.readLine()) != null) {
                 jsonBuffer.append(line);
             }
-
-            System.out.println("Received profile update JSON: " + jsonBuffer.toString());
 
             // Parse JSON to User object (includes all fields: basic + optional volunteer fields)
             Gson gson = new Gson();
@@ -183,18 +183,26 @@ public class ProfileServlet extends BaseServlet {
      * @throws IOException if response writing fails
      */
     private boolean isUserAuthenticated(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check for REGULAR_USER role
-        if (checkSession(request, response, "userRole", "REGULAR_USER")) {
+        HttpSession session = request.getSession(false);
+
+        if (session == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            PrintWriter out = response.getWriter();
+            out.print("{\"success\": false, \"message\": \"No active session. Please login.\"}");
+            out.flush();
+            return false;
+        }
+
+        String userRole = (String) session.getAttribute("userRole");
+
+        if ("REGULAR_USER".equals(userRole) || "VOLUNTEER".equals(userRole)) {
             return true;
         }
 
-        // Check for VOLUNTEER role
-        if (checkSession(request, response, "userRole", "VOLUNTEER")) {
-            return true;
-        }
-
-        // If neither role check passed, user is not authenticated
-        // checkSession already sent the unauthorized response
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        PrintWriter out = response.getWriter();
+        out.print("{\"success\": false, \"message\": \"Access denied. Insufficient privileges.\"}");
+        out.flush();
         return false;
     }
 }
