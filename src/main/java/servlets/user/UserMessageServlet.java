@@ -5,14 +5,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import com.google.gson.Gson;
 import database.tables.EditMessagesTable;
+import database.tables.EditIncidentsTable;
 import mainClasses.Message;
+import mainClasses.Incident;
 import servlets.BaseServlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 public class UserMessageServlet extends BaseServlet {
 
@@ -27,31 +27,23 @@ public class UserMessageServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Get logged in username from session
-            HttpSession session = request.getSession(false);
-            String loggedInUsername = (String) session.getAttribute("loggedInUserUsername");
-
-            // Get optional incident_id parameter
-            String incidentId = request.getParameter("incident_id");
-
             EditMessagesTable editMessagesTable = new EditMessagesTable();
+            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
 
-            // Get messages for user (messages to them and public messages)
-            ArrayList<Message> messagesForUser = editMessagesTable.getMessagesByRecipient(loggedInUsername);
-            messagesForUser.addAll(editMessagesTable.getMessagesByRecipient("public"));
+            // Get only public messages for regular users
+            ArrayList<Message> publicMessages = editMessagesTable.getMessagesByRecipient("public");
 
-            // Get messages sent by user
-            ArrayList<Message> messagesSentByUser = editMessagesTable.getMessagesSentByUser(loggedInUsername);
+            // Get all incidents for the incident dropdown (when sending to admin)
+            ArrayList<Incident> incidents = editIncidentsTable.databaseToIncidents();
 
-            // Combine results and remove duplicates (if any)
-            Set<Integer> messageIds = new HashSet<>();
-            ArrayList<Message> allMessages = new ArrayList<>();
+            // Create response object with both messages and incidents
+            UserMessagesResponse responseObj = new UserMessagesResponse();
+            responseObj.messages = publicMessages;
+            responseObj.incidents = incidents;
 
-            allMessages.addAll(messagesForUser);
-
-            // Convert to JSON array
+            // Convert to JSON
             Gson gson = new Gson();
-            String jsonResponse = gson.toJson(allMessages);
+            String jsonResponse = gson.toJson(responseObj);
 
             // Send response
             response.setStatus(HttpServletResponse.SC_OK);
@@ -81,7 +73,7 @@ public class UserMessageServlet extends BaseServlet {
         try {
             // Get logged in username from session (this is the sender)
             HttpSession session = request.getSession(false);
-            String loggedInUsername = (String) session.getAttribute("loggedInUserUsername");
+            String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
             // Read JSON payload
             StringBuilder jsonBuffer = new StringBuilder();
@@ -100,7 +92,7 @@ public class UserMessageServlet extends BaseServlet {
                     (!messageRequest.recipient.equals("admin") && !messageRequest.recipient.equals("public"))) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"Invalid recipient. Must be 'admin' or 'public'\"}");
+                out.print("{\"success\": false, \"message\": \"Invalid recipient. Users can send to 'admin' or 'public' only.\"}");
                 out.flush();
                 return;
             }
@@ -114,6 +106,17 @@ public class UserMessageServlet extends BaseServlet {
                 return;
             }
 
+            // For messages to admin, incident_id is required
+            if ("admin".equals(messageRequest.recipient)) {
+                if (messageRequest.incident_id == null || messageRequest.incident_id <= 0) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    PrintWriter out = response.getWriter();
+                    out.print("{\"success\": false, \"message\": \"Incident ID is required when sending messages to admin.\"}");
+                    out.flush();
+                    return;
+                }
+            }
+
             // Create Message object
             Message newMessage = new Message();
             newMessage.setSender(loggedInUsername);
@@ -124,8 +127,8 @@ public class UserMessageServlet extends BaseServlet {
             if (messageRequest.incident_id != null && messageRequest.incident_id > 0) {
                 newMessage.setIncident_id(messageRequest.incident_id);
             } else {
-                // Set a default incident_id if required by database (you might need to adjust this)
-                newMessage.setIncident_id(1); // Assuming 1 is a valid incident_id or adjust as needed
+                // For public messages, set a default incident_id or use 1
+                newMessage.setIncident_id(1);
             }
 
             // Set current date/time
@@ -138,7 +141,7 @@ public class UserMessageServlet extends BaseServlet {
             // Send success response
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
-            out.print("{\"success\": true, \"message\": \"Message sent\"}");
+            out.print("{\"success\": true, \"message\": \"Message sent successfully\"}");
             out.flush();
 
         } catch (Exception e) {
@@ -157,9 +160,9 @@ public class UserMessageServlet extends BaseServlet {
         Integer incident_id;
     }
 
-    // Inner class for response structure
-    private static class MessageResponse {
-        ArrayList<Message> messagesSentByUser;
-        ArrayList<Message> messagesForUser;
+    // Inner class for response structure that includes both messages and incidents
+    private static class UserMessagesResponse {
+        ArrayList<Message> messages;
+        ArrayList<Incident> incidents;
     }
 }

@@ -529,3 +529,214 @@ table tr:hover {
         font-size: 14px;
     }
 }
+
+/* Add these styles to your existing src/main/webapp/user/css/user_styles.css file */
+
+/* Message-specific styles for user panel */
+.message-info {
+    background-color: #e3f2fd;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 4px solid #2196f3;
+}
+
+.message-info ul {
+    margin: 10px 0 0 20px;
+    color: #1565c0;
+}
+
+.message-info ul li {
+    margin-bottom: 5px;
+}
+
+.field-note {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+.messages-info {
+    background-color: #fff3cd;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    font-size: 14px;
+}
+
+/* Message type badges for users */
+.message-type-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.message-type-badge.from-admin {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.message-type-badge.from-volunteer {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.message-type-badge.from-user {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+
+/* Message item styling based on sender type */
+.message-item.from-admin {
+    border-left-color: #f44336;
+    background-color: #fff8f8;
+}
+
+.message-item.from-volunteer {
+    border-left-color: #4caf50;
+    background-color: #f8fff8;
+}
+
+.message-item.from-user {
+    border-left-color: #2196f3;
+    background-color: #f3f8ff;
+}
+
+/* Enhanced message compose area */
+.message-compose {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    margin: 25px 0;
+    border: 2px solid #e9ecef;
+}
+
+.message-compose h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 8px;
+}
+
+/* Message list styling */
+.message-list {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #fafafa;
+    margin-bottom: 20px;
+}
+
+.message-list h3 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 8px;
+}
+
+.message-item {
+    background-color: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border-left: 4px solid #e9ecef;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.message-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.message-sender, .message-recipient, .message-incident {
+    font-weight: 600;
+}
+
+.message-content {
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.message-time {
+    font-size: 12px;
+    color: #999;
+    text-align: right;
+}
+
+/* Form enhancements */
+.form-group select:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Send button styling */
+.btn-send {
+    background: linear-gradient(135deg, #27ae60, #229954);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-send:hover {
+    background: linear-gradient(135deg, #229954, #1e8449);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+}
+
+/* Responsive design for messages */
+@media (max-width: 768px) {
+    .message-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .message-compose {
+        padding: 15px;
+    }
+
+    .message-list {
+        max-height: 400px;
+        padding: 10px;
+    }
+
+    .message-item {
+        padding: 12px;
+    }
+
+    .message-type-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+}

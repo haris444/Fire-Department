@@ -442,31 +442,41 @@ function renderIncidentsTable(incidents) {
     incidentsContainer.innerHTML = html;
 }
 
-// Messages Section
+// Messages Section - Updated implementation for regular users
 function loadMessagesSection() {
     let html = '<div class="content-section">';
     html += '<h2>Messages</h2>';
     html += '<div id="messagesContainer">Loading messages...</div>';
 
-    // Send message form
+    // Send message form with user-specific rules
     html += '<div class="message-compose">';
     html += '<h3>Send New Message</h3>';
+    html += '<div class="message-info">';
+    html += '<p><strong>User Messaging Rules:</strong></p>';
+    html += '<ul>';
+    html += '<li>Send <strong>Public</strong> messages: Visible to all users</li>';
+    html += '<li>Send to <strong>Admin</strong>: Must specify an incident ID (for incident-related communications)</li>';
+    html += '<li>You can only see public messages from others</li>';
+    html += '</ul>';
+    html += '</div>';
     html += '<form id="sendMessageForm">';
     html += '<div class="form-group">';
-    html += '<label for="recipient">Recipient:</label>';
+    html += '<label for="recipient">Recipient: *</label>';
     html += '<select id="recipient" name="recipient" required>';
     html += '<option value="">Select Recipient</option>';
-    html += '<option value="admin">Admin</option>';
-    html += '<option value="public">Public</option>';
+    html += '<option value="public">Public (All Users)</option>';
+    html += '<option value="admin">Admin (About Incident)</option>';
+    html += '</select>';
+    html += '</div>';
+    html += '<div class="form-group" id="incidentGroup" style="display: none;">';
+    html += '<label for="incident_id">Incident: * <span class="field-note">(Required when messaging admin)</span></label>';
+    html += '<select id="incident_id" name="incident_id">';
+    html += '<option value="">Loading incidents...</option>';
     html += '</select>';
     html += '</div>';
     html += '<div class="form-group">';
-    html += '<label for="message_text">Message:</label>';
+    html += '<label for="message_text">Message: *</label>';
     html += '<textarea id="message_text" name="message_text" required placeholder="Type your message here..."></textarea>';
-    html += '</div>';
-    html += '<div class="form-group">';
-    html += '<label for="incident_id">Incident ID (optional):</label>';
-    html += '<input type="number" id="incident_id" name="incident_id" placeholder="Enter incident ID if relevant">';
     html += '</div>';
     html += '<button type="submit" class="btn-send">Send Message</button>';
     html += '</form>';
@@ -476,62 +486,188 @@ function loadMessagesSection() {
 
     contentArea.innerHTML = html;
 
-    // Load messages
-    makeUserAjaxRequest('../user/messages', 'GET', null, function(err, allMessages) {
+    // Load messages and incidents
+    makeUserAjaxRequest('../user/messages', 'GET', null, function(err, responseData) {
         const messagesContainer = document.getElementById('messagesContainer');
         if (err) {
             messagesContainer.innerHTML = '<div class="error-message">Error loading messages: ' + err.message + '</div>';
         } else {
-            renderMessages(allMessages);
+            // Render public messages only
+            renderUserMessages(responseData.messages);
+
+            // Populate incidents dropdown for admin messages
+            populateUserIncidentsDropdown(responseData.incidents);
+        }
+    });
+
+    // Add recipient change listener to show/hide incident dropdown
+    document.getElementById('recipient').addEventListener('change', function() {
+        const incidentGroup = document.getElementById('incidentGroup');
+        const incidentSelect = document.getElementById('incident_id');
+
+        if (this.value === 'admin') {
+            incidentGroup.style.display = 'block';
+            incidentSelect.required = true;
+        } else {
+            incidentGroup.style.display = 'none';
+            incidentSelect.required = false;
+            incidentSelect.value = '';
         }
     });
 
     // Add send message form listener
     document.getElementById('sendMessageForm').addEventListener('submit', function(event) {
         event.preventDefault();
-        handleSendMessage();
+        handleUserSendMessage();
     });
 }
 
-function renderMessages(messagesData) {
+function populateUserIncidentsDropdown(incidents) {
+    const select = document.getElementById('incident_id');
+    if (!incidents || incidents.length === 0) {
+        select.innerHTML = '<option value="">No incidents available</option>';
+        return;
+    }
+
+    select.innerHTML = '<option value="">Select an incident</option>';
+    incidents.forEach(function(incident) {
+        // Show all incidents for user reference
+        select.innerHTML += '<option value="' + incident.incident_id + '">' +
+            'ID: ' + incident.incident_id + ' - ' +
+            incident.incident_type + ' (' + incident.status + ') - ' +
+            (incident.municipality || 'Unknown location') +
+            '</option>';
+    });
+}
+
+function renderUserMessages(messages) {
     const messagesContainer = document.getElementById('messagesContainer');
 
     let html = '<div class="message-list">';
+    html += '<h3>Public Messages</h3>';
+    html += '<div class="messages-info">You can see all public messages from admins, volunteers, and other users.</div>';
 
-    if (messagesData && messagesData.length > 0) {
-        messagesData.forEach(function(message) {
-            html += '<div class="message-item">';
-            html += '<div class="message-header">From: ' + message.sender + ' | To: ' + message.recipient + ' | Incident: ' + (message.incident_id || 'N/A') + '</div>';
-            html += '<div class="message-content">' + message.message + '</div>';
-            html += '<div class="message-time">' + message.date_time + '</div>';
+    if (messages && messages.length > 0) {
+        // Sort messages by date (newest first)
+        messages.sort(function(a, b) {
+            return new Date(b.date_time) - new Date(a.date_time);
+        });
+
+        messages.forEach(function(message) {
+            const messageType = getUserMessageType(message);
+            html += '<div class="message-item ' + messageType + '">';
+            html += '<div class="message-header">';
+            html += '<span class="message-sender">From: ' + message.sender + '</span>';
+            html += '<span class="message-recipient">To: ' + message.recipient + '</span>';
+            if (message.incident_id && message.incident_id > 1) {
+                html += '<span class="message-incident">Incident: ' + message.incident_id + '</span>';
+            }
+            html += '<span class="message-type-badge ' + messageType + '">' + getUserMessageTypeLabel(messageType) + '</span>';
+            html += '</div>';
+            html += '<div class="message-content">' + escapeHtml(message.message) + '</div>';
+            html += '<div class="message-time">' + formatDateTime(message.date_time) + '</div>';
             html += '</div>';
         });
     } else {
-        html += '<p>No messages available.</p>';
+        html += '<p>No public messages available.</p>';
     }
 
     html += '</div>';
     messagesContainer.innerHTML = html;
 }
 
-function handleSendMessage() {
+function getUserMessageType(message) {
+    if (message.sender === 'admin') return 'from-admin';
+    if (message.sender.includes('volunteer') || isKnownVolunteer(message.sender)) return 'from-volunteer';
+    return 'from-user';
+}
+
+function getUserMessageTypeLabel(messageType) {
+    switch (messageType) {
+        case 'from-admin': return 'From Admin';
+        case 'from-volunteer': return 'From Volunteer';
+        case 'from-user': return 'From User';
+        default: return 'Public';
+    }
+}
+
+function isKnownVolunteer(sender) {
+    // Simple check - in a real app you might want to track this differently
+    // For now, we'll assume volunteer usernames contain certain patterns
+    const volunteerPatterns = ['volunteer', 'vol_', 'raphael', 'nick', 'mary', 'papas'];
+    return volunteerPatterns.some(pattern => sender.toLowerCase().includes(pattern.toLowerCase()));
+}
+
+function handleUserSendMessage() {
+    const recipient = document.getElementById('recipient').value;
+    const messageText = document.getElementById('message_text').value;
+    const incidentId = document.getElementById('incident_id').value;
+
+    // Validation
+    if (!recipient) {
+        showUserMessageResult('Please select a recipient.', 'error');
+        return;
+    }
+
+    if (!messageText.trim()) {
+        showUserMessageResult('Please enter a message.', 'error');
+        return;
+    }
+
+    if (recipient === 'admin' && !incidentId) {
+        showUserMessageResult('Please select an incident when messaging admin.', 'error');
+        return;
+    }
+
     const messageData = {
-        recipient: document.getElementById('recipient').value,
-        message_text: document.getElementById('message_text').value,
-        incident_id: document.getElementById('incident_id').value || null
+        recipient: recipient,
+        message_text: messageText.trim()
     };
 
+    // Add incident_id if provided
+    if (incidentId) {
+        messageData.incident_id = parseInt(incidentId);
+    }
+
     makeUserAjaxRequest('../user/messages', 'POST', messageData, function(err, response) {
-        const resultDiv = document.getElementById('sendMessageResult');
         if (err) {
-            resultDiv.innerHTML = '<div class="error-message">Error sending message: ' + err.message + '</div>';
+            showUserMessageResult('Error sending message: ' + err.message, 'error');
         } else {
-            resultDiv.innerHTML = '<div class="success-message">Message sent successfully!</div>';
+            showUserMessageResult('Message sent successfully!', 'success');
             document.getElementById('sendMessageForm').reset();
+            document.getElementById('incidentGroup').style.display = 'none';
             // Refresh messages
             loadMessagesSection();
         }
     });
+}
+
+function showUserMessageResult(message, type) {
+    const resultDiv = document.getElementById('sendMessageResult');
+    resultDiv.innerHTML = '<div class="' + type + '-message">' + message + '</div>';
+
+    // Auto-clear after 5 seconds
+    setTimeout(function() {
+        if (resultDiv) {
+            resultDiv.innerHTML = '';
+        }
+    }, 5000);
+}
+
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return 'N/A';
+    try {
+        const date = new Date(dateTimeStr);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch (e) {
+        return dateTimeStr;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Initialize when DOM is loaded
