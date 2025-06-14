@@ -302,6 +302,7 @@ function submitUserProfileUpdate() {
 }
 
 // Submit Incident Section
+// Submit Incident Section
 function loadSubmitIncidentSection() {
     let html = '<div class="content-section">';
     html += '<h2>Submit New Incident</h2>';
@@ -312,8 +313,9 @@ function loadSubmitIncidentSection() {
     html += '<select id="incident_type" name="incident_type" required>';
     html += '<option value="">Select Type</option>';
     html += '<option value="fire">Fire</option>';
-    html += '<option value="accident">Accident</option>';
-    html += '<option value="medical">Medical Emergency</option>';
+    html += '<option value="crash">Accident</option>';
+    html += '<option value="accident">Medical Emergency</option>';
+    html += '<option value="rescue">Rescue</option>';
     html += '<option value="other">Other</option>';
     html += '</select>';
     html += '</div>';

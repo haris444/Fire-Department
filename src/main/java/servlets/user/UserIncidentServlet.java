@@ -63,7 +63,7 @@ public class UserIncidentServlet extends BaseServlet {
         try {
             // Get logged in username from session
             HttpSession session = request.getSession(false);
-            String loggedInUsername = (String) session.getAttribute("loggedInUserUsername");
+            String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
             // Get user's phone number from profile
             EditUsersTable editUsersTable = new EditUsersTable();
