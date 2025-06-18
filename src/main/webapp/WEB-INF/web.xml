@@ -53,17 +53,7 @@
         <servlet-class>servlets.user.UserMessageServlet</servlet-class>
     </servlet>
 
-    <!-- Volunteer Servlets -->
-    <servlet>
-        <servlet-name>VolunteerIncidentServlet</servlet-name>
-        <servlet-class>servlets.volunteer.VolunteerIncidentServlet</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>VolunteerMessageServlet</servlet-name>
-        <servlet-class>servlets.volunteer.VolunteerMessageServlet</servlet-class>
-    </servlet>
 
-    <!-- SERVLET MAPPINGS -->
 
 
 
@@ -119,15 +109,7 @@
         <url-pattern>/user/messages</url-pattern>
     </servlet-mapping>
 
-    <!-- Volunteer Mappings -->
-    <servlet-mapping>
-        <servlet-name>VolunteerIncidentServlet</servlet-name>
-        <url-pattern>/volunteer/incidents</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>VolunteerMessageServlet</servlet-name>
-        <url-pattern>/volunteer/messages</url-pattern>
-    </servlet-mapping>
+
 
     <!-- Session Configuration -->
     <session-config>
@@ -135,16 +117,8 @@
     </session-config>
 
 
-    <!-- Guest Servlet -->
-    <servlet>
-        <servlet-name>GuestIncidentServlet</servlet-name>
-        <servlet-class>servlets.GuestIncidentServlet</servlet-class>
-    </servlet>
 
-    <servlet-mapping>
-        <servlet-name>GuestIncidentServlet</servlet-name>
-        <url-pattern>/guest/incident</url-pattern>
-    </servlet-mapping>
+
 
     <servlet>
         <servlet-name>AdminAssignmentsServlet</servlet-name>
