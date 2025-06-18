@@ -43,16 +43,6 @@
         <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
     </servlet>
 
-    <!-- User Servlets -->
-    <servlet>
-        <servlet-name>UserIncidentServlet</servlet-name>
-        <servlet-class>servlets.user.UserIncidentServlet</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>UserMessageServlet</servlet-name>
-        <servlet-class>servlets.user.UserMessageServlet</servlet-class>
-    </servlet>
-
 
 
 
@@ -98,17 +88,6 @@
         <servlet-name>AdminStatisticsServlet</servlet-name>
         <url-pattern>/admin/statistics</url-pattern>
     </servlet-mapping>
-
-    <!-- User Mappings -->
-    <servlet-mapping>
-        <servlet-name>UserIncidentServlet</servlet-name>
-        <url-pattern>/user/incidents</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>UserMessageServlet</servlet-name>
-        <url-pattern>/user/messages</url-pattern>
-    </servlet-mapping>
-
 
 
     <!-- Session Configuration -->

@@ -13,15 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
 import java.util.*;
-/**
- * Universal Profile Servlet for handling user profile operations.
- * This servlet serves all user types (users and volunteers) from the consolidated users table.
- * It provides endpoints for both fetching and updating complete user profile data.
- *
- * Security: Both GET and POST operations require valid user session with REGULAR_USER or VOLUNTEER role.
- *
- * @author Mike
- */
+
 public class ProfileServlet extends BaseServlet {
 
     /**
@@ -46,10 +38,10 @@ public class ProfileServlet extends BaseServlet {
         try {
             // Get logged in username from session
             HttpSession session = request.getSession(false);
-            // FIX: Corrected the session attribute key from "loggedInUserUsername" to "loggedInUsername"
+
             String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
-            // Fetch complete user profile from consolidated users table
+
             EditUsersTable editUsersTable = new EditUsersTable();
             User user = editUsersTable.getUserByUsernameFromDB(loggedInUsername);
 
@@ -58,7 +50,7 @@ public class ProfileServlet extends BaseServlet {
                 // Password is excluded for security by not including it in the serialization
                 Gson gson = new Gson();
 
-                // Create a copy without password for security
+
                 User userForResponse = new User();
                 userForResponse.setUser_id(user.getUser_id());
                 userForResponse.setUsername(user.getUsername());
