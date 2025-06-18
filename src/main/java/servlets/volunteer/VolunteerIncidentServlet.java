@@ -133,7 +133,7 @@ public class VolunteerIncidentServlet extends BaseServlet {
 
             } else {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print("{\"success\": false, \"message\": \"Invalid action. Use 'apply' or 'leave'\"}");
+                out.print("{\"sccess\": false, \"message\": \"Invalid action. Use 'apply' or 'leave'\"}");
             }
 
         } catch (Exception e) {
