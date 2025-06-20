@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Response System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 2px solid white;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .btn-emergency {
+            background: rgba(231, 76, 60, 0.8);
+            border-color: #e74c3c;
+        }
+        .btn-emergency:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .btn {
+                display: block;
+                margin: 15px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🚨 Emergency Response System</h1>
+    <p>Access emergency services, report incidents, and stay informed about active emergencies in your area.</p>
+
+    <a href="guest_panel.html" class="btn btn-emergency">🚨 Emergency Services (Guest Access)</a>
+    <a href="user/login.html" class="btn">👤 User Login</a>
+    <a href="register.html" class="btn">📝 Register Account</a>
+    <a href="admin/admin_login.html" class="btn">⚙️ Admin Login</a>
+</div>
+
+<script>
+    // Auto-redirect to guest panel after 5 seconds if no interaction
+    let redirectTimer = setTimeout(() => {
+        window.location.href = 'guest_panel.html';
+    }, 10000);
+
+    // Cancel auto-redirect if user interacts with page
+    document.addEventListener('click', () => {
+        clearTimeout(redirectTimer);
+    });
+
+    document.addEventListener('keydown', () => {
+        clearTimeout(redirectTimer);
+    });
+</script>
+</body>
+</html>

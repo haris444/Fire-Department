@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Response System - Guest Access</title>
+    <link rel="stylesheet" href="css/guest_panel_styles.css">
+</head>
+<body>
+<header>
+    <h1>Emergency Response System</h1>
+    <div class="header-links">
+        <a href="user/login.html" class="login-link">Login</a>
+        <a href="register.html" class="register-link">Register</a>
+    </div>
+</header>
+
+<nav>
+    <div class="tab-navigation">
+        <button class="tab-btn active" data-tab="view">View Active Incidents</button>
+        <button class="tab-btn" data-tab="submit">Report New Incident</button>
+    </div>
+</nav>
+
+<main id="guestContentArea">
+    <!-- View Incidents Tab -->
+    <div id="viewIncidentsTab" class="tab-content active">
+        <div class="content-section">
+            <h2>Active Emergency Incidents</h2>
+            <p class="info-text">Current emergency situations in your area. This information is updated in real-time.</p>
+            <div id="incidentsContainer">Loading incidents...</div>
+        </div>
+    </div>
+
+    <!-- Submit Incident Tab -->
+    <div id="submitIncidentsTab" class="tab-content">
+        <div class="content-section">
+            <h2>Report an Emergency</h2>
+            <p class="info-text">Report an emergency incident. Your report will be reviewed by emergency responders.</p>
+
+            <form id="guestIncidentForm" class="guest-form">
+                <!-- Contact Information -->
+                <div class="section">
+                    <h3>Contact Information</h3>
+                    <div class="form-group">
+                        <label for="user_phone">Phone Number *</label>
+                        <input type="tel" id="user_phone" name="user_phone" required
+                               placeholder="Enter your phone number">
+                    </div>
+                </div>
+
+                <!-- Incident Details -->
+                <div class="section">
+                    <h3>Incident Details</h3>
+                    <div class="form-group">
+                        <label for="incident_type">Incident Type *</label>
+                        <select id="incident_type" name="incident_type" required>
+                            <option value="">Select incident type</option>
+                            <option value="fire">Fire</option>
+                            <option value="flood">Flood</option>
+                            <option value="earthquake">Earthquake</option>
+                            <option value="accident">Traffic Accident</option>
+                            <option value="medical">Medical Emergency</option>
+                            <option value="rescue">Rescue Operation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" required
+                                  placeholder="Describe the incident in detail..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Location Information -->
+                <div class="section">
+                    <h3>Location Information</h3>
+                    <div class="form-group">
+                        <label for="address">Address *</label>
+                        <input type="text" id="address" name="address" required
+                               placeholder="Enter the incident address">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="municipality">Municipality *</label>
+                            <input type="text" id="municipality" name="municipality" required
+                                   placeholder="Enter municipality">
+                        </div>
+                        <div class="form-group">
+                            <label for="prefecture">Prefecture *</label>
+                            <input type="text" id="prefecture" name="prefecture" required
+                                   placeholder="Enter prefecture">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lat">Latitude (Optional)</label>
+                            <input type="number" id="lat" name="lat" step="any"
+                                   placeholder="e.g., 37.9755">
+                        </div>
+                        <div class="form-group">
+                            <label for="lon">Longitude (Optional)</label>
+                            <input type="number" id="lon" name="lon" step="any"
+                                   placeholder="e.g., 23.7348">
+                        </div>
+                    </div>
+
+                    <button type="button" id="getLocationBtn" class="location-btn">
+                        📍 Get My Current Location
+                    </button>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn">Submit Incident Report</button>
+
+                <!-- Message Area -->
+                <div id="messageArea" class="message-area"></div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script src="js/guest_panel.js" defer></script>
+<script src="js/common.js" defer></script>
+<div id="footer-placeholder"></div>
+</body>
+</html>

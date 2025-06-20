@@ -2,7 +2,7 @@
 <web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
-         http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd">
+         http://xmlns.jcp.org/xml/ns/javaee/web-app_4.0.xsd">
 
 
     <!-- Authentication Servlets -->
@@ -19,10 +19,20 @@
         <servlet-class>servlets.UnifiedRegisterServlet</servlet-class>
     </servlet>
 
-    <!-- Universal Profile Servlet (ADDED) -->
+    <!-- Universal Profile Servlet -->
     <servlet>
         <servlet-name>ProfileServlet</servlet-name>
         <servlet-class>servlets.ProfileServlet</servlet-class>
+    </servlet>
+
+    <!-- Guest Servlets -->
+    <servlet>
+        <servlet-name>GuestIncidentServlet</servlet-name>
+        <servlet-class>servlets.GuestIncidentServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>GuestIncidentsServlet</servlet-name>
+        <servlet-class>servlets.GuestIncidentsServlet</servlet-class>
     </servlet>
 
     <!-- Admin Servlets -->
@@ -41,6 +51,14 @@
     <servlet>
         <servlet-name>AdminStatisticsServlet</servlet-name>
         <servlet-class>servlets.admin.AdminStatisticsServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminAssignmentsServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminAssignmentsServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminVolunteersServlet</servlet-name>
+        <servlet-class>servlets.admin.AdminVolunteersServlet</servlet-class>
     </servlet>
 
     <!-- User Servlets -->
@@ -65,8 +83,6 @@
 
     <!-- SERVLET MAPPINGS -->
 
-
-
     <!-- Authentication Mappings -->
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -81,7 +97,7 @@
         <url-pattern>/register</url-pattern>
     </servlet-mapping>
 
-    <!-- Universal Profile Mappings (FIXED) -->
+    <!-- Universal Profile Mappings -->
     <servlet-mapping>
         <servlet-name>ProfileServlet</servlet-name>
         <url-pattern>/user/profile</url-pattern>
@@ -89,6 +105,16 @@
     <servlet-mapping>
         <servlet-name>ProfileServlet</servlet-name>
         <url-pattern>/volunteer/profile</url-pattern>
+    </servlet-mapping>
+
+    <!-- Guest Mappings -->
+    <servlet-mapping>
+        <servlet-name>GuestIncidentServlet</servlet-name>
+        <url-pattern>/guest/incident</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GuestIncidentsServlet</servlet-name>
+        <url-pattern>/guest/incidents</url-pattern>
     </servlet-mapping>
 
     <!-- Admin Mappings -->
@@ -107,6 +133,14 @@
     <servlet-mapping>
         <servlet-name>AdminStatisticsServlet</servlet-name>
         <url-pattern>/admin/statistics</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminAssignmentsServlet</servlet-name>
+        <url-pattern>/admin/assignments</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminVolunteersServlet</servlet-name>
+        <url-pattern>/admin/volunteers</url-pattern>
     </servlet-mapping>
 
     <!-- User Mappings -->
@@ -133,37 +167,5 @@
     <session-config>
         <session-timeout>30</session-timeout>
     </session-config>
-
-
-    <!-- Guest Servlet -->
-    <servlet>
-        <servlet-name>GuestIncidentServlet</servlet-name>
-        <servlet-class>servlets.GuestIncidentServlet</servlet-class>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>GuestIncidentServlet</servlet-name>
-        <url-pattern>/guest/incident</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>AdminAssignmentsServlet</servlet-name>
-        <servlet-class>servlets.admin.AdminAssignmentsServlet</servlet-class>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>AdminAssignmentsServlet</servlet-name>
-        <url-pattern>/admin/assignments</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>AdminVolunteersServlet</servlet-name>
-        <servlet-class>servlets.admin.AdminVolunteersServlet</servlet-class>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>AdminVolunteersServlet</servlet-name>
-        <url-pattern>/admin/volunteers</url-pattern>
-    </servlet-mapping>
 
 </web-app>
