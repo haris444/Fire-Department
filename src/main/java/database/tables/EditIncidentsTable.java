@@ -122,6 +122,8 @@ public class EditIncidentsTable {
         stmt.close();
         con.close();
     }
+    // Todo simplify update with one request
+
 
     public void deleteIncident(String id) throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
