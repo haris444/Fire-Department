@@ -27,10 +27,6 @@
 
     <!-- Guest Servlets -->
     <servlet>
-        <servlet-name>GuestIncidentServlet</servlet-name>
-        <servlet-class>servlets.GuestIncidentServlet</servlet-class>
-    </servlet>
-    <servlet>
         <servlet-name>GuestIncidentsServlet</servlet-name>
         <servlet-class>servlets.GuestIncidentsServlet</servlet-class>
     </servlet>
@@ -109,12 +105,8 @@
 
     <!-- Guest Mappings -->
     <servlet-mapping>
-        <servlet-name>GuestIncidentServlet</servlet-name>
-        <url-pattern>/guest/incident</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
         <servlet-name>GuestIncidentsServlet</servlet-name>
-        <url-pattern>/guest/incidents</url-pattern>
+        <url-pattern>/guest/incident</url-pattern>
     </servlet-mapping>
 
     <!-- Admin Mappings -->

@@ -54,7 +54,7 @@ function loadActiveIncidents() {
 
     // Simple AJAX request to get incidents
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'guest/incidents', true);
+    xhr.open('GET', 'guest/incident', true);
 
     xhr.onload = function() {
         if (xhr.status === 200) {
