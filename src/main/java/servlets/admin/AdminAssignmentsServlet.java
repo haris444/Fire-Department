@@ -28,7 +28,7 @@ public class AdminAssignmentsServlet extends BaseServlet {
 
         try {
             EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
-            // Use the new method that returns enriched data
+
             ArrayList<HashMap<String, Object>> assignments = assignmentsTable.getAllAssignmentsWithDetails();
 
             Gson gson = new Gson();
@@ -69,7 +69,7 @@ public class AdminAssignmentsServlet extends BaseServlet {
 
             String action = requestData.get("action").getAsString();
             EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
-
+            // TODO duplicate assignment frontend error message
             if ("assign".equals(action)) {
                 int volunteerUserId = requestData.get("volunteer_user_id").getAsInt();
                 int incidentId = requestData.get("incident_id").getAsInt();

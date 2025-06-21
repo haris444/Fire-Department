@@ -2,12 +2,11 @@ package database.tables;
 
 import mainClasses.User;
 import com.google.gson.Gson;
+
+import java.sql.*;
 import java.util.*;
 import database.DB_Connection;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +49,7 @@ public class EditUsersTable {
     }
 
 
-    public User databaseToUsers(String username, String password) throws SQLException, ClassNotFoundException{
+    public User userFromCredentials(String username, String password) throws SQLException, ClassNotFoundException{
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
 
@@ -63,37 +62,12 @@ public class EditUsersTable {
             User user = gson.fromJson(json, User.class);
             return user;
         } catch (Exception e) {
-            System.err.println("Got an exception! ");
             System.err.println(e.getMessage());
         }
         return null;
     }
 
-    public String databaseUserToJSON(String username, String password) throws SQLException, ClassNotFoundException{
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-
-        ResultSet rs;
-        try {
-            rs = stmt.executeQuery("SELECT * FROM users WHERE username = '" + username + "' AND password='"+password+"'");
-            rs.next();
-            String json=DB_Connection.getResultsToJSON(rs);
-            return json;
-        } catch (Exception e) {
-            System.err.println("Got an exception! ");
-            System.err.println(e.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Retrieves all users from the database with summary information only.
-     * Returns user_id, username, firstname, and lastname for each user.
-     *
-     * @return ArrayList<User> containing user summary objects
-     * @throws SQLException
-     * @throws ClassNotFoundException
-     */
+    // Retrieves users from database basic info only
     public ArrayList<User> getAllUsersSummary() throws SQLException, ClassNotFoundException {
         ArrayList<User> userList = new ArrayList<User>();
         Connection con = DB_Connection.getConnection();
@@ -112,7 +86,6 @@ public class EditUsersTable {
             }
 
         } catch (SQLException e) {
-            System.err.println("Got an exception! ");
             System.err.println(e.getMessage());
         } finally {
             stmt.close();
@@ -122,14 +95,7 @@ public class EditUsersTable {
         return userList;
     }
 
-    /**
-     * Deletes a user from the database by username.
-     *
-     * @param username The username of the user to delete
-     * @return true if deletion was successful, false otherwise
-     * @throws SQLException
-     * @throws ClassNotFoundException
-     */
+
     public boolean deleteUserByUsername(String username) throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
@@ -141,7 +107,6 @@ public class EditUsersTable {
             success = (rowsAffected > 0);
 
         } catch (SQLException e) {
-            System.err.println("Got an exception! ");
             System.err.println(e.getMessage());
         } finally {
             stmt.close();
@@ -180,123 +145,78 @@ public class EditUsersTable {
                 + " PRIMARY KEY (user_id))";
         stmt.execute(query);
         stmt.close();
+        stmt.close();
+        con.close();
     }
 
 
-    /**
-     * Establish a database connection and add in the database.
-     * Updated to work with consolidated users table including new fields:
-     * user_type, volunteer_type, height, weight
-     *
-     * @throws ClassNotFoundException
-     */
+
     public void addNewUser(User user) throws ClassNotFoundException {
         try {
             Connection con = DB_Connection.getConnection();
 
-            Statement stmt = con.createStatement();
+            String insertQuery = "INSERT INTO users (username,email,password,firstname,lastname,birthdate,gender,afm,country,address,municipality,prefecture,job,telephone,lat,lon,user_type,volunteer_type,height,weight) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-            // Handle nullable fields - convert null values to SQL NULL
-            String volunteerType = (user.getVolunteer_type() == null) ? "NULL" : "'" + user.getVolunteer_type() + "'";
-            String height = (user.getHeight() == null) ? "NULL" : user.getHeight().toString();
-            String weight = (user.getWeight() == null) ? "NULL" : user.getWeight().toString();
+            PreparedStatement pstmt = con.prepareStatement(insertQuery);
 
-            String insertQuery = "INSERT INTO "
-                    + " users (username,email,password,firstname,lastname,birthdate,gender,afm,country,address,municipality,prefecture,"
-                    + "job,telephone,lat,lon,user_type,volunteer_type,height,weight)"
-                    + " VALUES ("
-                    + "'" + user.getUsername() + "',"
-                    + "'" + user.getEmail() + "',"
-                    + "'" + user.getPassword() + "',"
-                    + "'" + user.getFirstname() + "',"
-                    + "'" + user.getLastname() + "',"
-                    + "'" + user.getBirthdate() + "',"
-                    + "'" + user.getGender() + "',"
-                    + "'" + user.getAfm() + "',"
-                    + "'" + user.getCountry() + "',"
-                    + "'" + user.getAddress() + "',"
-                    + "'" + user.getMunicipality() + "',"
-                    + "'" + user.getPrefecture() + "',"
-                    + "'" + user.getJob() + "',"
-                    + "'" + user.getTelephone() + "',"
-                    + "'" + user.getLat() + "',"
-                    + "'" + user.getLon() + "',"
-                    + "'" + user.getUser_type() + "',"
-                    + volunteerType + ","
-                    + height + ","
-                    + weight
-                    + ")";
-            //stmt.execute(table);
-            System.out.println(insertQuery);
-            stmt.executeUpdate(insertQuery);
+            pstmt.setString(1, user.getUsername());
+            pstmt.setString(2, user.getEmail());
+            pstmt.setString(3, user.getPassword());
+            pstmt.setString(4, user.getFirstname());
+            pstmt.setString(5, user.getLastname());
+            pstmt.setString(6, user.getBirthdate());
+            pstmt.setString(7, user.getGender());
+            pstmt.setString(8, user.getAfm());
+            pstmt.setString(9, user.getCountry());
+            pstmt.setString(10, user.getAddress());
+            pstmt.setString(11, user.getMunicipality());
+            pstmt.setString(12, user.getPrefecture());
+            pstmt.setString(13, user.getJob());
+            pstmt.setString(14, user.getTelephone());
+            pstmt.setDouble(15, user.getLat());
+            pstmt.setDouble(16, user.getLon());
+            pstmt.setString(17, user.getUser_type());
+            pstmt.setString(18, user.getVolunteer_type());
+            pstmt.setObject(19, user.getHeight());
+            pstmt.setObject(20, user.getWeight());
+
+            pstmt.executeUpdate();
             System.out.println("# The user was successfully added in the database.");
 
-            /* Get the member id from the database and set it to the member */
-            stmt.close();
+            pstmt.close();
 
         } catch (SQLException ex) {
             Logger.getLogger(EditUsersTable.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    // In EditUsersTable.java - Smart update method that only updates provided fields
-    public boolean updateUserProfileSelective(String username, Map<String, Object> updates) throws SQLException, ClassNotFoundException {
-        if (updates == null || updates.isEmpty()) {
-            return false;
-        }
-
-        Connection con = null;
-        java.sql.PreparedStatement stmt = null;
-        boolean success = false;
-
-        try {
-            con = DB_Connection.getConnection();
-
-            // Build dynamic SQL with only the fields that need updating
+    //Todo explain later
+    public boolean updateUserProfile(String username, Map<String, Object> updates) throws SQLException, ClassNotFoundException {
+        try (Connection con = DB_Connection.getConnection()) {
             StringBuilder sql = new StringBuilder("UPDATE users SET ");
-            List<Object> values = new ArrayList<>();
 
             boolean first = true;
             for (String field : updates.keySet()) {
                 if (!first) sql.append(", ");
                 sql.append(field).append(" = ?");
-                values.add(updates.get(field));
                 first = false;
             }
-
             sql.append(" WHERE username = ?");
-            values.add(username);
 
-            stmt = con.prepareStatement(sql.toString());
-
-            // Set parameters
-            for (int i = 0; i < values.size(); i++) {
-                Object value = values.get(i);
-                if (value == null) {
-                    stmt.setNull(i + 1, java.sql.Types.VARCHAR);
-                } else if (value instanceof String) {
-                    stmt.setString(i + 1, (String) value);
-                } else if (value instanceof Double) {
-                    stmt.setDouble(i + 1, (Double) value);
-                } else if (value instanceof Integer) {
-                    stmt.setInt(i + 1, (Integer) value);
-                } else {
-                    stmt.setString(i + 1, value.toString());
+            try (PreparedStatement stmt = con.prepareStatement(sql.toString())) {
+                int i = 1;
+                for (Object value : updates.values()) {
+                    if (value instanceof Double) {
+                        stmt.setDouble(i++, (Double) value);
+                    } else {
+                        stmt.setString(i++, (String) value);
+                    }
                 }
+                stmt.setString(i, username);
+
+                return stmt.executeUpdate() > 0;
             }
-
-            int rowsAffected = stmt.executeUpdate();
-            success = (rowsAffected > 0);
-
-        } catch (SQLException e) {
-            System.err.println("Error updating user profile: " + e.getMessage());
-            throw e;
-        } finally {
-            if (stmt != null) stmt.close();
-            if (con != null) con.close();
         }
-
-        return success;
     }
 
     /**

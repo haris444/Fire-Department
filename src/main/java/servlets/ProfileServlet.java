@@ -107,112 +107,55 @@ public class ProfileServlet extends BaseServlet {
         }
     }
 
-    /**
-     * Handles profile data updates for authenticated users.
-     * Accepts complete User object in JSON format and updates all fields in the database.
-     * Supports updating both basic user fields and optional volunteer-specific fields.
-     *
-     * @param request HTTP request containing JSON payload with updated user data
-     * @param response HTTP response with operation status
-     * @throws IOException if response writing fails
-     */
+
+
+    private static final Set<String> DOUBLE_FIELDS = Set.of("lat", "lon", "height", "weight");
+    private static final Set<String> ALL_FIELDS = Set.of(
+            "firstname", "lastname", "birthdate", "gender", "afm", "country",
+            "address", "municipality", "prefecture", "job", "telephone",
+            "volunteer_type", "lat", "lon", "height", "weight"
+    );
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if (!isUserAuthenticated(request, response)) {
-            return;
-        }
+        if (!isUserAuthenticated(request, response)) return;
 
         response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
 
         try {
-            HttpSession session = request.getSession(false);
-            String loggedInUsername = (String) session.getAttribute("loggedInUsername");
+            String username = (String) request.getSession(false).getAttribute("loggedInUsername");
 
-            // Read JSON payload
-            StringBuilder jsonBuffer = new StringBuilder();
-            BufferedReader reader = request.getReader();
+            // Read JSON
+            StringBuilder json = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
-                jsonBuffer.append(line);
+            while ((line = request.getReader().readLine()) != null) {
+                json.append(line);
             }
 
-            // Parse JSON and build update map
-            JsonObject jsonObject = new JsonParser().parse(jsonBuffer.toString()).getAsJsonObject();
+            // Parse and build updates
+            JsonObject jsonObject = new JsonParser().parse(json.toString()).getAsJsonObject();
             Map<String, Object> updates = new HashMap<>();
 
-            // Define allowed fields for security
-            Set<String> allowedFields = Set.of(
-                    "firstname", "lastname", "birthdate", "gender", "afm",
-                    "country", "address", "municipality", "prefecture",
-                    "job", "telephone", "lat", "lon",
-                    "volunteer_type", "height", "weight"
-            );
-
-            // Extract only allowed fields that are present in JSON
-            for (String field : allowedFields) {
-                if (jsonObject.has(field)) {
-                    JsonElement element = jsonObject.get(field);
-                    if (element.isJsonNull()) {
-                        updates.put(field, null);
+            for (String field : ALL_FIELDS) {
+                if (jsonObject.has(field) && !jsonObject.get(field).isJsonNull()) {
+                    if (DOUBLE_FIELDS.contains(field)) {
+                        updates.put(field, jsonObject.get(field).getAsDouble());
                     } else {
-                        switch (field) {
-                            case "lat":
-                            case "lon":
-                            case "height":
-                            case "weight":
-                                updates.put(field, element.getAsDouble());
-                                break;
-                            default:
-                                updates.put(field, element.getAsString());
-                        }
+                        updates.put(field, jsonObject.get(field).getAsString());
                     }
                 }
             }
 
-            if (updates.isEmpty()) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"No valid fields to update\"}");
-                out.flush();
-                return;
-            }
+            // Update and respond
+            boolean success = !updates.isEmpty() &&
+                    new EditUsersTable().updateUserProfile(username, updates);
 
-            // Update only the provided fields
-            EditUsersTable editUsersTable = new EditUsersTable();
-            boolean success = editUsersTable.updateUserProfileSelective(loggedInUsername, updates);
-
-            if (success) {
-                response.setStatus(HttpServletResponse.SC_OK);
-                PrintWriter out = response.getWriter();
-                out.print("{\"success\": true, \"message\": \"Profile updated successfully\"}");
-                out.flush();
-            } else {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"Profile update failed\"}");
-                out.flush();
-            }
+            response.getWriter().print("{\"success\": " + success + "}");
 
         } catch (Exception e) {
-            System.err.println("Error updating user profile: " + e.getMessage());
-            e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            PrintWriter out = response.getWriter();
-            out.print("{\"success\": false, \"message\": \"Error processing profile update\"}");
-            out.flush();
+            response.getWriter().print("{\"success\": false}");
         }
     }
-
-    /**
-     * Helper method to check if user is authenticated with proper role.
-     * Verifies user session and allows access for both REGULAR_USER and VOLUNTEER roles.
-     *
-     * @param request HTTP request to check session
-     * @param response HTTP response for sending unauthorized errors
-     * @return true if user is authenticated with valid role, false otherwise
-     * @throws IOException if response writing fails
-     */
     private boolean isUserAuthenticated(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
 

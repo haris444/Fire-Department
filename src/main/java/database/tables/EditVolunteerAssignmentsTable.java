@@ -57,9 +57,9 @@ public class EditVolunteerAssignmentsTable {
     }
 
     public ArrayList<Integer> getAssignedIncidentIds(int volunteerUserId) throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        ArrayList<Integer> incidentIds = new ArrayList<>();
+            Connection con = DB_Connection.getConnection();
+            Statement stmt = con.createStatement();
+            ArrayList<Integer> incidentIds = new ArrayList<>();
 
         try {
             ResultSet rs = stmt.executeQuery("SELECT incident_id FROM volunteer_assignments WHERE volunteer_user_id = " + volunteerUserId);

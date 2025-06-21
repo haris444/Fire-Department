@@ -54,14 +54,14 @@ public class UnifiedRegisterServlet extends HttpServlet {
                 return;
             }
 
-            // Parse JSON payload directly into User object
+
             Gson gson = new Gson();
             User user = gson.fromJson(jsonBuffer.toString(), User.class);
 
-            // Set the user_type based on registrationType
+
             user.setUser_type(registrationType);
 
-            // Check for duplicates using the consolidated duplicate checker
+
             CheckForDuplicatesExample duplicateChecker = new CheckForDuplicatesExample();
             boolean usernameAvailable = duplicateChecker.isUserNameAvailable(user.getUsername());
             boolean emailAvailable = duplicateChecker.isEmailAvailable(user.getEmail());
@@ -72,11 +72,11 @@ public class UnifiedRegisterServlet extends HttpServlet {
                 return;
             }
 
-            // Save the user to the consolidated users table
+
             EditUsersTable editUsersTable = new EditUsersTable();
             editUsersTable.addNewUser(user);
 
-            // Send success response
+
             String message = registrationType.substring(0, 1).toUpperCase() + registrationType.substring(1) + " registration successful. Please login.";
             sendSuccessResponse(response, message);
 

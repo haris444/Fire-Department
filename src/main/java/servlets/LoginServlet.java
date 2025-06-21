@@ -45,7 +45,7 @@ public class LoginServlet extends HttpServlet {
 
             // Unified authentication for all user types
             EditUsersTable editUsersTable = new EditUsersTable();
-            User user = editUsersTable.databaseToUsers(username, password);
+            User user = editUsersTable.userFromCredentials(username, password);
 
             if (user != null) {
                 // Authentication successful
