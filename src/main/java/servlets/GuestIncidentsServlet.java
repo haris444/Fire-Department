@@ -31,7 +31,7 @@ public class GuestIncidentsServlet extends HttpServlet {
         try {
             // Get all incidents from database
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            ArrayList<Incident> allIncidents = editIncidentsTable.databaseToIncidents();
+            ArrayList<Incident> allIncidents = editIncidentsTable.getAllIncidents();
 
             // Filter for active incidents only (running or submitted status)
             ArrayList<Incident> activeIncidents = new ArrayList<>();

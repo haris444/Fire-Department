@@ -28,7 +28,7 @@ public class AdminIncidentsServlet extends BaseServlet {
 
         try {
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            ArrayList<Incident> incidents = editIncidentsTable.databaseToIncidents();
+            ArrayList<Incident> incidents = editIncidentsTable.getAllIncidents();
 
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(incidents);

@@ -36,7 +36,7 @@ public class EditIncidentsTable {
     }
 
 
-    public ArrayList<Incident> databaseToIncidents() throws SQLException, ClassNotFoundException {
+    public ArrayList<Incident> getAllIncidents() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
         ArrayList<Incident> pets = new ArrayList<Incident>();
@@ -77,17 +77,8 @@ public class EditIncidentsTable {
             con.close();
         }
     }
-    // Todo simplify update with one request
 
 
-    public void deleteIncident(String id) throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        String deleteQuery = "DELETE * FROM incidents WHERE incident_id='" + id + "'";
-        stmt.executeUpdate(deleteQuery);
-        stmt.close();
-        con.close();
-    }
 
     public void createIncidentsTable() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
@@ -116,11 +107,7 @@ public class EditIncidentsTable {
         con.close();
     }
 
-    /**
-     * Establish a database connection and add in the database.
-     *
-     * @throws ClassNotFoundException
-     */
+
     public void createNewIncident(Incident bt) throws ClassNotFoundException {
 
         try {
@@ -151,12 +138,11 @@ public class EditIncidentsTable {
                     + "'" + bt.getVehicles() + "',"
                     + "'" + bt.getFiremen() + "'"
                     + ")";
-            //stmt.execute(table);
+
             System.out.println(insertQuery);
             stmt.executeUpdate(insertQuery);
             System.out.println("# The incident was successfully added in the database.");
 
-            /* Get the member id from the database and set it to the member */
             stmt.close();
 
         } catch (SQLException ex) {
@@ -164,12 +150,7 @@ public class EditIncidentsTable {
         }
     }
 
-    /**
-     * Count incidents by type for admin statistics.
-     * @return ArrayList of HashMaps containing type and count
-     * @throws SQLException
-     * @throws ClassNotFoundException
-     */
+
     public ArrayList<HashMap<String, Object>> countIncidentsByType() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
@@ -195,12 +176,7 @@ public class EditIncidentsTable {
         return null;
     }
 
-    /**
-     * Get total vehicles involved across all incidents.
-     * @return Total number of vehicles
-     * @throws SQLException
-     * @throws ClassNotFoundException
-     */
+
     public int getTotalVehiclesInvolved() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
@@ -219,59 +195,6 @@ public class EditIncidentsTable {
             con.close();
         }
         return 0;
-    }
-
-    /**
-     * Get total firemen involved across all incidents.
-     * @return Total number of firemen
-     * @throws SQLException
-     * @throws ClassNotFoundException
-     */
-    public int getTotalFiremenInvolved() throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        ResultSet rs;
-
-        try {
-            rs = stmt.executeQuery("SELECT SUM(firemen) as total FROM incidents");
-            if (rs.next()) {
-                return rs.getInt("total");
-            }
-        } catch (Exception e) {
-            System.err.println("Got an exception! ");
-            System.err.println(e.getMessage());
-        } finally {
-            stmt.close();
-            con.close();
-        }
-        return 0;
-    }
-
-    public ArrayList<Incident> getIncidentsByIds(ArrayList<Integer> ids) throws SQLException, ClassNotFoundException {
-        if (ids == null || ids.isEmpty()) {
-            return new ArrayList<>();
-        }
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        ArrayList<Incident> incidents = new ArrayList<>();
-
-        // Create a comma-separated string of IDs for the IN clause
-        String idList = ids.toString().replace("[", "(").replace("]", ")");
-
-        try {
-            String query = "SELECT * FROM incidents WHERE incident_id IN " + idList;
-            ResultSet rs = stmt.executeQuery(query);
-            while (rs.next()) {
-                String json = DB_Connection.getResultsToJSON(rs);
-                Gson gson = new Gson();
-                Incident incident = gson.fromJson(json, Incident.class);
-                incidents.add(incident);
-            }
-        } finally {
-            stmt.close();
-            con.close();
-        }
-        return incidents;
     }
 
     public ArrayList<Incident> getIncidentsByVolunteerId(int volunteerUserId) throws SQLException, ClassNotFoundException {

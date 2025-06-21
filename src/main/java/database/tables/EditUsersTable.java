@@ -243,4 +243,39 @@ public class EditUsersTable {
         return volunteers;
     }
 
+
+
+    public int getUserCount() throws Exception {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'user'");
+            int count = 0;
+            if (rs.next()) {
+                count = rs.getInt("count");
+            }
+            return count;
+        } finally {
+            stmt.close();
+            con.close();
+        }
+    }
+
+    public int getVolunteerCount() throws Exception {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
+
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM users WHERE user_type = 'volunteer'");
+            int count = 0;
+            if (rs.next()) {
+                count = rs.getInt("count");
+            }
+            return count;
+        } finally {
+            stmt.close();
+            con.close();
+        }
+    }
 }

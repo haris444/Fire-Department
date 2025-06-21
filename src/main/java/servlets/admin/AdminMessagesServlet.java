@@ -34,7 +34,7 @@ public class AdminMessagesServlet extends BaseServlet {
             ArrayList<Message> messages = editMessagesTable.getAllMessages();
 
             // Get all incidents for the incident dropdown
-            ArrayList<Incident> incidents = editIncidentsTable.databaseToIncidents();
+            ArrayList<Incident> incidents = editIncidentsTable.getAllIncidents();
 
             // Create response object with both messages and incidents
             AdminMessagesResponse responseObj = new AdminMessagesResponse();

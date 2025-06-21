@@ -49,7 +49,7 @@ public class VolunteerIncidentServlet extends BaseServlet {
                 incidents = incidentsTable.getIncidentsByVolunteerId(volunteerUserId);
             } else {
                 // Get all incidents
-                incidents = incidentsTable.databaseToIncidents();
+                incidents = incidentsTable.getAllIncidents();
             }
 
             Gson gson = new Gson();

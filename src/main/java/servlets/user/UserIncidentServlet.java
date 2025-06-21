@@ -29,7 +29,7 @@ public class UserIncidentServlet extends BaseServlet {
         try {
             // Get all incidents from database
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            ArrayList<Incident> incidents = editIncidentsTable.databaseToIncidents();
+            ArrayList<Incident> incidents = editIncidentsTable.getAllIncidents();
 
             // Convert to JSON array
             Gson gson = new Gson();
