@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import database.tables.EditIncidentsTable;
+import database.tables.IncidentsTable;
 import mainClasses.Incident;
 import servlets.BaseServlet;
 import java.io.BufferedReader;
@@ -27,8 +27,8 @@ public class AdminIncidentsServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            ArrayList<Incident> incidents = editIncidentsTable.getAllIncidents();
+            IncidentsTable incidentsTable = new IncidentsTable();
+            ArrayList<Incident> incidents = incidentsTable.getAllIncidents();
 
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(incidents);
@@ -81,8 +81,8 @@ public class AdminIncidentsServlet extends BaseServlet {
             updates.put("vehicles", String.valueOf(requestData.get("vehicles")));
 
             // Update incident
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            editIncidentsTable.updateIncident(incidentId, updates);
+            IncidentsTable incidentsTable = new IncidentsTable();
+            incidentsTable.updateIncident(incidentId, updates);
 
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();

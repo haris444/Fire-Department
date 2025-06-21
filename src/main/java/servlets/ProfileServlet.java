@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import com.google.gson.Gson;
-import database.tables.EditUsersTable;
+import database.tables.UsersTable;
 import mainClasses.User;
 
 import java.io.IOException;
@@ -50,8 +50,8 @@ public class ProfileServlet extends BaseServlet {
             String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
             // Fetch complete user profile from consolidated users table
-            EditUsersTable editUsersTable = new EditUsersTable();
-            User user = editUsersTable.getUserByUsername(loggedInUsername);
+            UsersTable usersTable = new UsersTable();
+            User user = usersTable.getUserByUsername(loggedInUsername);
 
             if (user != null) {
                 // Convert complete User object to JSON (including all optional fields)
@@ -148,7 +148,7 @@ public class ProfileServlet extends BaseServlet {
 
             // Update and respond
             boolean success = !updates.isEmpty() &&
-                    new EditUsersTable().updateUserProfile(username, updates);
+                    new UsersTable().updateUserProfile(username, updates);
 
             response.getWriter().print("{\"success\": " + success + "}");
 

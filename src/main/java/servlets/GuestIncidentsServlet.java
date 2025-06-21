@@ -1,7 +1,7 @@
 package servlets;
 
 import com.google.gson.Gson;
-import database.tables.EditIncidentsTable;
+import database.tables.IncidentsTable;
 import mainClasses.Incident;
 
 import jakarta.servlet.ServletException;
@@ -30,8 +30,8 @@ public class GuestIncidentsServlet extends HttpServlet {
 
         try {
             // Get all incidents from database
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            ArrayList<Incident> allIncidents = editIncidentsTable.getAllIncidents();
+            IncidentsTable incidentsTable = new IncidentsTable();
+            ArrayList<Incident> allIncidents = incidentsTable.getAllIncidents();
 
             // Filter for active incidents only (running or submitted status)
             ArrayList<Incident> activeIncidents = new ArrayList<>();
@@ -107,8 +107,8 @@ public class GuestIncidentsServlet extends HttpServlet {
             }
 
             // Save incident to database
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            editIncidentsTable.createNewIncident(newIncident);
+            IncidentsTable incidentsTable = new IncidentsTable();
+            incidentsTable.createNewIncident(newIncident);
 
             // Send success response
             response.setStatus(HttpServletResponse.SC_OK);

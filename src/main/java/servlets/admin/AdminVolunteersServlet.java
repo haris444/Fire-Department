@@ -3,7 +3,7 @@ package servlets.admin;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
-import database.tables.EditUsersTable;
+import database.tables.UsersTable;
 import mainClasses.User;
 import servlets.BaseServlet;
 import java.io.IOException;
@@ -24,8 +24,8 @@ public class AdminVolunteersServlet extends BaseServlet {
 
         try {
             // Get all volunteers from database using the existing method
-            EditUsersTable editUsersTable = new EditUsersTable();
-            ArrayList<User> volunteers = editUsersTable.getAllVolunteers();
+            UsersTable usersTable = new UsersTable();
+            ArrayList<User> volunteers = usersTable.getAllVolunteers();
 
             // Convert to JSON
             Gson gson = new Gson();

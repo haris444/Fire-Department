@@ -12,7 +12,7 @@ import mainClasses.Message;
 
 
 
-public class EditMessagesTable {
+public class MessagesTable {
 
     public void addMessageFromJSON(String json) throws ClassNotFoundException {
         Message msg = jsonToMessage(json);
@@ -66,7 +66,7 @@ public class EditMessagesTable {
             stmt.close();
 
         } catch (Exception ex) {
-            Logger.getLogger(EditMessagesTable.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MessagesTable.class.getName()).log(Level.SEVERE, null, ex);
             throw new ClassNotFoundException("Error creating message: " + ex.getMessage());
         }
     }

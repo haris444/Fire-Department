@@ -11,7 +11,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class EditVolunteerAssignmentsTable {
+public class VolunteerAssignmentsTable {
 
     public void createAssignmentsTable() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();

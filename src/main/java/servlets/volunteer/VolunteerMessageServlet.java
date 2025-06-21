@@ -1,9 +1,9 @@
 package servlets.volunteer;
 
 import com.google.gson.Gson;
-import database.tables.EditMessagesTable;
-import database.tables.EditUsersTable;
-import database.tables.EditVolunteerAssignmentsTable;
+import database.tables.MessagesTable;
+import database.tables.UsersTable;
+import database.tables.VolunteerAssignmentsTable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -13,7 +13,6 @@ import servlets.BaseServlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
@@ -37,9 +36,9 @@ public class VolunteerMessageServlet extends BaseServlet {
         String volunteerUsername = (String) session.getAttribute("loggedInUsername");
 
         try (PrintWriter out = response.getWriter()) {
-            EditMessagesTable messagesTable = new EditMessagesTable();
-            EditUsersTable usersTable = new EditUsersTable();
-            EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
+            MessagesTable messagesTable = new MessagesTable();
+            UsersTable usersTable = new UsersTable();
+            VolunteerAssignmentsTable assignmentsTable = new VolunteerAssignmentsTable();
 
             // Get volunteer's user ID
             int volunteerUserId = usersTable.getUserByUsername(volunteerUsername).getUser_id();
@@ -118,7 +117,7 @@ public class VolunteerMessageServlet extends BaseServlet {
             newMessage.setIncident_id(messageRequest.incident_id);
             newMessage.setDate_time();
 
-            EditMessagesTable messagesTable = new EditMessagesTable();
+            MessagesTable messagesTable = new MessagesTable();
             messagesTable.createNewMessage(newMessage);
 
             response.setStatus(HttpServletResponse.SC_OK);

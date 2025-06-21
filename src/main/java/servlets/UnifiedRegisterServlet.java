@@ -6,8 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import database.tables.EditUsersTable;
-import database.tables.CheckForDuplicatesExample;
+import database.tables.UsersTable;
 import mainClasses.User;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -62,19 +61,17 @@ public class UnifiedRegisterServlet extends HttpServlet {
             user.setUser_type(registrationType);
 
 
-            CheckForDuplicatesExample duplicateChecker = new CheckForDuplicatesExample();
-            boolean usernameAvailable = duplicateChecker.isUserNameAvailable(user.getUsername());
-            boolean emailAvailable = duplicateChecker.isEmailAvailable(user.getEmail());
+            UsersTable usersTable = new UsersTable();
+            boolean usernameAvailable = usersTable.getUserByUsername(user.getUsername()) == null;
 
-            if (!usernameAvailable || !emailAvailable) {
+            if (!usernameAvailable) {
                 sendErrorResponse(response, HttpServletResponse.SC_CONFLICT,
-                        "Username or email already exists.");
+                        "Username already exists.");
                 return;
             }
 
 
-            EditUsersTable editUsersTable = new EditUsersTable();
-            editUsersTable.addNewUser(user);
+            usersTable.addNewUser(user);
 
 
             String message = registrationType.substring(0, 1).toUpperCase() + registrationType.substring(1) + " registration successful. Please login.";

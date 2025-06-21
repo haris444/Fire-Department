@@ -3,8 +3,8 @@ package servlets.admin;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
-import database.tables.EditMessagesTable;
-import database.tables.EditIncidentsTable;
+import database.tables.MessagesTable;
+import database.tables.IncidentsTable;
 import mainClasses.Message;
 import mainClasses.Incident;
 import servlets.BaseServlet;
@@ -27,14 +27,14 @@ public class AdminMessagesServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            EditMessagesTable editMessagesTable = new EditMessagesTable();
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
+            MessagesTable messagesTable = new MessagesTable();
+            IncidentsTable incidentsTable = new IncidentsTable();
 
             // Admin can see all messages
-            ArrayList<Message> messages = editMessagesTable.getAllMessages();
+            ArrayList<Message> messages = messagesTable.getAllMessages();
 
             // Get all incidents for the incident dropdown
-            ArrayList<Incident> incidents = editIncidentsTable.getAllIncidents();
+            ArrayList<Incident> incidents = incidentsTable.getAllIncidents();
 
             // Create response object with both messages and incidents
             AdminMessagesResponse responseObj = new AdminMessagesResponse();
@@ -126,8 +126,8 @@ public class AdminMessagesServlet extends BaseServlet {
             message.setDate_time();
 
             // Save message to database
-            EditMessagesTable editMessagesTable = new EditMessagesTable();
-            editMessagesTable.createNewMessage(message);
+            MessagesTable messagesTable = new MessagesTable();
+            messagesTable.createNewMessage(message);
 
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();

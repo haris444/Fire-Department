@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class EditUsersTable {
+public class UsersTable {
 
 
     public void addUserFromJSON(String json) throws ClassNotFoundException{
@@ -27,25 +27,6 @@ public class EditUsersTable {
     }
 
 
-
-
-    public User userFromCredentials(String username, String password) throws SQLException, ClassNotFoundException{
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-
-        ResultSet rs;
-        try {
-            rs = stmt.executeQuery("SELECT * FROM users WHERE username = '" + username + "' AND password='"+password+"'");
-            rs.next();
-            String json=DB_Connection.getResultsToJSON(rs);
-            Gson gson = new Gson();
-            User user = gson.fromJson(json, User.class);
-            return user;
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return null;
-    }
 
     // Retrieves users from database basic info only
     public ArrayList<User> getAllUsersSummary() throws SQLException, ClassNotFoundException {
@@ -153,8 +134,8 @@ public class EditUsersTable {
             pstmt.setString(12, user.getPrefecture());
             pstmt.setString(13, user.getJob());
             pstmt.setString(14, user.getTelephone());
-            pstmt.setDouble(15, user.getLat());
-            pstmt.setDouble(16, user.getLon());
+            pstmt.setObject(15, user.getLat());
+            pstmt.setObject(16, user.getLon());
             pstmt.setString(17, user.getUser_type());
             pstmt.setString(18, user.getVolunteer_type());
             pstmt.setObject(19, user.getHeight());
@@ -166,7 +147,7 @@ public class EditUsersTable {
             pstmt.close();
 
         } catch (SQLException ex) {
-            Logger.getLogger(EditUsersTable.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(UsersTable.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

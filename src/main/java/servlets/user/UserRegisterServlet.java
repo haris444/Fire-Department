@@ -4,17 +4,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
-import database.tables.EditUsersTable;
-import database.tables.CheckForDuplicatesExample;
-import database.DB_Connection;
+import database.tables.UsersTable;
 import mainClasses.User;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 public class UserRegisterServlet extends HttpServlet {
 
@@ -37,24 +31,21 @@ public class UserRegisterServlet extends HttpServlet {
             User user = gson.fromJson(jsonBuffer.toString(), User.class);
 
             // Check if username is available
-            CheckForDuplicatesExample duplicateChecker = new CheckForDuplicatesExample();
-            boolean usernameAvailable = duplicateChecker.isUserNameAvailable(user.getUsername());
+            UsersTable usersTable = new UsersTable();
+            boolean usernameAvailable = usersTable.getUserByUsername(user.getUsername()) == null;
 
-            // Check if email is available
-            boolean emailAvailable = duplicateChecker.isEmailAvailable(user.getEmail());
 
             // If username or email is already taken
-            if (!usernameAvailable || !emailAvailable) {
+            if (!usernameAvailable ) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"Username or email already exists.\"}");
+                out.print("{\"success\": false, \"message\": \"Username already exists.\"}");
                 out.flush();
                 return;
             }
 
-            // Try to register the user
-            EditUsersTable editUsersTable = new EditUsersTable();
-            editUsersTable.addNewUser(user);
+
+            usersTable.addNewUser(user);
 
             // If registration successful
             response.setStatus(HttpServletResponse.SC_CREATED);

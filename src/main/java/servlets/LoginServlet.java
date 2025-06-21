@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject; // Import JsonObject for cleaner JSON building
-import database.tables.EditUsersTable;
+import database.tables.UsersTable;
 import mainClasses.User;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,10 +44,10 @@ public class LoginServlet extends HttpServlet {
             String password = loginRequest.password;
 
             // Unified authentication for all user types
-            EditUsersTable editUsersTable = new EditUsersTable();
-            User user = editUsersTable.userFromCredentials(username, password);
+            UsersTable usersTable = new UsersTable();
+            User user = usersTable.getUserByUsername(username);
 
-            if (user != null) {
+            if (user != null && user.getPassword().equals(password)) {
                 // Authentication successful
                 HttpSession session = request.getSession(true);
                 session.setAttribute("loggedInUsername", user.getUsername());

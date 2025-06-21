@@ -4,8 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import com.google.gson.Gson;
-import database.tables.EditIncidentsTable;
-import database.tables.EditUsersTable;
+import database.tables.IncidentsTable;
+import database.tables.UsersTable;
 import mainClasses.Incident;
 import mainClasses.User;
 import servlets.BaseServlet;
@@ -28,8 +28,8 @@ public class UserIncidentServlet extends BaseServlet {
 
         try {
             // Get all incidents from database
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            ArrayList<Incident> incidents = editIncidentsTable.getAllIncidents();
+            IncidentsTable incidentsTable = new IncidentsTable();
+            ArrayList<Incident> incidents = incidentsTable.getAllIncidents();
 
             // Convert to JSON array
             Gson gson = new Gson();
@@ -66,8 +66,8 @@ public class UserIncidentServlet extends BaseServlet {
             String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
             // Get user's phone number from profile
-            EditUsersTable editUsersTable = new EditUsersTable();
-            User currentUser = editUsersTable.getUserByUsername(loggedInUsername);
+            UsersTable usersTable = new UsersTable();
+            User currentUser = usersTable.getUserByUsername(loggedInUsername);
 
             if (currentUser == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -116,8 +116,8 @@ public class UserIncidentServlet extends BaseServlet {
             }
 
             // Save incident to database
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
-            editIncidentsTable.createNewIncident(newIncident);
+            IncidentsTable incidentsTable = new IncidentsTable();
+            incidentsTable.createNewIncident(newIncident);
 
             // Send success response
             response.setStatus(HttpServletResponse.SC_CREATED);

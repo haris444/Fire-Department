@@ -3,7 +3,7 @@ package servlets.admin;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
-import database.tables.EditUsersTable;
+import database.tables.UsersTable;
 import mainClasses.User;
 import servlets.BaseServlet;
 import java.io.BufferedReader;
@@ -25,8 +25,8 @@ public class AdminUsersServlet extends BaseServlet {
 
         try {
             // Get all users summary from database
-            EditUsersTable editUsersTable = new EditUsersTable();
-            ArrayList<User> users = editUsersTable.getAllUsersSummary();
+            UsersTable usersTable = new UsersTable();
+            ArrayList<User> users = usersTable.getAllUsersSummary();
 
             // Convert to JSON
             Gson gson = new Gson();
@@ -75,8 +75,8 @@ public class AdminUsersServlet extends BaseServlet {
                 String username = deleteRequest.username;
 
                 // Delete user from database
-                EditUsersTable editUsersTable = new EditUsersTable();
-                boolean success = editUsersTable.deleteUserByUsername(username);
+                UsersTable usersTable = new UsersTable();
+                boolean success = usersTable.deleteUserByUsername(username);
 
                 if (success) {
                     response.setStatus(HttpServletResponse.SC_OK);

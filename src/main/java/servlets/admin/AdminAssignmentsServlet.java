@@ -3,7 +3,7 @@ package servlets.admin;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import database.tables.EditVolunteerAssignmentsTable;
+import database.tables.VolunteerAssignmentsTable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import mainClasses.VolunteerAssignment;
@@ -27,7 +27,7 @@ public class AdminAssignmentsServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
+            VolunteerAssignmentsTable assignmentsTable = new VolunteerAssignmentsTable();
 
             ArrayList<HashMap<String, Object>> assignments = assignmentsTable.getAllAssignmentsWithDetails();
 
@@ -68,7 +68,7 @@ public class AdminAssignmentsServlet extends BaseServlet {
             JsonObject requestData = new JsonParser().parse(jsonBuffer.toString()).getAsJsonObject();
 
             String action = requestData.get("action").getAsString();
-            EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
+            VolunteerAssignmentsTable assignmentsTable = new VolunteerAssignmentsTable();
             // TODO duplicate assignment frontend error message
             if ("assign".equals(action)) {
                 int volunteerUserId = requestData.get("volunteer_user_id").getAsInt();

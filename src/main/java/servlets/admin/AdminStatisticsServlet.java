@@ -1,10 +1,10 @@
 package servlets.admin;
 
-import database.tables.EditUsersTable;
+import database.tables.UsersTable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.gson.Gson;
-import database.tables.EditIncidentsTable;
+import database.tables.IncidentsTable;
 import servlets.BaseServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -36,12 +36,12 @@ public class AdminStatisticsServlet extends BaseServlet {
 
         try {
             // Initialize database table objects
-            EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
+            IncidentsTable editIncidentsTable = new IncidentsTable();
 
             // Fetch all required statistics
             ArrayList<HashMap<String, Object>> incidentsByType = editIncidentsTable.countIncidentsByType();
-            EditUsersTable usersTable = new EditUsersTable();
-            EditIncidentsTable incidentsTable = new EditIncidentsTable();
+            UsersTable usersTable = new UsersTable();
+            IncidentsTable incidentsTable = new IncidentsTable();
             int totalVehicleCount = incidentsTable.getTotalVehiclesInvolved();
             int volunteerCount = usersTable.getVolunteerCount();
             int userCount = usersTable.getUserCount(); // simple user NOT combined with volunteer

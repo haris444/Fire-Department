@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package database.tables;
 
 import mainClasses.Incident;
@@ -12,14 +7,9 @@ import database.DB_Connection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-/**
- *
- * @author Mike
- */
-public class EditIncidentsTable {
+
+public class IncidentsTable {
 
     public void addIncidentFromJSON(String json) throws ClassNotFoundException {
         Incident bt = jsonToIncident(json);
@@ -113,41 +103,35 @@ public class EditIncidentsTable {
         try {
             Connection con = DB_Connection.getConnection();
 
-            Statement stmt = con.createStatement();
+            String insertQuery = "INSERT INTO incidents (incident_id,incident_type,description,user_phone,user_type,address,lat,lon,municipality,prefecture,start_datetime,danger,status,finalResult,vehicles,firemen) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-            String insertQuery = "INSERT INTO "
-                    + " incidents (incident_id,incident_type,"
-                    + "description,user_phone,user_type,"
-                    + "address,lat,lon,municipality,prefecture,start_datetime,danger,status,"
-                    + "finalResult,vehicles,firemen) "
-                    + " VALUES ("
-                    + "'" + bt.getIncident_id() + "',"
-                    + "'" + bt.getIncident_type() + "',"
-                    + "'" + bt.getDescription() + "',"
-                    + "'" + bt.getUser_phone() + "',"
-                    + "'" + bt.getUser_type() + "',"
-                    + "'" + bt.getAddress() + "',"
-                    + "'" + bt.getLat() + "',"
-                    + "'" + bt.getLon() + "',"
-                    + "'" + bt.getMunicipality() + "',"
-                    + "'" + bt.getPrefecture() + "',"
-                    + "'" + bt.getStart_datetime() + "',"
-                    + "'" + bt.getDanger() + "',"
-                    + "'" + bt.getStatus() + "',"
-                    + "'" + bt.getFinalResult() + "',"
-                    + "'" + bt.getVehicles() + "',"
-                    + "'" + bt.getFiremen() + "'"
-                    + ")";
+            PreparedStatement pstmt = con.prepareStatement(insertQuery);
 
-            System.out.println(insertQuery);
-            stmt.executeUpdate(insertQuery);
+            pstmt.setInt(1, bt.getIncident_id());
+            pstmt.setString(2, bt.getIncident_type());
+            pstmt.setString(3, bt.getDescription());
+            pstmt.setString(4, bt.getUser_phone());
+            pstmt.setString(5, bt.getUser_type());
+            pstmt.setString(6, bt.getAddress());
+            pstmt.setObject(7, bt.getLat());
+            pstmt.setObject(8, bt.getLon());
+            pstmt.setString(9, bt.getMunicipality());
+            pstmt.setString(10, bt.getPrefecture());
+            pstmt.setString(11, bt.getStart_datetime());
+            pstmt.setString(12, bt.getDanger());
+            pstmt.setString(13, bt.getStatus());
+            pstmt.setString(14, bt.getFinalResult());
+            pstmt.setObject(15, bt.getVehicles());
+            pstmt.setObject(16, bt.getFiremen());
+
+            pstmt.executeUpdate();
             System.out.println("# The incident was successfully added in the database.");
 
-            stmt.close();
+            pstmt.close();
 
         } catch (SQLException ex) {
-            Logger.getLogger(EditIncidentsTable.class.getName()).log(Level.SEVERE, null, ex);
-        }
+            System.err.println("Got an exception! ");
+            System.err.println(ex.getMessage());        }
     }
 
 

@@ -3,9 +3,9 @@ package servlets.volunteer;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import database.tables.EditIncidentsTable;
-import database.tables.EditUsersTable;
-import database.tables.EditVolunteerAssignmentsTable;
+import database.tables.IncidentsTable;
+import database.tables.UsersTable;
+import database.tables.VolunteerAssignmentsTable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -39,12 +39,12 @@ public class VolunteerIncidentServlet extends BaseServlet {
         String volunteerUsername = (String) session.getAttribute("loggedInUsername");
 
         try (PrintWriter out = response.getWriter()) {
-            EditIncidentsTable incidentsTable = new EditIncidentsTable();
+            IncidentsTable incidentsTable = new IncidentsTable();
             ArrayList<Incident> incidents;
 
             if ("assigned".equals(requestType)) {
                 // Get only incidents assigned to this volunteer
-                EditUsersTable usersTable = new EditUsersTable();
+                UsersTable usersTable = new UsersTable();
                 int volunteerUserId = usersTable.getUserByUsername(volunteerUsername).getUser_id();
                 incidents = incidentsTable.getIncidentsByVolunteerId(volunteerUserId);
             } else {
@@ -91,10 +91,10 @@ public class VolunteerIncidentServlet extends BaseServlet {
             String action = requestData.get("action").getAsString();
             int incidentId = requestData.get("incident_id").getAsInt();
 
-            EditUsersTable usersTable = new EditUsersTable();
+            UsersTable usersTable = new UsersTable();
             int volunteerUserId = usersTable.getUserByUsername(volunteerUsername).getUser_id();
 
-            EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
+            VolunteerAssignmentsTable assignmentsTable = new VolunteerAssignmentsTable();
 
             if ("apply".equals(action)) {
                 // Volunteer wants to apply to an incident
