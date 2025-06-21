@@ -19,7 +19,6 @@ public class AdminIncidentsServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check admin session
         if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
@@ -28,22 +27,18 @@ public class AdminIncidentsServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Fetch all incidents from database
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
             ArrayList<Incident> incidents = editIncidentsTable.databaseToIncidents();
 
-            // Convert to JSON
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(incidents);
 
-            // Send response
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             out.print(jsonResponse);
             out.flush();
 
         } catch (Exception e) {
-            // Handle database errors
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             PrintWriter out = response.getWriter();
             out.print("{\"success\": false, \"message\": \"Error fetching incidents\"}");
@@ -53,7 +48,6 @@ public class AdminIncidentsServlet extends BaseServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check admin session
         if (!checkSession(request, response, "adminUser", "true")) {
             return;
         }
@@ -70,7 +64,7 @@ public class AdminIncidentsServlet extends BaseServlet {
                 jsonBuffer.append(line);
             }
 
-            // Parse JSON
+            // Parse JSON - frontend sends: incident_id, incident_type, description, status, danger, vehicles
             Gson gson = new Gson();
             Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
             Map<String, Object> requestData = gson.fromJson(jsonBuffer.toString(), mapType);
@@ -78,15 +72,15 @@ public class AdminIncidentsServlet extends BaseServlet {
             // Extract incident ID
             String incidentId = String.valueOf(requestData.get("incident_id"));
 
-            // Extract updates (remove incident_id from updates map)
+            // Build updates - convert everything to string
             HashMap<String, String> updates = new HashMap<>();
-            for (Map.Entry<String, Object> entry : requestData.entrySet()) {
-                if (!"incident_id".equals(entry.getKey())) {
-                    updates.put(entry.getKey(), String.valueOf(entry.getValue()));
-                }
-            }
+            updates.put("incident_type", String.valueOf(requestData.get("incident_type")));
+            updates.put("description", String.valueOf(requestData.get("description")));
+            updates.put("status", String.valueOf(requestData.get("status")));
+            updates.put("danger", String.valueOf(requestData.get("danger")));
+            updates.put("vehicles", String.valueOf(requestData.get("vehicles")));
 
-            // Update incident in database
+            // Update incident
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
             editIncidentsTable.updateIncident(incidentId, updates);
 
@@ -95,9 +89,7 @@ public class AdminIncidentsServlet extends BaseServlet {
             out.print("{\"success\": true, \"message\": \"Incident updated successfully\"}");
             out.flush();
 
-
         } catch (Exception e) {
-            // Handle JSON parsing or database errors
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             PrintWriter out = response.getWriter();
             out.print("{\"success\": false, \"message\": \"Error processing request\"}");

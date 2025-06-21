@@ -1,4 +1,4 @@
-// admin_app.js - Compact version with external templates
+// admin_app.js - Updated version with vehicle management
 
 const contentArea = document.getElementById('adminContentArea');
 const navLinks = document.querySelectorAll('nav ul li a');
@@ -100,6 +100,7 @@ function loadDashboard() {
                         <div><strong>Total Users:</strong> ${stats.userCount || 0}</div>
                         <div><strong>Total Volunteers:</strong> ${stats.volunteerCount || 0}</div>
                         <div><strong>Total People:</strong> ${totalPeople}</div>
+                        <div><strong>Total Vehicles:</strong> ${stats.totalVehicleCount || 0}</div>
                     </div>
                 </div>
                 <div>
@@ -110,7 +111,7 @@ function loadDashboard() {
     });
 }
 
-// Incidents
+// Incidents - UPDATED to include vehicles column
 function loadIncidents() {
     makeAdminAjaxRequest('../admin/incidents', 'GET', null, (err, incidents) => {
         const container = document.getElementById('incidentsTableContainer');
@@ -126,11 +127,13 @@ function loadIncidents() {
                 incident.description,
                 incident.status,
                 incident.danger,
+                incident.vehicles || 0, // ADDED: Vehicles column
                 `<button class="btn-small btn-edit edit-incident-btn" data-incident-id="${incident.incident_id}">Edit</button>`
             ])
         ).join('');
 
-        container.innerHTML = buildTable(['ID', 'Type', 'Description', 'Status', 'Danger', 'Actions'], rows);
+        // UPDATED: Added "Vehicles" header
+        container.innerHTML = buildTable(['ID', 'Type', 'Description', 'Status', 'Danger', 'Vehicles', 'Actions'], rows);
 
         // Add edit listeners
         document.querySelectorAll('.edit-incident-btn').forEach(btn => {
@@ -139,6 +142,7 @@ function loadIncidents() {
     });
 }
 
+// UPDATED: Edit modal now includes vehicles field
 function showEditModal(incidentId) {
     // First get the current incident data
     makeAdminAjaxRequest('../admin/incidents', 'GET', null, (err, incidents) => {
@@ -190,6 +194,10 @@ function showEditModal(incidentId) {
                                 <option value="Unknown">Unknown</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Vehicles Engaged:</label>
+                            <input type="number" id="editVehicles" min="0" step="1" value="${incident.vehicles || 0}">
+                        </div>
                         <button type="submit">Update</button>
                         <button type="button" onclick="document.getElementById('editModal').remove()">Cancel</button>
                     </form>
@@ -211,7 +219,8 @@ function showEditModal(incidentId) {
                 incident_type: document.getElementById('editType').value,
                 description: document.getElementById('editDescription').value,
                 status: document.getElementById('editStatus').value,
-                danger: document.getElementById('editDanger').value
+                danger: document.getElementById('editDanger').value,
+                vehicles: parseInt(document.getElementById('editVehicles').value) || 0 // ADDED: Vehicles field
             };
 
             makeAdminAjaxRequest('../admin/incidents', 'POST', data, (err, response) => {
@@ -504,6 +513,15 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Table builders
+function buildTable(headers, rows) {
+    return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function buildRow(cells) {
+    return `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
 }
 
 // Initialize

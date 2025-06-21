@@ -8,10 +8,8 @@ package database.tables;
 import mainClasses.Incident;
 import com.google.gson.Gson;
 import database.DB_Connection;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -66,61 +64,25 @@ public class EditIncidentsTable {
         return null;
     }
 
-    public ArrayList<Incident> databaseToIncidentsSearch(String type,String status,String municipality) throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        ArrayList<Incident> incidents = new ArrayList<Incident>();
-        ResultSet rs;
-        String where="WHERE";
-        if(!type.equals("all"))
-            where+=" incident_type='" + type + "'";
-        if(!status.equals("all")){
-            if(!where.equals("WHERE")){
-                where+=" and status='" + status + "'";
-            }
-            else{
-                where+=" status='" + status + "'";
-            }
-        }
-        if(!municipality.equals("all") && !municipality.equals("")){
-            if(!where.equals("WHERE")){
-                where+=" and municipality='" + municipality + "'";
-            }
-            else{
-                where+=" municipality='" + municipality + "'";
-            }
-        }
-        try {
-            String query="SELECT * FROM incidents ";
-            if(!where.equals("WHERE"))
-                query+=where;
-            System.out.println(query);
-            rs = stmt.executeQuery(query);
 
-            while (rs.next()) {
-                String json = DB_Connection.getResultsToJSON(rs);
-                Gson gson = new Gson();
-                Incident incident = gson.fromJson(json, Incident.class);
-                incidents.add(incident);
-            }
-            return incidents;
-        } catch (Exception e) {
-            System.err.println("Got an exception! ");
-            System.err.println(e.getMessage());
-        }
-        return null;
-    }
 
     public void updateIncident(String id, HashMap<String, String> updates) throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        Incident bt = new Incident();
-        for (String key : updates.keySet()) {
-            String update = "UPDATE incidents SET " + key + "='" + updates.get(key) + "'" + "WHERE incident_id = '" + id + "'";
-            stmt.executeUpdate(update);
+
+        try (PreparedStatement stmt = con.prepareStatement(
+                "UPDATE incidents SET incident_type = ?, description = ?, status = ?, danger = ?, vehicles = ? WHERE incident_id = ?")) {
+
+            stmt.setString(1, updates.get("incident_type"));
+            stmt.setString(2, updates.get("description"));
+            stmt.setString(3, updates.get("status"));
+            stmt.setString(4, updates.get("danger"));
+            stmt.setString(5, updates.get("vehicles"));
+
+            stmt.setString(6, id);
+            stmt.executeUpdate();
+        } finally {
+            con.close();
         }
-        stmt.close();
-        con.close();
     }
     // Todo simplify update with one request
 

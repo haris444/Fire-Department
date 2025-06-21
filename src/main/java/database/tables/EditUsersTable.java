@@ -11,10 +11,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author Mike
- */
+
 public class EditUsersTable {
 
 
@@ -26,27 +23,10 @@ public class EditUsersTable {
     public User jsonToUser(String json){
         Gson gson = new Gson();
 
-        User user = gson.fromJson(json, User.class);
-        return user;
-    }
-
-    public String userToJSON(User user){
-        Gson gson = new Gson();
-
-        String json = gson.toJson(user, User.class);
-        return json;
+        return gson.fromJson(json, User.class);
     }
 
 
-
-    public void updateUser(String username,String key,String value) throws SQLException, ClassNotFoundException{
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        String update="UPDATE users SET "+key+"='"+value+"' WHERE username = '"+username+"'";
-        stmt.executeUpdate(update);
-        stmt.close();
-        con.close();
-    }
 
 
     public User userFromCredentials(String username, String password) throws SQLException, ClassNotFoundException{
@@ -218,14 +198,7 @@ public class EditUsersTable {
         }
     }
 
-    /**
-     * Direct database query to get user by username.
-     * This is a simple implementation for the school assignment.
-     *
-     * @param username The username to fetch
-     * @return User object or null if not found
-     * @throws Exception
-     */
+
     public User getUserByUsername(String username) throws Exception {
         database.DB_Connection dbConn = new database.DB_Connection();
         java.sql.Connection con = dbConn.getConnection();
