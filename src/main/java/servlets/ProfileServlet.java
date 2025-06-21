@@ -6,12 +6,12 @@ import jakarta.servlet.http.HttpSession;
 import com.google.gson.Gson;
 import database.tables.EditUsersTable;
 import mainClasses.User;
-import java.io.BufferedReader;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonElement;
+
 import java.util.*;
 /**
  * Universal Profile Servlet for handling user profile operations.
@@ -51,7 +51,7 @@ public class ProfileServlet extends BaseServlet {
 
             // Fetch complete user profile from consolidated users table
             EditUsersTable editUsersTable = new EditUsersTable();
-            User user = editUsersTable.getUserByUsernameFromDB(loggedInUsername);
+            User user = editUsersTable.getUserByUsername(loggedInUsername);
 
             if (user != null) {
                 // Convert complete User object to JSON (including all optional fields)

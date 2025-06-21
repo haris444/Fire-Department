@@ -42,12 +42,7 @@ public class VolunteerMessageServlet extends BaseServlet {
             EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
 
             // Get volunteer's user ID
-            int volunteerUserId = usersTable.getUserIdByUsername(volunteerUsername);
-            if (volunteerUserId == -1) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.print("{\"success\": false, \"message\": \"Volunteer not found\"}");
-                return;
-            }
+            int volunteerUserId = usersTable.getUserByUsername(volunteerUsername).getUser_id();
 
             // Get incidents this volunteer is assigned to
             ArrayList<Integer> assignedIncidentIds = assignmentsTable.getAssignedIncidentIds(volunteerUserId);
@@ -118,14 +113,6 @@ public class VolunteerMessageServlet extends BaseServlet {
             EditUsersTable usersTable = new EditUsersTable();
             EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
 
-            int volunteerUserId = usersTable.getUserIdByUsername(senderUsername);
-            ArrayList<Integer> assignedIncidentIds = assignmentsTable.getAssignedIncidentIds(volunteerUserId);
-
-            if (!assignedIncidentIds.contains(messageRequest.incident_id)) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.print("{\"success\": false, \"message\": \"You can only send messages for incidents you are assigned to.\"}");
-                return;
-            }
 
             // Create and save the message
             Message newMessage = new Message();
@@ -141,7 +128,7 @@ public class VolunteerMessageServlet extends BaseServlet {
             response.setStatus(HttpServletResponse.SC_OK);
             out.print("{\"success\": true, \"message\": \"Message sent successfully.\"}");
 
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch ( Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             PrintWriter out = response.getWriter();
             out.print("{\"success\": false, \"message\": \"Error sending message.\"}");

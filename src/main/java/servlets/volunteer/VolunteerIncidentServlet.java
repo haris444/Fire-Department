@@ -18,8 +18,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
- * Servlet to handle incidents for volunteers.
- * Supports both viewing all incidents and managing volunteer assignments.
+ * Servlet for volunteer + incident functionality: Shows all or assigned only incidents
+ * and handles aplications to join incident AND volunteer leaving incident
  */
 public class VolunteerIncidentServlet extends BaseServlet {
 
@@ -32,7 +32,7 @@ public class VolunteerIncidentServlet extends BaseServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String requestType = request.getParameter("type"); // "all" or "assigned"
+        String requestType = request.getParameter("type"); // "all" or "assigned" to handle both incident tables
 
         HttpSession session = request.getSession(false);
         String volunteerUsername = (String) session.getAttribute("loggedInUsername");
@@ -44,15 +44,10 @@ public class VolunteerIncidentServlet extends BaseServlet {
             if ("assigned".equals(requestType)) {
                 // Get only incidents assigned to this volunteer
                 EditUsersTable usersTable = new EditUsersTable();
-                int volunteerUserId = usersTable.getUserIdByUsername(volunteerUsername);
-                if (volunteerUserId == -1) {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    out.print("{\"success\": false, \"message\": \"Volunteer not found\"}");
-                    return;
-                }
+                int volunteerUserId = usersTable.getUserByUsername(volunteerUsername).getUser_id();
                 incidents = incidentsTable.getIncidentsByVolunteerId(volunteerUserId);
             } else {
-                // Get all incidents (default behavior)
+                // Get all incidents
                 incidents = incidentsTable.databaseToIncidents();
             }
 
@@ -90,20 +85,13 @@ public class VolunteerIncidentServlet extends BaseServlet {
         }
 
         try (PrintWriter out = response.getWriter()) {
-            Gson gson = new Gson();
             JsonObject requestData = new JsonParser().parse(jsonBuffer.toString()).getAsJsonObject();
 
             String action = requestData.get("action").getAsString();
             int incidentId = requestData.get("incident_id").getAsInt();
 
             EditUsersTable usersTable = new EditUsersTable();
-            int volunteerUserId = usersTable.getUserIdByUsername(volunteerUsername);
-
-            if (volunteerUserId == -1) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.print("{\"success\": false, \"message\": \"Volunteer not found\"}");
-                return;
-            }
+            int volunteerUserId = usersTable.getUserByUsername(volunteerUsername).getUser_id();
 
             EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
 
@@ -120,7 +108,7 @@ public class VolunteerIncidentServlet extends BaseServlet {
                 }
 
             } else if ("leave".equals(action)) {
-                // Volunteer wants to leave an incident assignment
+                // leave an incident assignment
                 boolean success = assignmentsTable.removeAssignment(volunteerUserId, incidentId);
 
                 if (success) {
@@ -131,9 +119,6 @@ public class VolunteerIncidentServlet extends BaseServlet {
                     out.print("{\"success\": false, \"message\": \"Assignment not found\"}");
                 }
 
-            } else {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print("{\"success\": false, \"message\": \"Invalid action. Use 'apply' or 'leave'\"}");
             }
 
         } catch (Exception e) {

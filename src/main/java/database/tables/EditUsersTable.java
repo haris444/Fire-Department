@@ -190,7 +190,6 @@ public class EditUsersTable {
         }
     }
 
-    //Todo explain later
     public boolean updateUserProfile(String username, Map<String, Object> updates) throws SQLException, ClassNotFoundException {
         try (Connection con = DB_Connection.getConnection()) {
             StringBuilder sql = new StringBuilder("UPDATE users SET ");
@@ -227,7 +226,7 @@ public class EditUsersTable {
      * @return User object or null if not found
      * @throws Exception
      */
-    public User getUserByUsernameFromDB(String username) throws Exception {
+    public User getUserByUsername(String username) throws Exception {
         database.DB_Connection dbConn = new database.DB_Connection();
         java.sql.Connection con = dbConn.getConnection();
         java.sql.Statement stmt = con.createStatement();
@@ -248,20 +247,6 @@ public class EditUsersTable {
         return null;
     }
 
-    public int getUserIdByUsername(String username) throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT user_id FROM users WHERE username = '" + username + "'");
-            if (rs.next()) {
-                return rs.getInt("user_id");
-            }
-            return -1;
-        } finally {
-            stmt.close();
-            con.close();
-        }
-    }
 
     public ArrayList<User> getAllVolunteers() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();

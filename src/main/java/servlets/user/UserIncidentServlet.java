@@ -67,7 +67,7 @@ public class UserIncidentServlet extends BaseServlet {
 
             // Get user's phone number from profile
             EditUsersTable editUsersTable = new EditUsersTable();
-            User currentUser = editUsersTable.getUserByUsernameFromDB(loggedInUsername);
+            User currentUser = editUsersTable.getUserByUsername(loggedInUsername);
 
             if (currentUser == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
