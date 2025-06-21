@@ -28,7 +28,7 @@ public class EditVolunteerAssignmentsTable {
         con.close();
     }
 
-    public void addAssignmentFromJSON(String json) throws ClassNotFoundException {
+    public void addAssignmentFromJSON(String json) throws SQLException, ClassNotFoundException {
         VolunteerAssignment assignment = jsonToAssignment(json);
         createNewAssignment(assignment);
     }
@@ -38,21 +38,24 @@ public class EditVolunteerAssignmentsTable {
         return gson.fromJson(json, VolunteerAssignment.class);
     }
 
-    public void createNewAssignment(VolunteerAssignment assignment) throws ClassNotFoundException {
+    public boolean createNewAssignment(VolunteerAssignment assignment) throws SQLException,ClassNotFoundException {
+        Connection con = DB_Connection.getConnection();
+        Statement stmt = con.createStatement();
         try {
-            Connection con = DB_Connection.getConnection();
-            Statement stmt = con.createStatement();
-
             String insertQuery = "INSERT INTO volunteer_assignments (volunteer_user_id, incident_id) VALUES ("
                     + assignment.getVolunteer_user_id() + ", "
                     + assignment.getIncident_id() + ")";
 
-            stmt.executeUpdate(insertQuery);
-            System.out.println("# Assignment added successfully");
+            int result = stmt.executeUpdate(insertQuery);
+            return result > 0;
+        } catch (SQLException e) {
+            if (e.getMessage().contains("Duplicate entry")) {
+                return false;
+            }
+            throw e;
+        } finally {
             stmt.close();
             con.close();
-        } catch (SQLException ex) {
-            System.err.println("Error adding assignment: " + ex.getMessage());
         }
     }
 
@@ -73,26 +76,7 @@ public class EditVolunteerAssignmentsTable {
         return incidentIds;
     }
 
-    public boolean assignVolunteerToIncident(int volunteerUserId, int incidentId) throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
 
-        try {
-            String insertQuery = "INSERT INTO volunteer_assignments (volunteer_user_id, incident_id) VALUES ("
-                    + volunteerUserId + ", " + incidentId + ")";
-            int result = stmt.executeUpdate(insertQuery);
-            return result > 0;
-        } catch (SQLException e) {
-            // Ignore duplicate key errors (assignment already exists)
-            if (e.getMessage().contains("Duplicate entry")) {
-                return false;
-            }
-            throw e;
-        } finally {
-            stmt.close();
-            con.close();
-        }
-    }
 
     public boolean removeAssignment(int volunteerUserId, int incidentId) throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
@@ -109,25 +93,7 @@ public class EditVolunteerAssignmentsTable {
         }
     }
 
-    public ArrayList<VolunteerAssignment> getAllAssignments() throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        ArrayList<VolunteerAssignment> assignments = new ArrayList<>();
 
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM volunteer_assignments");
-            while (rs.next()) {
-                String json = DB_Connection.getResultsToJSON(rs);
-                Gson gson = new Gson();
-                VolunteerAssignment assignment = gson.fromJson(json, VolunteerAssignment.class);
-                assignments.add(assignment);
-            }
-        } finally {
-            stmt.close();
-            con.close();
-        }
-        return assignments;
-    }
 
     public ArrayList<HashMap<String, Object>> getAllAssignmentsWithDetails() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();

@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import mainClasses.Incident;
+import mainClasses.VolunteerAssignment;
 import servlets.BaseServlet;
 
 import java.io.BufferedReader;
@@ -97,7 +98,7 @@ public class VolunteerIncidentServlet extends BaseServlet {
 
             if ("apply".equals(action)) {
                 // Volunteer wants to apply to an incident
-                boolean success = assignmentsTable.assignVolunteerToIncident(volunteerUserId, incidentId);
+                boolean success = assignmentsTable.createNewAssignment(new VolunteerAssignment( volunteerUserId, incidentId));
 
                 if (success) {
                     response.setStatus(HttpServletResponse.SC_OK);

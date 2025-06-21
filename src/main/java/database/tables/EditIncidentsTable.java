@@ -35,12 +35,6 @@ public class EditIncidentsTable {
         return btest;
     }
 
-    public String incidentToJSON(Incident bt) {
-        Gson gson = new Gson();
-
-        String json = gson.toJson(bt, Incident.class);
-        return json;
-    }
 
     public ArrayList<Incident> databaseToIncidents() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
@@ -77,7 +71,6 @@ public class EditIncidentsTable {
             stmt.setString(3, updates.get("status"));
             stmt.setString(4, updates.get("danger"));
             stmt.setString(5, updates.get("vehicles"));
-
             stmt.setString(6, id);
             stmt.executeUpdate();
         } finally {

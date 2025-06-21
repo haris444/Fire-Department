@@ -2,20 +2,16 @@ package database.tables;
 
 import com.google.gson.Gson;
 import database.DB_Connection;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mainClasses.Message;
 
-/**
- * Updated EditMessagesTable with new message rules:
- * - All messages must be tied to an incident
- * - Recipients can only be: "public", "volunteers", "admin"
- */
+
+
 public class EditMessagesTable {
 
     public void addMessageFromJSON(String json) throws ClassNotFoundException {
@@ -30,34 +26,6 @@ public class EditMessagesTable {
         return msg;
     }
 
-    public String messageToJSON(Message msg) {
-        Gson gson = new Gson();
-        String json = gson.toJson(msg, Message.class);
-        return json;
-    }
-
-    /**
-     * Get messages for a specific incident
-     */
-    public ArrayList<Message> databaseToMessage(int incident_id) throws SQLException, ClassNotFoundException {
-        Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
-        ArrayList<Message> messages = new ArrayList<Message>();
-        ResultSet rs;
-        try {
-            rs = stmt.executeQuery("SELECT * FROM messages WHERE incident_id= '" + incident_id + "'");
-            while (rs.next()) {
-                String json = DB_Connection.getResultsToJSON(rs);
-                Gson gson = new Gson();
-                Message msg = gson.fromJson(json, Message.class);
-                messages.add(msg);
-            }
-            return messages;
-        } catch (Exception e) {
-            System.err.println("Got an exception! ");
-        }
-        return null;
-    }
 
     public void createMessageTable() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
@@ -77,23 +45,11 @@ public class EditMessagesTable {
         con.close();
     }
 
-    /**
-     * Create new message - now requires incident_id
-     */
+
     public void createNewMessage(Message msg) throws ClassNotFoundException {
         try {
             Connection con = DB_Connection.getConnection();
             Statement stmt = con.createStatement();
-
-            // Validate required fields
-            if (msg.getIncident_id() <= 0) {
-                throw new IllegalArgumentException("Incident ID is required for all messages");
-            }
-
-            String recipient = msg.getRecipient();
-            if (!"public".equals(recipient) && !"volunteers".equals(recipient) && !"admin".equals(recipient)) {
-                throw new IllegalArgumentException("Recipient must be 'public', 'volunteers', or 'admin'");
-            }
 
             String insertQuery = "INSERT INTO "
                     + " messages (incident_id,message,sender,recipient,date_time) "
@@ -115,9 +71,7 @@ public class EditMessagesTable {
         }
     }
 
-    /**
-     * Get all messages - for admin use only
-     */
+
     public ArrayList<Message> getAllMessages() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
@@ -138,9 +92,7 @@ public class EditMessagesTable {
         return null;
     }
 
-    /**
-     * Get public messages - for users and volunteers
-     */
+
     public ArrayList<Message> getPublicMessages() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
@@ -166,27 +118,30 @@ public class EditMessagesTable {
         return messages;
     }
 
-    /**
-     * Get messages for volunteers - public messages and volunteer messages for assigned incidents
-     */
+    // public + volunteer only for specific incidents
     public ArrayList<Message> getMessagesForVolunteer(ArrayList<Integer> assignedIncidentIds) throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
-        Statement stmt = con.createStatement();
         ArrayList<Message> messages = new ArrayList<Message>();
-        ResultSet rs;
+
+        String query = "SELECT * FROM messages WHERE recipient = 'public'";
+
+        // Create placeholders for the IN clause
+        String placeholders = String.join(",", Collections.nCopies(assignedIncidentIds.size(), "?"));
+        query += " OR (recipient = 'volunteers' AND incident_id IN (" + placeholders + "))";
+
+        query += " ORDER BY date_time DESC";
+
+        PreparedStatement pstmt = con.prepareStatement(query);
 
         try {
-            // Build query for public messages and volunteer messages for assigned incidents
-            String query = "SELECT * FROM messages WHERE recipient = 'public'";
-
+            // Set parameters for the incident IDs
             if (assignedIncidentIds != null && !assignedIncidentIds.isEmpty()) {
-                String incidentList = assignedIncidentIds.toString().replace("[", "(").replace("]", ")");
-                query += " OR (recipient = 'volunteers' AND incident_id IN " + incidentList + ")";
+                for (int i = 0; i < assignedIncidentIds.size(); i++) {
+                    pstmt.setInt(i + 1, assignedIncidentIds.get(i));
+                }
             }
 
-            query += " ORDER BY date_time DESC";
-
-            rs = stmt.executeQuery(query);
+            ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 String json = DB_Connection.getResultsToJSON(rs);
                 Gson gson = new Gson();
@@ -198,7 +153,7 @@ public class EditMessagesTable {
             System.err.println(e.getMessage());
             throw e;
         } finally {
-            stmt.close();
+            pstmt.close();
             con.close();
         }
         return messages;

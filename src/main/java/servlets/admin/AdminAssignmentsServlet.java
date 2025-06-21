@@ -74,7 +74,7 @@ public class AdminAssignmentsServlet extends BaseServlet {
                 int volunteerUserId = requestData.get("volunteer_user_id").getAsInt();
                 int incidentId = requestData.get("incident_id").getAsInt();
 
-                boolean success = assignmentsTable.assignVolunteerToIncident(volunteerUserId, incidentId);
+                boolean success = assignmentsTable.createNewAssignment(new VolunteerAssignment(volunteerUserId, incidentId));
 
                 response.setStatus(HttpServletResponse.SC_OK);
                 PrintWriter out = response.getWriter();
