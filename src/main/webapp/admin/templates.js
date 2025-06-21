@@ -1,11 +1,4 @@
-// templates.js - All templates in one compact file
 
-// Simple template renderer
-function render(template, data = {}) {
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => data[key] || '');
-}
-
-// Basic page templates
 const templates = {
     dashboard: `<div class="content-section"><h2>Dashboard & Statistics</h2><div id="statsContainer">Loading...</div></div>`,
 
@@ -38,22 +31,31 @@ const templates = {
         <div id="messagesContainer">Loading...</div>
         <div class="admin-form">
             <h3>Send New Message</h3>
+            <div class="message-info">
+                <p><strong>Admin Message Rules:</strong></p>
+                <ul>
+                    <li>You can send messages to: <strong>Public</strong> (all users) or <strong>Volunteers</strong> (for specific incident)</li>
+                    <li>All messages must be tied to an incident</li>
+                    <li>Public messages are visible to all users</li>
+                    <li>Volunteer messages are only visible to volunteers assigned to that incident</li>
+                </ul>
+            </div>
             <form id="sendMessageForm">
                 <div class="form-group">
-                    <label for="recipient">Recipient:</label>
+                    <label for="recipient">Recipient: *</label>
                     <select id="recipient" required>
                         <option value="">Select Recipient</option>
                         <option value="public">Public (All Users)</option>
                         <option value="volunteers">Volunteers (Specific Incident)</option>
                     </select>
                 </div>
-                <div class="form-group" id="incidentGroup" style="display: none;">
-                    <label for="incidentId">Incident:</label>
-                    <select id="incidentId"><option value="">Loading...</option></select>
+                <div class="form-group">
+                    <label for="incidentId">Incident: * <span class="field-note">(Required for all messages)</span></label>
+                    <select id="incidentId" required><option value="">Loading...</option></select>
                 </div>
                 <div class="form-group">
-                    <label for="messageText">Message:</label>
-                    <textarea id="messageText" required rows="4"></textarea>
+                    <label for="messageText">Message: *</label>
+                    <textarea id="messageText" required rows="4" placeholder="Type your message..."></textarea>
                 </div>
                 <button type="submit">Send Message</button>
             </form>

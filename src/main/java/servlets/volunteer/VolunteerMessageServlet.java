@@ -17,10 +17,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
- * Servlet to handle messaging for volunteers according to project rules.
+ * Updated servlet to handle messaging for volunteers according to new project rules.
  * Volunteers can:
- * - Send messages to: admin, public, volunteers (with incident_id)
- * - Read messages from: admin and volunteers for incidents they participate in, plus all public messages
+ * - Send messages to: admin, public, volunteers (incident_id always required)
+ * - Read messages: public messages and volunteer messages for incidents they participate in
  */
 public class VolunteerMessageServlet extends BaseServlet {
 
@@ -47,8 +47,8 @@ public class VolunteerMessageServlet extends BaseServlet {
             // Get incidents this volunteer is assigned to
             ArrayList<Integer> assignedIncidentIds = assignmentsTable.getAssignedIncidentIds(volunteerUserId);
 
-            // Get messages according to the rules
-            ArrayList<Message> messages = getVolunteerMessages(messagesTable, volunteerUsername, assignedIncidentIds);
+            // Get messages according to the new rules
+            ArrayList<Message> messages = messagesTable.getMessagesForVolunteer(assignedIncidentIds);
 
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(messages);
@@ -95,7 +95,7 @@ public class VolunteerMessageServlet extends BaseServlet {
                 return;
             }
 
-            // Validate incident_id is provided (always required for volunteers)
+            // Validate incident_id is provided
             if (messageRequest.incident_id == null || messageRequest.incident_id <= 0) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.print("{\"success\": false, \"message\": \"Incident ID is required for all volunteer messages.\"}");
@@ -109,10 +109,6 @@ public class VolunteerMessageServlet extends BaseServlet {
                 return;
             }
 
-            // Verify the volunteer is assigned to this incident
-            EditUsersTable usersTable = new EditUsersTable();
-            EditVolunteerAssignmentsTable assignmentsTable = new EditVolunteerAssignmentsTable();
-
 
             // Create and save the message
             Message newMessage = new Message();
@@ -120,7 +116,7 @@ public class VolunteerMessageServlet extends BaseServlet {
             newMessage.setRecipient(recipient);
             newMessage.setMessage(messageRequest.message_text);
             newMessage.setIncident_id(messageRequest.incident_id);
-            newMessage.setDate_time(); // Set current timestamp
+            newMessage.setDate_time();
 
             EditMessagesTable messagesTable = new EditMessagesTable();
             messagesTable.createNewMessage(newMessage);
@@ -128,61 +124,12 @@ public class VolunteerMessageServlet extends BaseServlet {
             response.setStatus(HttpServletResponse.SC_OK);
             out.print("{\"success\": true, \"message\": \"Message sent successfully.\"}");
 
-        } catch ( Exception e) {
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             PrintWriter out = response.getWriter();
             out.print("{\"success\": false, \"message\": \"Error sending message.\"}");
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Gets messages that a volunteer should be able to read according to the rules:
-     * - Messages from admin and volunteers for incidents they participate in
-     * - All public messages
-     *
-     * @param messagesTable The messages table handler
-     * @param volunteerUsername The volunteer's username
-     * @param assignedIncidentIds List of incident IDs the volunteer is assigned to
-     * @return List of messages the volunteer can read
-     */
-    private ArrayList<Message> getVolunteerMessages(EditMessagesTable messagesTable,
-                                                    String volunteerUsername, ArrayList<Integer> assignedIncidentIds)
-            throws SQLException, ClassNotFoundException {
-
-        ArrayList<Message> allMessages = messagesTable.getAllMessages();
-        ArrayList<Message> filteredMessages = new ArrayList<>();
-
-        for (Message message : allMessages) {
-            // Always include public messages
-            if ("public".equals(message.getRecipient())) {
-                filteredMessages.add(message);
-                continue;
-            }
-
-            // Include messages where volunteer is the recipient for their assigned incidents
-            if (volunteerUsername.equals(message.getRecipient()) &&
-                    assignedIncidentIds.contains(message.getIncident_id())) {
-                filteredMessages.add(message);
-                continue;
-            }
-
-            // Include messages to "volunteers" for incidents they're assigned to
-            if ("volunteers".equals(message.getRecipient()) &&
-                    assignedIncidentIds.contains(message.getIncident_id())) {
-                filteredMessages.add(message);
-                continue;
-            }
-
-            // Include messages from admin for incidents they're assigned to
-            if ("admin".equals(message.getSender()) &&
-                    assignedIncidentIds.contains(message.getIncident_id())) {
-                filteredMessages.add(message);
-                continue;
-            }
-        }
-
-        return filteredMessages;
     }
 
     /**

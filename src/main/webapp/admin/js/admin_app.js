@@ -363,7 +363,6 @@ function removeAssignment(volunteerUserId, incidentId) {
     }
 }
 
-// Messages
 function loadMessages() {
     makeAdminAjaxRequest('../admin/messages', 'GET', null, (err, responseData) => {
         const container = document.getElementById('messagesContainer');
@@ -376,41 +375,51 @@ function loadMessages() {
         populateIncidentsForMessages(responseData.incidents);
     });
 
-    // Setup form handlers
-    document.getElementById('recipient').addEventListener('change', function() {
-        const incidentGroup = document.getElementById('incidentGroup');
-        incidentGroup.style.display = this.value === 'volunteers' ? 'block' : 'none';
-    });
+    // FIXED: Remove existing event listener before adding new one
+    const sendMessageForm = document.getElementById('sendMessageForm');
+    if (sendMessageForm) {
+        // Clone the form to remove all event listeners
+        const newForm = sendMessageForm.cloneNode(true);
+        sendMessageForm.parentNode.replaceChild(newForm, sendMessageForm);
 
-    document.getElementById('sendMessageForm').addEventListener('submit', event => {
-        event.preventDefault();
-        const recipient = document.getElementById('recipient').value;
-        const messageText = document.getElementById('messageText').value;
-        const incidentId = document.getElementById('incidentId').value;
+        // Add single event listener to the new form
+        document.getElementById('sendMessageForm').addEventListener('submit', handleAdminSendMessage);
+    }
+}
 
-        if (!recipient || !messageText.trim()) {
-            showMessageResult('Please fill all required fields', 'error');
-            return;
+// FIXED: Extract the send message handler to a separate function
+function handleAdminSendMessage(event) {
+    event.preventDefault();
+
+    const recipient = document.getElementById('recipient').value;
+    const messageText = document.getElementById('messageText').value;
+    const incidentId = document.getElementById('incidentId').value;
+
+    if (!recipient || !messageText.trim() || !incidentId) {
+        showMessageResult('Please fill all required fields', 'error');
+        return;
+    }
+
+    // Validate admin can only send to public or volunteers
+    if (recipient !== 'public' && recipient !== 'volunteers') {
+        showMessageResult('Admin can only send to Public or Volunteers', 'error');
+        return;
+    }
+
+    const data = {
+        recipient: recipient,
+        message_text: messageText.trim(),
+        incident_id: parseInt(incidentId)
+    };
+
+    makeAdminAjaxRequest('../admin/messages', 'POST', data, (err, response) => {
+        if (err) {
+            showMessageResult('Error: ' + err.message, 'error');
+        } else {
+            showMessageResult('Message sent!', 'success');
+            document.getElementById('sendMessageForm').reset();
+            loadMessages();
         }
-
-        if (recipient === 'volunteers' && !incidentId) {
-            showMessageResult('Please select incident for volunteer messages', 'error');
-            return;
-        }
-
-        const data = {recipient, message_text: messageText.trim()};
-        if (incidentId) data.incident_id = parseInt(incidentId);
-
-        makeAdminAjaxRequest('../admin/messages', 'POST', data, (err, response) => {
-            if (err) {
-                showMessageResult('Error: ' + err.message, 'error');
-            } else {
-                showMessageResult('Message sent!', 'success');
-                document.getElementById('sendMessageForm').reset();
-                document.getElementById('incidentGroup').style.display = 'none';
-                loadMessages();
-            }
-        });
     });
 }
 
@@ -435,6 +444,9 @@ function renderMessagesTable(messages, container) {
     }).join('');
 
     container.innerHTML = `<h3>All Messages (${messages.length} total)</h3>` +
+        '<div class="message-info">' +
+        '<p><strong>Message Rules:</strong> All messages are tied to incidents. Recipients are Public, Volunteers, or Admin.</p>' +
+        '</div>' +
         buildTable(['Time', 'From', 'To', 'Message', 'Incident', 'Type'], rows);
 }
 
@@ -445,16 +457,18 @@ function populateIncidentsForMessages(incidents) {
         return;
     }
 
-    const activeIncidents = incidents.filter(inc => inc.status === 'running' || inc.status === 'submitted');
+    // Show all incidents (admin can send messages about any incident)
     select.innerHTML = '<option value="">Select incident</option>' +
-        buildOptions(activeIncidents, 'incident_id', inc => `ID: ${inc.incident_id} - ${inc.incident_type} (${inc.status})`);
+        buildOptions(incidents, 'incident_id', inc => `ID: ${inc.incident_id} - ${inc.incident_type} (${inc.status}) - ${inc.municipality || 'Unknown'}`);
 }
 
 function getMessageType(message) {
     if (message.sender === 'admin' && message.recipient === 'public') return 'Admin → Public';
     if (message.sender === 'admin' && message.recipient === 'volunteers') return 'Admin → Volunteers';
-    if (message.sender === 'admin') return 'Admin Message';
-    return 'Regular';
+    if (message.recipient === 'admin') return 'To Admin';
+    if (message.recipient === 'public') return 'Public Message';
+    if (message.recipient === 'volunteers') return 'Volunteer Message';
+    return 'Other';
 }
 
 function buildOptions(items, valueField, labelFunction) {

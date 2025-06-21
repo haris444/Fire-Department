@@ -1,5 +1,3 @@
-// user_templates.js - Compact templates
-
 const userTemplates = {
     profile: `<div class="content-section"><h2>My Profile</h2><div id="profileContainer">Loading...</div></div>`,
 
@@ -62,28 +60,34 @@ const userTemplates = {
 
     viewIncidents: `<div class="content-section"><h2>View Incidents</h2><div id="incidentsContainer">Loading...</div></div>`,
 
+    // MSG TEMPLATE
     messages: `<div class="content-section"><h2>Messages</h2>
         <div id="messagesContainer">Loading...</div>
         <div class="message-compose">
             <h3>Send New Message</h3>
             <div class="message-info">
-                <p><strong>Rules:</strong> Send Public messages (visible to all) or Admin messages (requires incident ID)</p>
+                <p><strong>User Message Rules:</strong></p>
+                <ul>
+                    <li>You can send messages to: <strong>Admin</strong> (about specific incident) or <strong>Public</strong> (visible to all)</li>
+                    <li>All messages must be tied to an incident</li>
+                    <li>You can only see public messages from all users</li>
+                </ul>
             </div>
             <form id="sendMessageForm">
                 <div class="form-group">
-                    <label for="recipient">Recipient:</label>
+                    <label for="recipient">Recipient: *</label>
                     <select id="recipient" required>
                         <option value="">Select Recipient</option>
-                        <option value="public">Public (All Users)</option>
                         <option value="admin">Admin (About Incident)</option>
+                        <option value="public">Public (All Users)</option>
                     </select>
                 </div>
-                <div class="form-group" id="incidentGroup" style="display: none;">
-                    <label for="incident_id">Incident:</label>
-                    <select id="incident_id"><option value="">Loading...</option></select>
+                <div class="form-group">
+                    <label for="incident_id">Incident: * <span class="field-note">(Required for all messages)</span></label>
+                    <select id="incident_id" required><option value="">Loading...</option></select>
                 </div>
                 <div class="form-group">
-                    <label for="message_text">Message:</label>
+                    <label for="message_text">Message: *</label>
                     <textarea id="message_text" required placeholder="Type your message..."></textarea>
                 </div>
                 <button type="submit" class="btn-send">Send Message</button>
@@ -93,7 +97,7 @@ const userTemplates = {
     </div>`
 };
 
-// Compact profile form builder
+// Profile form builder and utility functions
 function buildProfileForm(user) {
     const isVol = user.user_type === 'volunteer';
     let h = '<form id="userProfileForm" class="user-form"><h3>Profile Information</h3>';

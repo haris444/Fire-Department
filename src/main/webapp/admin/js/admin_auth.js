@@ -77,7 +77,7 @@ function initializeLoginPage() {
 // Logout Logic
 function logoutAdmin() {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '../admin/logout', true);
+    xhr.open('POST', '../logout', true);
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {

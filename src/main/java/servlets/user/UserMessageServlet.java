@@ -30,8 +30,8 @@ public class UserMessageServlet extends BaseServlet {
             EditMessagesTable editMessagesTable = new EditMessagesTable();
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
 
-            // Get only public messages for regular users
-            ArrayList<Message> publicMessages = editMessagesTable.getMessagesByRecipient("public");
+            // Users can only see public messages
+            ArrayList<Message> publicMessages = editMessagesTable.getPublicMessages();
 
             // Get all incidents for the incident dropdown (when sending to admin)
             ArrayList<Incident> incidents = editIncidentsTable.databaseToIncidents();
@@ -92,7 +92,7 @@ public class UserMessageServlet extends BaseServlet {
                     (!messageRequest.recipient.equals("admin") && !messageRequest.recipient.equals("public"))) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"Invalid recipient. Users can send to 'admin' or 'public' only.\"}");
+                out.print("{\"success\": false, \"message\": \"Users can send to 'admin' or 'public' only.\"}");
                 out.flush();
                 return;
             }
@@ -106,15 +106,13 @@ public class UserMessageServlet extends BaseServlet {
                 return;
             }
 
-            // For messages to admin, incident_id is required
-            if ("admin".equals(messageRequest.recipient)) {
-                if (messageRequest.incident_id == null || messageRequest.incident_id <= 0) {
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    PrintWriter out = response.getWriter();
-                    out.print("{\"success\": false, \"message\": \"Incident ID is required when sending messages to admin.\"}");
-                    out.flush();
-                    return;
-                }
+            // Incident_id is required for all messages
+            if (messageRequest.incident_id == null || messageRequest.incident_id <= 0) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                PrintWriter out = response.getWriter();
+                out.print("{\"success\": false, \"message\": \"Incident ID is required for all messages.\"}");
+                out.flush();
+                return;
             }
 
             // Create Message object
@@ -122,16 +120,7 @@ public class UserMessageServlet extends BaseServlet {
             newMessage.setSender(loggedInUsername);
             newMessage.setRecipient(messageRequest.recipient);
             newMessage.setMessage(messageRequest.message_text);
-
-            // Set incident_id if provided
-            if (messageRequest.incident_id != null && messageRequest.incident_id > 0) {
-                newMessage.setIncident_id(messageRequest.incident_id);
-            } else {
-                // For public messages, set a default incident_id or use 1
-                newMessage.setIncident_id(1);
-            }
-
-            // Set current date/time
+            newMessage.setIncident_id(messageRequest.incident_id);
             newMessage.setDate_time();
 
             // Save message to database

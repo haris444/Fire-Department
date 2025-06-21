@@ -226,24 +226,62 @@ function loadMessagesSection() {
         }
     });
 
-    // Setup form handlers
-    document.getElementById('recipient').addEventListener('change', function() {
-        const incidentGroup = document.getElementById('incidentGroup');
-        const incidentSelect = document.getElementById('incident_id');
+    // FIXED: Remove existing event listener before adding new one
+    const sendMessageForm = document.getElementById('sendMessageForm');
+    if (sendMessageForm) {
+        // Clone the form to remove all event listeners
+        const newForm = sendMessageForm.cloneNode(true);
+        sendMessageForm.parentNode.replaceChild(newForm, sendMessageForm);
 
-        if (this.value === 'admin') {
-            incidentGroup.style.display = 'block';
-            incidentSelect.required = true;
+        // Add single event listener to the new form
+        document.getElementById('sendMessageForm').addEventListener('submit', handleUserSendMessage);
+    }
+}
+
+// FIXED: Extract the send message handler to a separate function
+function handleUserSendMessage(event) {
+    event.preventDefault();
+
+    const recipient = document.getElementById('recipient').value;
+    const messageText = document.getElementById('message_text').value;
+    const incidentId = document.getElementById('incident_id').value;
+
+    if (!recipient) {
+        showUserMessageResult('Please select a recipient.', 'error');
+        return;
+    }
+
+    if (!messageText.trim()) {
+        showUserMessageResult('Please enter a message.', 'error');
+        return;
+    }
+
+    // UPDATED: Incident ID is now required for all messages
+    if (!incidentId) {
+        showUserMessageResult('Please select an incident (required for all messages).', 'error');
+        return;
+    }
+
+    // UPDATED: Validate user can only send to admin or public
+    if (recipient !== 'admin' && recipient !== 'public') {
+        showUserMessageResult('Users can only send to Admin or Public.', 'error');
+        return;
+    }
+
+    const messageData = {
+        recipient: recipient,
+        message_text: messageText.trim(),
+        incident_id: parseInt(incidentId)
+    };
+
+    makeUserAjaxRequest('../user/messages', 'POST', messageData, function(err, response) {
+        if (err) {
+            showUserMessageResult('Error sending message: ' + err.message, 'error');
         } else {
-            incidentGroup.style.display = 'none';
-            incidentSelect.required = false;
-            incidentSelect.value = '';
+            showUserMessageResult('Message sent successfully!', 'success');
+            document.getElementById('sendMessageForm').reset();
+            loadMessagesSection();
         }
-    });
-
-    document.getElementById('sendMessageForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        handleUserSendMessage();
     });
 }
 
@@ -269,7 +307,7 @@ function renderUserMessages(messages) {
 
     let html = '<div class="message-list">';
     html += '<h3>Public Messages</h3>';
-    html += '<div class="messages-info">You can see all public messages from admins, volunteers, and other users.</div>';
+    html += '<div class="messages-info">You can see all public messages from admins, volunteers, and other users. All messages are tied to specific incidents.</div>';
 
     if (messages && messages.length > 0) {
         messages.sort(function(a, b) {
@@ -282,9 +320,7 @@ function renderUserMessages(messages) {
             html += '<div class="message-header">';
             html += '<span class="message-sender">From: ' + message.sender + '</span>';
             html += '<span class="message-recipient">To: ' + message.recipient + '</span>';
-            if (message.incident_id && message.incident_id > 1) {
-                html += '<span class="message-incident">Incident: ' + message.incident_id + '</span>';
-            }
+            html += '<span class="message-incident">Incident: ' + (message.incident_id || 'N/A') + '</span>';
             html += '<span class="message-type-badge ' + messageType + '">' + getUserMessageTypeLabel(messageType) + '</span>';
             html += '</div>';
             html += '<div class="message-content">' + escapeHtml(message.message) + '</div>';
@@ -317,47 +353,6 @@ function getUserMessageTypeLabel(messageType) {
 function isKnownVolunteer(sender) {
     const volunteerPatterns = ['volunteer', 'vol_', 'raphael', 'nick', 'mary', 'papas'];
     return volunteerPatterns.some(pattern => sender.toLowerCase().includes(pattern.toLowerCase()));
-}
-
-function handleUserSendMessage() {
-    const recipient = document.getElementById('recipient').value;
-    const messageText = document.getElementById('message_text').value;
-    const incidentId = document.getElementById('incident_id').value;
-
-    if (!recipient) {
-        showUserMessageResult('Please select a recipient.', 'error');
-        return;
-    }
-
-    if (!messageText.trim()) {
-        showUserMessageResult('Please enter a message.', 'error');
-        return;
-    }
-
-    if (recipient === 'admin' && !incidentId) {
-        showUserMessageResult('Please select an incident when messaging admin.', 'error');
-        return;
-    }
-
-    const messageData = {
-        recipient: recipient,
-        message_text: messageText.trim()
-    };
-
-    if (incidentId) {
-        messageData.incident_id = parseInt(incidentId);
-    }
-
-    makeUserAjaxRequest('../user/messages', 'POST', messageData, function(err, response) {
-        if (err) {
-            showUserMessageResult('Error sending message: ' + err.message, 'error');
-        } else {
-            showUserMessageResult('Message sent successfully!', 'success');
-            document.getElementById('sendMessageForm').reset();
-            document.getElementById('incidentGroup').style.display = 'none';
-            loadMessagesSection();
-        }
-    });
 }
 
 function showUserMessageResult(message, type) {

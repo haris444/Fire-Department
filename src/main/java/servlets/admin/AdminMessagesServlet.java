@@ -30,7 +30,7 @@ public class AdminMessagesServlet extends BaseServlet {
             EditMessagesTable editMessagesTable = new EditMessagesTable();
             EditIncidentsTable editIncidentsTable = new EditIncidentsTable();
 
-            // Get all messages for admin view
+            // Admin can see all messages
             ArrayList<Message> messages = editMessagesTable.getAllMessages();
 
             // Get all incidents for the incident dropdown
@@ -92,6 +92,14 @@ public class AdminMessagesServlet extends BaseServlet {
                 return;
             }
 
+            if (messageRequest.incident_id == null || messageRequest.incident_id <= 0) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                PrintWriter out = response.getWriter();
+                out.print("{\"success\": false, \"message\": \"Incident ID is required for all messages.\"}");
+                out.flush();
+                return;
+            }
+
             if (messageRequest.recipient == null || messageRequest.recipient.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 PrintWriter out = response.getWriter();
@@ -100,21 +108,11 @@ public class AdminMessagesServlet extends BaseServlet {
                 return;
             }
 
-            // Validate recipient type
+            // Validate recipient type - admin can only send to public or volunteers
             if (!"public".equals(messageRequest.recipient) && !"volunteers".equals(messageRequest.recipient)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"Invalid recipient. Admin can send to 'public' or 'volunteers'.\"}");
-                out.flush();
-                return;
-            }
-
-            // For volunteers recipient, incident_id is required
-            if ("volunteers".equals(messageRequest.recipient) &&
-                    (messageRequest.incident_id == null || messageRequest.incident_id <= 0)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"Incident ID is required when sending to volunteers.\"}");
+                out.print("{\"success\": false, \"message\": \"Admin can only send to 'public' or 'volunteers'.\"}");
                 out.flush();
                 return;
             }
@@ -124,16 +122,7 @@ public class AdminMessagesServlet extends BaseServlet {
             message.setSender("admin");
             message.setMessage(messageRequest.message_text);
             message.setRecipient(messageRequest.recipient);
-
-            // Set incident_id if provided
-            if (messageRequest.incident_id != null && messageRequest.incident_id > 0) {
-                message.setIncident_id(messageRequest.incident_id);
-            } else {
-                // For public messages, we can set a default incident_id or leave it null
-                // Based on your current schema, we'll set it to 1 as a default
-                message.setIncident_id(1);
-            }
-
+            message.setIncident_id(messageRequest.incident_id);
             message.setDate_time();
 
             // Save message to database
