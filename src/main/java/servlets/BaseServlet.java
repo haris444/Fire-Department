@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -44,5 +46,15 @@ public class BaseServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         out.print("{\"success\": false, \"message\": \"" + message + "\"}");
         out.flush();
+    }
+
+    protected String getJSONFromAjax(BufferedReader reader) throws IOException{
+        StringBuilder buffer = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            buffer.append(line);
+        }
+        String data = buffer.toString();
+        return data;
     }
 }

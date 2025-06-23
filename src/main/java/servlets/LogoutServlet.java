@@ -15,15 +15,12 @@ public class LogoutServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // Get existing session (don't create new one)
         HttpSession session = request.getSession(false);
 
-        // If session exists, invalidate it
         if (session != null) {
             session.invalidate();
         }
 
-        // Always respond with success
         response.setStatus(HttpServletResponse.SC_OK);
         PrintWriter out = response.getWriter();
         out.print("{\"success\": true, \"message\": \"Logout successful\"}");

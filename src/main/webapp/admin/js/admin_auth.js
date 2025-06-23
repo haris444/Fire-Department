@@ -56,7 +56,11 @@ function initializeLoginPage() {
                         } catch (e) {
                             showErrorMessage('Invalid response from server');
                         }
-                    } else {
+                    }  else if (xhr.status === 401) {
+                        showErrorMessage('Invalid Username or Password');
+                    }
+
+                    else {
                         showErrorMessage('Network error occurred');
                     }
                 }

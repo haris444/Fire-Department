@@ -14,28 +14,14 @@ import com.google.gson.JsonParser;
 
 import java.util.*;
 /**
- * Universal Profile Servlet for handling user profile operations.
- * This servlet serves all user types (users and volunteers) from the consolidated users table.
- * It provides endpoints for both fetching and updating complete user profile data.
- *
- * Security: Both GET and POST operations require valid user session with REGULAR_USER or VOLUNTEER role.
- *
- * @author Mike
+ * Universal Profile Servlet for handling user profile operations for users and volunteers
  */
 public class ProfileServlet extends BaseServlet {
 
-    /**
-     * Handles profile data retrieval for authenticated users.
-     * Returns the complete User object including all fields (basic + volunteer-specific).
-     * The frontend will determine which fields to display based on user_type.
-     *
-     * @param request HTTP request containing user session
-     * @param response HTTP response with complete user profile data in JSON format
-     * @throws IOException if response writing fails
-     */
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check user session - allow both REGULAR_USER and VOLUNTEER roles
+
         if (!isUserAuthenticated(request, response)) {
             return;
         }
@@ -44,60 +30,28 @@ public class ProfileServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Get logged in username from session
+
             HttpSession session = request.getSession(false);
-            // FIX: Corrected the session attribute key from "loggedInUserUsername" to "loggedInUsername"
+
             String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
-            // Fetch complete user profile from consolidated users table
+
             UsersTable usersTable = new UsersTable();
             User user = usersTable.getUserByUsername(loggedInUsername);
 
-            if (user != null) {
-                // Convert complete User object to JSON (including all optional fields)
-                // Password is excluded for security by not including it in the serialization
-                Gson gson = new Gson();
+            Gson gson = new Gson();
+            // invalidate the password before sending to frontend
+            user.setPassword("");
 
-                // Create a copy without password for security
-                User userForResponse = new User();
-                userForResponse.setUser_id(user.getUser_id());
-                userForResponse.setUsername(user.getUsername());
-                userForResponse.setEmail(user.getEmail());
-                userForResponse.setFirstname(user.getFirstname());
-                userForResponse.setLastname(user.getLastname());
-                userForResponse.setBirthdate(user.getBirthdate());
-                userForResponse.setGender(user.getGender());
-                userForResponse.setAfm(user.getAfm());
-                userForResponse.setCountry(user.getCountry());
-                userForResponse.setAddress(user.getAddress());
-                userForResponse.setMunicipality(user.getMunicipality());
-                userForResponse.setPrefecture(user.getPrefecture());
-                userForResponse.setJob(user.getJob());
-                userForResponse.setTelephone(user.getTelephone());
-                userForResponse.setLat(user.getLat());
-                userForResponse.setLon(user.getLon());
-                userForResponse.setUser_type(user.getUser_type());
-                userForResponse.setVolunteer_type(user.getVolunteer_type());
-                userForResponse.setHeight(user.getHeight());
-                userForResponse.setWeight(user.getWeight());
+            String userJson = gson.toJson(user);
 
-                String userJson = gson.toJson(userForResponse);
+            response.setStatus(HttpServletResponse.SC_OK);
+            PrintWriter out = response.getWriter();
+            out.print(userJson);
+            out.flush();
 
-                // Send success response with complete user data
-                response.setStatus(HttpServletResponse.SC_OK);
-                PrintWriter out = response.getWriter();
-                out.print(userJson);
-                out.flush();
-            } else {
-                // User not found in database
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                PrintWriter out = response.getWriter();
-                out.print("{\"success\": false, \"message\": \"User profile not found for username: " + loggedInUsername + "\"}");
-                out.flush();
-            }
 
         } catch (Exception e) {
-            // Handle database or other errors
             System.err.println("Error fetching user profile: " + e.getMessage());
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -124,16 +78,10 @@ public class ProfileServlet extends BaseServlet {
 
         try {
             String username = (String) request.getSession(false).getAttribute("loggedInUsername");
+            
+            String jsonString = getJSONFromAjax(request.getReader());
 
-            // Read JSON
-            StringBuilder json = new StringBuilder();
-            String line;
-            while ((line = request.getReader().readLine()) != null) {
-                json.append(line);
-            }
-
-            // Parse and build updates
-            JsonObject jsonObject = new JsonParser().parse(json.toString()).getAsJsonObject();
+            JsonObject jsonObject = new JsonParser().parse(jsonString).getAsJsonObject();
             Map<String, Object> updates = new HashMap<>();
 
             for (String field : ALL_FIELDS) {
@@ -145,10 +93,9 @@ public class ProfileServlet extends BaseServlet {
                     }
                 }
             }
+            UsersTable usersTable = new UsersTable();
 
-            // Update and respond
-            boolean success = !updates.isEmpty() &&
-                    new UsersTable().updateUserProfile(username, updates);
+            boolean success = !updates.isEmpty() && usersTable.updateUserProfile(username, updates);
 
             response.getWriter().print("{\"success\": " + success + "}");
 
