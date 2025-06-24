@@ -564,7 +564,7 @@ function loadMessagesSection() {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="incident_id">Incident: * <span class="field-note">(Any incident)</span></label>
+                    <label for="incident_id">Incident: * <span class="field-note">(Format: Type - Municipality (Status))</span></label>
                     <select id="incident_id" name="incident_id" required>
                         <option value="">Loading incidents...</option>
                     </select>
@@ -579,16 +579,14 @@ function loadMessagesSection() {
         </div>
     </div>`;
 
-    // Load all incidents for the dropdown (not just assigned)
-    loadAllIncidentsForMessaging();
-
-    // Fetch and render messages
-    makeVolunteerAjaxRequest('../volunteer/messages', 'GET', null, (err, messages) => {
+    // Fetch and render messages with incident info
+    makeVolunteerAjaxRequest('../volunteer/messages', 'GET', null, (err, responseData) => {
         const messagesContainer = document.getElementById('messagesContainer');
         if (err) {
             messagesContainer.innerHTML = `<div class="error-message">Error loading messages: ${err.message}</div>`;
         } else {
-            renderVolunteerMessages(messages, messagesContainer);
+            renderVolunteerMessages(responseData.messages, responseData.incident_info || {}, messagesContainer);
+            populateVolunteerIncidentsDropdown(responseData.incidents);
         }
     });
 
@@ -603,33 +601,37 @@ function loadMessagesSection() {
 }
 
 /**
- * Loads all incidents for the messaging dropdown (volunteers can message about any incident).
+ * Populates the incidents dropdown with only type, municipality, and status.
+ * @param {Array<object>} incidents - Array of incident objects.
  */
-function loadAllIncidentsForMessaging() {
-    makeVolunteerAjaxRequest('../volunteer/incidents?type=all', 'GET', null, (err, incidents) => {
-        const select = document.getElementById('incident_id');
-        if (err || !incidents || incidents.length === 0) {
-            select.innerHTML = '<option value="">No incidents found</option>';
-            select.disabled = true;
-            return;
-        }
+function populateVolunteerIncidentsDropdown(incidents) {
+    const select = document.getElementById('incident_id');
+    if (!incidents || incidents.length === 0) {
+        select.innerHTML = '<option value="">No incidents found</option>';
+        select.disabled = true;
+        return;
+    }
 
-        select.innerHTML = '<option value="">Select an incident</option>';
-        incidents.forEach(incident => {
-            select.innerHTML += `<option value="${incident.incident_id}">
-                ID: ${incident.incident_id} - ${incident.incident_type} (${incident.status}) - ${incident.municipality || 'Unknown'}
-            </option>`;
-        });
-        select.disabled = false;
+    select.innerHTML = '<option value="">Select an incident</option>';
+    incidents.forEach(incident => {
+        const type = incident.incident_type || '';
+        const municipality = incident.municipality || '';
+        const status = incident.status || '';
+
+        select.innerHTML += `<option value="${incident.incident_id}">
+            ${type} - ${municipality} (${status})
+        </option>`;
     });
+    select.disabled = false;
 }
 
 /**
- * Renders messages in the message list with proper categorization.
+ * Renders messages in the message list with proper categorization and incident info.
  * @param {Array<object>} messages - Array of message objects.
+ * @param {object} incidentInfo - Map of incident info by incident ID.
  * @param {HTMLElement} container - The container to render into.
  */
-function renderVolunteerMessages(messages, container) {
+function renderVolunteerMessages(messages, incidentInfo, container) {
     let html = '<div class="message-list">';
 
     if (messages && messages.length > 0) {
@@ -641,12 +643,14 @@ function renderVolunteerMessages(messages, container) {
 
         messages.forEach(message => {
             const messageType = getVolunteerMessageType(message);
+            const incidentDisplay = getVolunteerIncidentDisplayString(message.incident_id, incidentInfo);
+
             html += `
                 <div class="message-item ${messageType}">
                     <div class="message-header">
                         <span class="message-sender">From: ${message.sender}</span>
                         <span class="message-recipient">To: ${message.recipient}</span>
-                        <span class="message-incident">Incident: ${message.incident_id || 'N/A'}</span>
+                        <span class="message-incident">Incident: ${incidentDisplay}</span>
                         <span class="message-type-badge ${messageType}">${getVolunteerMessageTypeLabel(messageType)}</span>
                     </div>
                     <div class="message-content">${escapeHtml(message.message)}</div>
@@ -660,6 +664,21 @@ function renderVolunteerMessages(messages, container) {
 
     html += '</div>';
     container.innerHTML = html;
+}
+
+/**
+ * Gets incident display string showing only type, municipality, and status.
+ * @param {number} incidentId - The incident ID.
+ * @param {object} incidentInfo - The incident info map.
+ * @returns {string} Formatted incident display string.
+ */
+function getVolunteerIncidentDisplayString(incidentId, incidentInfo) {
+    if (!incidentId) return '';
+
+    const info = incidentInfo[incidentId];
+    if (!info) return incidentId;
+
+    return `${info.type || ''} - ${info.municipality || ''} (${info.status || ''})`;
 }
 
 /**

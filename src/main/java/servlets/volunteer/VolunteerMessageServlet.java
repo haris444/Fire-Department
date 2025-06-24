@@ -4,22 +4,23 @@ import com.google.gson.Gson;
 import database.tables.MessagesTable;
 import database.tables.UsersTable;
 import database.tables.VolunteerAssignmentsTable;
+import database.tables.IncidentsTable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import mainClasses.Message;
+import mainClasses.Incident;
 import servlets.BaseServlet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
- * Updated servlet to handle messaging for volunteers according to new project rules.
- * Volunteers can:
- * - Send messages to: admin, public, volunteers (incident_id always required)
- * - Read messages: public messages and volunteer messages for incidents they participate in
+ * Updated servlet to handle messaging for volunteers with simplified incident display.
+ * Shows only type, municipality, status for incidents in dropdown and messages table.
  */
 public class VolunteerMessageServlet extends BaseServlet {
 
@@ -39,6 +40,7 @@ public class VolunteerMessageServlet extends BaseServlet {
             MessagesTable messagesTable = new MessagesTable();
             UsersTable usersTable = new UsersTable();
             VolunteerAssignmentsTable assignmentsTable = new VolunteerAssignmentsTable();
+            IncidentsTable incidentsTable = new IncidentsTable();
 
             // Get volunteer's user ID
             int volunteerUserId = usersTable.getUserByUsername(volunteerUsername).getUser_id();
@@ -46,11 +48,20 @@ public class VolunteerMessageServlet extends BaseServlet {
             // Get incidents this volunteer is assigned to
             ArrayList<Integer> assignedIncidentIds = assignmentsTable.getAssignedIncidentIds(volunteerUserId);
 
-            // Get messages according to the new rules
+            // Get messages according to the rules
             ArrayList<Message> messages = messagesTable.getMessagesForVolunteer(assignedIncidentIds);
 
+            // Get all incidents for the dropdown
+            ArrayList<Incident> allIncidents = incidentsTable.getAllIncidents();
+
+            // Create response object with messages, incidents, and incident info
+            VolunteerMessagesResponse responseObj = new VolunteerMessagesResponse();
+            responseObj.messages = messages;
+            responseObj.incidents = allIncidents;
+            responseObj.incident_info = createIncidentInfoMap(allIncidents);
+
             Gson gson = new Gson();
-            String jsonResponse = gson.toJson(messages);
+            String jsonResponse = gson.toJson(responseObj);
             response.setStatus(HttpServletResponse.SC_OK);
             out.print(jsonResponse);
 
@@ -108,7 +119,6 @@ public class VolunteerMessageServlet extends BaseServlet {
                 return;
             }
 
-
             // Create and save the message
             Message newMessage = new Message();
             newMessage.setSender(senderUsername);
@@ -132,11 +142,39 @@ public class VolunteerMessageServlet extends BaseServlet {
     }
 
     /**
+     * Helper method to create incident info map for frontend display.
+     * Returns only type, municipality, and status for each incident.
+     */
+    private HashMap<String, HashMap<String, String>> createIncidentInfoMap(ArrayList<Incident> incidents) {
+        HashMap<String, HashMap<String, String>> incidentInfo = new HashMap<>();
+
+        for (Incident incident : incidents) {
+            HashMap<String, String> info = new HashMap<>();
+            info.put("type", incident.getIncident_type());
+            info.put("municipality", incident.getMunicipality());
+            info.put("status", incident.getStatus());
+
+            incidentInfo.put(String.valueOf(incident.getIncident_id()), info);
+        }
+
+        return incidentInfo;
+    }
+
+    /**
      * Inner class for JSON parsing of message requests
      */
     private static class MessageRequest {
         String recipient;
         String message_text;
         Integer incident_id;
+    }
+
+    /**
+     * Inner class for response structure that includes messages, incidents, and incident info
+     */
+    private static class VolunteerMessagesResponse {
+        ArrayList<Message> messages;
+        ArrayList<Incident> incidents;
+        HashMap<String, HashMap<String, String>> incident_info;
     }
 }
