@@ -60,7 +60,7 @@ const userTemplates = {
 
     viewIncidents: `<div class="content-section"><h2>View Incidents</h2><div id="incidentsContainer">Loading...</div></div>`,
 
-    // MSG TEMPLATE
+    // UPDATED MSG TEMPLATE with field note about format
     messages: `<div class="content-section"><h2>Messages</h2>
         <div id="messagesContainer">Loading...</div>
         <div class="message-compose">
@@ -83,7 +83,7 @@ const userTemplates = {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="incident_id">Incident: * <span class="field-note">(Required for all messages)</span></label>
+                    <label for="incident_id">Incident: * <span class="field-note">(Format: Type - Municipality (Status))</span></label>
                     <select id="incident_id" required><option value="">Loading...</option></select>
                 </div>
                 <div class="form-group">

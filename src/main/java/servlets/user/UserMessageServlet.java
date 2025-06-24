@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UserMessageServlet extends BaseServlet {
 
@@ -40,6 +41,7 @@ public class UserMessageServlet extends BaseServlet {
             UserMessagesResponse responseObj = new UserMessagesResponse();
             responseObj.messages = publicMessages;
             responseObj.incidents = incidents;
+            responseObj.incident_info = createIncidentInfoMap(incidents);
 
             // Convert to JSON
             Gson gson = new Gson();
@@ -142,6 +144,22 @@ public class UserMessageServlet extends BaseServlet {
         }
     }
 
+    // Helper method to create incident info map for frontend
+    private HashMap<String, HashMap<String, String>> createIncidentInfoMap(ArrayList<Incident> incidents) {
+        HashMap<String, HashMap<String, String>> incidentInfo = new HashMap<>();
+
+        for (Incident incident : incidents) {
+            HashMap<String, String> info = new HashMap<>();
+            info.put("type", incident.getIncident_type() != null ? incident.getIncident_type() : "Unknown");
+            info.put("municipality", incident.getMunicipality() != null ? incident.getMunicipality() : "Unknown");
+            info.put("status", incident.getStatus() != null ? incident.getStatus() : "Unknown");
+
+            incidentInfo.put(String.valueOf(incident.getIncident_id()), info);
+        }
+
+        return incidentInfo;
+    }
+
     // Inner class for JSON parsing
     private static class MessageRequest {
         String recipient;
@@ -153,5 +171,6 @@ public class UserMessageServlet extends BaseServlet {
     private static class UserMessagesResponse {
         ArrayList<Message> messages;
         ArrayList<Incident> incidents;
+        HashMap<String, HashMap<String, String>> incident_info;
     }
 }

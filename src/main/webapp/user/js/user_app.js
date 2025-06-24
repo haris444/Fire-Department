@@ -221,7 +221,7 @@ function loadMessagesSection() {
         if (err) {
             messagesContainer.innerHTML = '<div class="error-message">Error loading messages: ' + err.message + '</div>';
         } else {
-            renderUserMessages(responseData.messages);
+            renderUserMessages(responseData.messages, responseData.incident_info || {});
             populateUserIncidentsDropdown(responseData.incidents);
         }
     });
@@ -294,15 +294,17 @@ function populateUserIncidentsDropdown(incidents) {
 
     select.innerHTML = '<option value="">Select an incident</option>';
     incidents.forEach(function(incident) {
+        const type = incident.incident_type || 'Unknown';
+        const municipality = incident.municipality || 'Unknown';
+        const status = incident.status || 'Unknown';
+
         select.innerHTML += '<option value="' + incident.incident_id + '">' +
-            'ID: ' + incident.incident_id + ' - ' +
-            incident.incident_type + ' (' + incident.status + ') - ' +
-            (incident.municipality || 'Unknown location') +
+            type + ' - ' + municipality + ' (' + status + ')' +
             '</option>';
     });
 }
 
-function renderUserMessages(messages) {
+function renderUserMessages(messages, incidentInfo) {
     const messagesContainer = document.getElementById('messagesContainer');
 
     let html = '<div class="message-list">';
@@ -316,11 +318,13 @@ function renderUserMessages(messages) {
 
         messages.forEach(function(message) {
             const messageType = getUserMessageType(message);
+            const incidentDisplay = getIncidentDisplayString(message.incident_id, incidentInfo);
+
             html += '<div class="message-item ' + messageType + '">';
             html += '<div class="message-header">';
             html += '<span class="message-sender">From: ' + message.sender + '</span>';
             html += '<span class="message-recipient">To: ' + message.recipient + '</span>';
-            html += '<span class="message-incident">Incident: ' + (message.incident_id || 'N/A') + '</span>';
+            html += '<span class="message-incident">Incident: ' + incidentDisplay + '</span>';
             html += '<span class="message-type-badge ' + messageType + '">' + getUserMessageTypeLabel(messageType) + '</span>';
             html += '</div>';
             html += '<div class="message-content">' + escapeHtml(message.message) + '</div>';
@@ -333,6 +337,15 @@ function renderUserMessages(messages) {
 
     html += '</div>';
     messagesContainer.innerHTML = html;
+}
+
+function getIncidentDisplayString(incidentId, incidentInfo) {
+    if (!incidentId) return 'N/A';
+
+    const info = incidentInfo[incidentId];
+    if (!info) return 'ID: ' + incidentId;
+
+    return info.type + ' - ' + info.municipality + ' (' + info.status + ')';
 }
 
 function getUserMessageType(message) {
