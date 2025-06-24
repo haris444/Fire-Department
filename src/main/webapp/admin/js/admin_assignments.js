@@ -1,17 +1,26 @@
 // admin_assignments.js - Assignment management functionality
 
 function loadAssignments() {
-    loadVolunteersDropdown();
-    loadIncidentsDropdown();
-    loadCurrentAssignments();
+    makeAdminAjaxRequest('../admin/assignments', 'GET', null, (err, responseData) => {
+        if (err) {
+            document.getElementById('assignmentResult').innerHTML = `<div class="error-message">Error: ${err.message}</div>`;
+            return;
+        }
 
+        // Load dropdowns with the data from the server
+        loadVolunteersDropdown(responseData.volunteers);
+        loadIncidentsDropdown(responseData.incidents);
+        loadCurrentAssignments(responseData.assignments);
+    });
+
+    // Setup form submission handler
     document.getElementById('createAssignmentForm').addEventListener('submit', event => {
         event.preventDefault();
         const volunteerUserId = document.getElementById('volunteerSelect').value;
         const incidentId = document.getElementById('incidentSelect').value;
 
         if (!volunteerUserId || !incidentId) {
-            document.getElementById('assignmentResult').innerHTML = '<div class="error-message">Please select both</div>';
+            document.getElementById('assignmentResult').innerHTML = '<div class="error-message">Please select both volunteer and incident</div>';
             return;
         }
 
@@ -28,61 +37,59 @@ function loadAssignments() {
             } else {
                 resultDiv.innerHTML = '<div class="success-message">Assignment created!</div>';
                 document.getElementById('createAssignmentForm').reset();
-                loadCurrentAssignments();
+                loadAssignments(); // Reload everything
             }
         });
     });
 }
 
-function loadVolunteersDropdown() {
-    makeAdminAjaxRequest('../admin/volunteers', 'GET', null, (err, volunteers) => {
-        const select = document.getElementById('volunteerSelect');
-        if (err) {
-            select.innerHTML = '<option value="">Error loading</option>';
-        } else {
-            select.innerHTML = '<option value="">Select Volunteer</option>' +
-                buildOptions(volunteers, 'user_id', vol => `${vol.firstname} ${vol.lastname} (${vol.username})`);
-        }
-    });
+function loadVolunteersDropdown(volunteers) {
+    const select = document.getElementById('volunteerSelect');
+    if (!volunteers || volunteers.length === 0) {
+        select.innerHTML = '<option value="">No volunteers available</option>';
+        return;
+    }
+
+    select.innerHTML = '<option value="">Select Volunteer</option>' +
+        buildOptions(volunteers, 'user_id', vol => `${vol.firstname} ${vol.lastname} (${vol.username})`);
 }
 
-function loadIncidentsDropdown() {
-    makeAdminAjaxRequest('../admin/incidents', 'GET', null, (err, incidents) => {
-        const select = document.getElementById('incidentSelect');
-        if (err) {
-            select.innerHTML = '<option value="">Error loading</option>';
-        } else {
-            select.innerHTML = '<option value="">Select Incident</option>' +
-                buildOptions(incidents, 'incident_id', inc => `ID: ${inc.incident_id} - ${inc.incident_type} (${inc.status})`);
-        }
-    });
+function loadIncidentsDropdown(incidents) {
+    const select = document.getElementById('incidentSelect');
+    if (!incidents || incidents.length === 0) {
+        select.innerHTML = '<option value="">No incidents available</option>';
+        return;
+    }
+
+    // Build options showing Type, Municipality, Status instead of just ID
+    select.innerHTML = '<option value="">Select Incident</option>' +
+        buildOptions(incidents, 'incident_id', inc => {
+            const type = inc.incident_type || 'Unknown';
+            const municipality = inc.municipality || 'Unknown';
+            const status = inc.status || 'Unknown';
+            return `${type} - ${municipality} (${status})`;
+        });
 }
 
-function loadCurrentAssignments() {
-    makeAdminAjaxRequest('../admin/assignments', 'GET', null, (err, assignments) => {
-        const container = document.getElementById('assignmentsTableContainer');
-        if (err) {
-            container.innerHTML = `<div class="error-message">Error: ${err.message}</div>`;
-            return;
-        }
+function loadCurrentAssignments(assignments) {
+    const container = document.getElementById('assignmentsTableContainer');
 
-        if (!assignments || !assignments.length) {
-            container.innerHTML = '<h3>Current Assignments</h3><p>No assignments found.</p>';
-            return;
-        }
+    if (!assignments || assignments.length === 0) {
+        container.innerHTML = '<h3>Current Assignments</h3><p>No assignments found.</p>';
+        return;
+    }
 
-        const rows = assignments.map(assignment =>
-            buildRow([
-                assignment.volunteer_name,
-                assignment.incident_description,
-                assignment.assignment_date || 'N/A',
-                `<button class="btn-small btn-delete" onclick="removeAssignment(${assignment.volunteer_user_id}, ${assignment.incident_id})">Remove</button>`
-            ])
-        ).join('');
+    const rows = assignments.map(assignment =>
+        buildRow([
+            assignment.volunteer_name,
+            assignment.incident_description,
+            assignment.assignment_date || 'N/A',
+            `<button class="btn-small btn-delete" onclick="removeAssignment(${assignment.volunteer_user_id}, ${assignment.incident_id})">Remove</button>`
+        ])
+    ).join('');
 
-        container.innerHTML = '<h3>Current Assignments</h3>' +
-            buildTable(['Volunteer', 'Incident', 'Date', 'Actions'], rows);
-    });
+    container.innerHTML = '<h3>Current Assignments</h3>' +
+        buildTable(['Volunteer', 'Incident', 'Date', 'Actions'], rows);
 }
 
 function removeAssignment(volunteerUserId, incidentId) {
@@ -92,7 +99,7 @@ function removeAssignment(volunteerUserId, incidentId) {
             if (err) {
                 showMessage('Error removing assignment: ' + err.message, 'error');
             } else {
-                loadCurrentAssignments();
+                loadAssignments(); // Reload everything
                 showMessage('Assignment removed!', 'success');
             }
         });
