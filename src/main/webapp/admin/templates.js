@@ -1,4 +1,3 @@
-
 const templates = {
     dashboard: `<div class="content-section"><h2>Dashboard & Statistics</h2><div id="statsContainer">Loading...</div></div>`,
 
@@ -50,7 +49,7 @@ const templates = {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="incidentId">Incident: * <span class="field-note">(Required for all messages)</span></label>
+                    <label for="incidentId">Incident: * <span class="field-note">(Format: Type - Municipality (Status))</span></label>
                     <select id="incidentId" required><option value="">Loading...</option></select>
                 </div>
                 <div class="form-group">
@@ -73,6 +72,11 @@ function buildRow(cells) {
     return `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
 }
 
-function buildOptions(items, valueKey, textKey) {
-    return items.map(item => `<option value="${item[valueKey]}">${item[textKey]}</option>`).join('');
+function buildOptions(items, valueKey, textFunction) {
+    if (typeof textFunction === 'function') {
+        return items.map(item => `<option value="${item[valueKey]}">${textFunction(item)}</option>`).join('');
+    } else {
+        // Fallback for backwards compatibility
+        return items.map(item => `<option value="${item[valueKey]}">${item[textFunction]}</option>`).join('');
+    }
 }

@@ -1,4 +1,7 @@
-// admin_messaging.js - Messaging system functionality
+// admin_messaging.js
+
+// Store incidents data globally for table rendering
+let incidentsData = [];
 
 function loadMessages() {
     makeAdminAjaxRequest('../admin/messages', 'GET', null, (err, responseData) => {
@@ -7,6 +10,9 @@ function loadMessages() {
             container.innerHTML = `<div class="error-message">Error: ${err.message}</div>`;
             return;
         }
+
+        // Store incidents data for later use in table rendering
+        incidentsData = responseData.incidents || [];
 
         renderMessagesTable(responseData.messages, container);
         populateIncidentsForMessages(responseData.incidents);
@@ -68,7 +74,8 @@ function renderMessagesTable(messages, container) {
     messages.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
 
     const rows = messages.map(msg => {
-        const incidentInfo = msg.incident_id ? `ID: ${msg.incident_id}` : 'N/A';
+        // Get incident details from the incidents data loaded earlier
+        const incidentInfo = getIncidentDisplayInfo(msg.incident_id);
         return buildRow([
             formatDateTime(msg.date_time),
             msg.sender,
@@ -93,9 +100,11 @@ function populateIncidentsForMessages(incidents) {
         return;
     }
 
-    // Show all incidents (admin can send messages about any incident)
+    // UPDATED: Show only type, municipality, status
     select.innerHTML = '<option value="">Select incident</option>' +
-        buildOptions(incidents, 'incident_id', inc => `ID: ${inc.incident_id} - ${inc.incident_type} (${inc.status}) - ${inc.municipality || 'Unknown'}`);
+        buildOptions(incidents, 'incident_id', inc =>
+            `${inc.incident_type || 'Unknown'} - ${inc.municipality || 'Unknown'} (${inc.status || 'Unknown'})`
+        );
 }
 
 function getMessageType(message) {
@@ -111,4 +120,18 @@ function showMessageResult(message, type) {
     const resultDiv = document.getElementById('sendMessageResult');
     resultDiv.innerHTML = `<div class="${type}-message">${message}</div>`;
     setTimeout(() => resultDiv.innerHTML = '', 5000);
+}
+
+// Helper function to get incident display info for messages table
+function getIncidentDisplayInfo(incidentId) {
+    if (!incidentId) return 'N/A';
+
+    const incident = incidentsData.find(inc => inc.incident_id == incidentId);
+    if (!incident) return `ID: ${incidentId}`;
+
+    const type = incident.incident_type || 'Unknown';
+    const municipality = incident.municipality || 'Unknown';
+    const status = incident.status || 'Unknown';
+
+    return `${type}<br>${municipality}<br>(${status})`;
 }
