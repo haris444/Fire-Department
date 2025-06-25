@@ -5,6 +5,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageArea = document.getElementById('messageArea');
     const submitBtn = document.getElementById('submitBtn');
 
+    // Add event listeners to clear validation errors when address fields change
+    const addressFields = ['country', 'municipality', 'address'];
+    addressFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', function() {
+                // Clear validation errors when user starts typing
+                clearValidationErrors();
+                // Hide any previous location feedback
+                const locationFeedback = document.getElementById('locfeedback');
+                if (locationFeedback) {
+                    locationFeedback.style.display = 'none';
+                }
+            });
+        }
+    });
+
     // Form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -36,17 +53,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // Clear any existing validation errors before starting new validation
+            clearValidationErrors();
+
             // Show loading message
             const locationFeedback = document.getElementById('locfeedback');
             locationFeedback.style.display = 'block';
-            locationFeedback.innerHTML = '<span style="color: blue;">Validating location...</span>';
+            locationFeedback.innerHTML = '<span style="color: blue;">🔄 Validating location...</span>';
 
             // Create the search address
             const address = `${countryName} ${municipalityName} ${addressName}`;
 
             // Create XMLHttpRequest for geocoding
             const xhr = new XMLHttpRequest();
-            xhr.withCredentials = true;
 
             xhr.addEventListener("readystatechange", function () {
                 if (this.readyState === this.DONE) {
@@ -64,35 +83,39 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const lon = parseFloat(location.lon);
 
                                 // Success - location found and valid
-                                locationFeedback.innerHTML = '<span style="color: green;">Location validated successfully.</span>';
-
-                                // Clear any previous validation errors
-                                clearValidationErrors();
+                                locationFeedback.innerHTML = '<span style="color: green;">✅ Location validated successfully.</span>';
 
                                 resolve({ lat: lat, lon: lon });
                             } else {
                                 // Location not in Crete
-                                locationFeedback.innerHTML = '<span style="color: red;">The service is available only in Crete.</span>';
+                                locationFeedback.innerHTML = '<span style="color: red;">❌ The service is available only in Crete.</span>';
                                 setValidationErrors("This location is not in Crete.");
                                 reject(new Error('The service is available only in Crete.'));
                             }
                         } else if (response.length > 0 && countryName !== "Greece") {
                             // Not in Greece
-                            locationFeedback.innerHTML = '<span style="color: red;">The application is available only in Greece.</span>';
+                            locationFeedback.innerHTML = '<span style="color: red;">❌ The application is available only in Greece.</span>';
                             setValidationErrors("The application is available only in Greece.");
                             reject(new Error('The application is available only in Greece.'));
                         } else {
                             // Location not found
-                            locationFeedback.innerHTML = '<span style="color: red;">Location not found. Please check your address.</span>';
+                            locationFeedback.innerHTML = '<span style="color: red;">❌ Location not found. Please check your address.</span>';
                             setValidationErrors("This location could not be found.");
                             reject(new Error('Location not found. Please check your address.'));
                         }
                     } catch (e) {
-                        locationFeedback.innerHTML = '<span style="color: red;">Error validating location.</span>';
+                        locationFeedback.innerHTML = '<span style="color: red;">❌ Error validating location.</span>';
+                        setValidationErrors("Error validating location.");
                         reject(new Error('Error validating location: ' + e.message));
                     }
                 }
             });
+
+            xhr.onerror = function() {
+                locationFeedback.innerHTML = '<span style="color: red;">❌ Network error during validation.</span>';
+                setValidationErrors("Network error during validation.");
+                reject(new Error('Network error during location validation.'));
+            };
 
             // Configure and send the geocoding request
             xhr.open("GET", "https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=" +
@@ -156,17 +179,26 @@ document.addEventListener('DOMContentLoaded', function() {
      * Sets validation errors on form fields
      */
     function setValidationErrors(message) {
-        document.getElementById('municipality').setCustomValidity(message);
-        document.getElementById('address').setCustomValidity(message);
+        const municipalityField = document.getElementById('municipality');
+        const addressField = document.getElementById('address');
+        const countryField = document.getElementById('country');
+
+        if (municipalityField) municipalityField.setCustomValidity(message);
+        if (addressField) addressField.setCustomValidity(message);
+        if (countryField) countryField.setCustomValidity(message);
     }
 
     /**
      * Clears validation errors from form fields
      */
     function clearValidationErrors() {
-        document.getElementById('municipality').setCustomValidity('');
-        document.getElementById('address').setCustomValidity('');
-        document.getElementById('country').setCustomValidity('');
+        const municipalityField = document.getElementById('municipality');
+        const addressField = document.getElementById('address');
+        const countryField = document.getElementById('country');
+
+        if (municipalityField) municipalityField.setCustomValidity('');
+        if (addressField) addressField.setCustomValidity('');
+        if (countryField) countryField.setCustomValidity('');
     }
 
     /**

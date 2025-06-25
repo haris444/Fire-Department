@@ -32,6 +32,130 @@ function redirectToVolunteerPanel() {
     window.location.href = '../volunteer/panel.html';
 }
 
+// Address Validation Function for Registration
+function validateRegistrationAddress() {
+    return new Promise(function(resolve, reject) {
+        const countryName = document.getElementById('country').value.trim();
+        const municipalityName = document.getElementById('municipality').value.trim();
+        const addressName = document.getElementById('address').value.trim();
+        const regionName = document.getElementById('region').value.trim();
+
+        // Check if required fields are filled
+        if (!countryName || !municipalityName || !addressName || !regionName) {
+            reject(new Error('Please fill in all address fields (Country, Municipality, Address, Region)'));
+            return;
+        }
+
+        // Clear any existing validation errors before starting new validation
+        clearRegistrationValidationErrors();
+
+        // Show loading message
+        const locationFeedback = document.getElementById('locationFeedback');
+        locationFeedback.style.display = 'block';
+        locationFeedback.className = 'location-feedback loading';
+        locationFeedback.innerHTML = '🔄 Validating address...';
+
+        // Create the search address - prioritize region for better geocoding
+        const address = `${addressName}, ${municipalityName}, ${regionName}, ${countryName}`;
+
+        // Create XMLHttpRequest for geocoding
+        const xhr = new XMLHttpRequest();
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === this.DONE) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+
+                    // Check if we got results
+                    if (response.length > 0 && countryName === "Greece") {
+                        const location = response[0];
+                        const displayName = location.display_name;
+
+                        // Check if the location matches the specified region (case-insensitive)
+                        if (displayName.toLowerCase().includes(regionName.toLowerCase())) {
+                            const lat = parseFloat(location.lat);
+                            const lon = parseFloat(location.lon);
+
+                            // Success - location found and valid
+                            locationFeedback.className = 'location-feedback success';
+                            locationFeedback.innerHTML = `✅ Address validated successfully in ${regionName}.`;
+
+                            // Set the hidden coordinates
+                            document.getElementById('lat').value = lat;
+                            document.getElementById('lon').value = lon;
+
+                            resolve({ lat: lat, lon: lon });
+                        } else {
+                            // Location not in specified region
+                            locationFeedback.className = 'location-feedback error';
+                            locationFeedback.innerHTML = `❌ Address not found in ${regionName}. Please check your region.`;
+                            setRegistrationValidationErrors(`This location is not in ${regionName}.`);
+                            reject(new Error(`Address not found in ${regionName}. Please check your region.`));
+                        }
+                    } else if (response.length > 0 && countryName !== "Greece") {
+                        // Not in Greece
+                        locationFeedback.className = 'location-feedback error';
+                        locationFeedback.innerHTML = '❌ This application is available only in Greece.';
+                        setRegistrationValidationErrors("This application is available only in Greece.");
+                        reject(new Error('This application is available only in Greece.'));
+                    } else {
+                        // Location not found
+                        locationFeedback.className = 'location-feedback error';
+                        locationFeedback.innerHTML = '❌ Address not found. Please check your address details.';
+                        setRegistrationValidationErrors("This address could not be found.");
+                        reject(new Error('Address not found. Please check your address details.'));
+                    }
+                } catch (e) {
+                    locationFeedback.className = 'location-feedback error';
+                    locationFeedback.innerHTML = '❌ Error validating address.';
+                    setRegistrationValidationErrors("Error validating address.");
+                    reject(new Error('Error validating address: ' + e.message));
+                }
+            }
+        });
+
+        xhr.onerror = function() {
+            locationFeedback.className = 'location-feedback error';
+            locationFeedback.innerHTML = '❌ Network error during validation.';
+            setRegistrationValidationErrors("Network error during validation.");
+            reject(new Error('Network error during address validation.'));
+        };
+
+        // Configure and send the geocoding request
+        xhr.open("GET", "https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=" +
+            encodeURIComponent(address) + "&accept-language=en&polygon_threshold=0.0");
+
+        xhr.setRequestHeader("x-rapidapi-host", "forward-reverse-geocoding.p.rapidapi.com");
+        xhr.setRequestHeader("x-rapidapi-key", "2137d13aedmsh3be9797ef5d78f4p12abd7jsn2946b41ea9a6");
+
+        xhr.send();
+    });
+}
+
+// Validation error handling for registration
+function setRegistrationValidationErrors(message) {
+    const countryField = document.getElementById('country');
+    const municipalityField = document.getElementById('municipality');
+    const addressField = document.getElementById('address');
+    const regionField = document.getElementById('region');
+
+    if (countryField) countryField.setCustomValidity(message);
+    if (municipalityField) municipalityField.setCustomValidity(message);
+    if (addressField) addressField.setCustomValidity(message);
+    if (regionField) regionField.setCustomValidity(message);
+}
+
+function clearRegistrationValidationErrors() {
+    const countryField = document.getElementById('country');
+    const municipalityField = document.getElementById('municipality');
+    const addressField = document.getElementById('address');
+    const regionField = document.getElementById('region');
+
+    if (countryField) countryField.setCustomValidity('');
+    if (municipalityField) municipalityField.setCustomValidity('');
+    if (addressField) addressField.setCustomValidity('');
+    if (regionField) regionField.setCustomValidity('');
+}
 
 // Registration Logic for register.html
 function initializeRegistrationPage() {
@@ -39,6 +163,26 @@ function initializeRegistrationPage() {
     const messageDiv = document.getElementById('registerMessage');
 
     if (registerForm) {
+        // Add event listeners to clear validation errors when address fields change
+        const addressFields = ['country', 'municipality', 'address', 'region'];
+        addressFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', function() {
+                    // Clear validation errors when user starts typing
+                    clearRegistrationValidationErrors();
+                    // Hide any previous location feedback
+                    const locationFeedback = document.getElementById('locationFeedback');
+                    if (locationFeedback) {
+                        locationFeedback.style.display = 'none';
+                    }
+                    // Clear coordinates so validation is required again
+                    document.getElementById('lat').value = '';
+                    document.getElementById('lon').value = '';
+                });
+            }
+        });
+
         registerForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -46,63 +190,78 @@ function initializeRegistrationPage() {
             const volunteerToggle = document.getElementById('volunteerToggle');
             let registrationType = (volunteerToggle && volunteerToggle.classList.contains('active')) ? 'volunteer' : 'user';
 
-            // Collect form field values
-            const formData = {
-                registrationType: registrationType,
-                username: document.getElementById('username').value,
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
-                firstname: document.getElementById('firstname').value,
-                lastname: document.getElementById('lastname').value,
-                birthdate: document.getElementById('birthdate').value,
-                gender: document.getElementById('gender').value,
-                afm: document.getElementById('afm').value,
-                country: document.getElementById('country').value,
-                address: document.getElementById('address').value,
-                municipality: document.getElementById('municipality').value,
-                prefecture: document.getElementById('prefecture').value,
-                job: document.getElementById('job').value,
-                telephone: document.getElementById('telephone').value,
-                lat: document.getElementById('lat').value || null,
-                lon: document.getElementById('lon').value || null
-            };
-
-            if (registrationType === 'volunteer') {
-                formData.volunteer_type = document.getElementById('volunteer_type').value;
-                formData.height = document.getElementById('height').value || null;
-                formData.weight = document.getElementById('weight').value || null;
-            }
-
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (!validateRegistrationForm(formData, confirmPassword, messageDiv, registrationType)) {
-                return;
-            }
-
-            const xhr = new XMLHttpRequest();
-            // Path from register.html (root) to the servlet is direct
-            xhr.open('POST', 'register', true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 201) {
-                        showSuccessMessage(messageDiv, 'Registration successful! Please login.');
-                        registerForm.reset();
-                    } else {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            showErrorMessage(messageDiv, response.message || 'An error occurred.');
-                        } catch (e) {
-                            showErrorMessage(messageDiv, 'An unknown error occurred.');
-                        }
-                    }
-                }
-            };
-            xhr.onerror = () => showErrorMessage(messageDiv, 'Network error.');
-            xhr.send(JSON.stringify(formData));
+            // First validate the address before proceeding with registration
+            validateRegistrationAddress()
+                .then(function(coords) {
+                    // Address is valid, now proceed with form data collection and validation
+                    submitRegistrationData(registrationType, messageDiv);
+                })
+                .catch(function(error) {
+                    showErrorMessage(messageDiv, error.message);
+                });
         });
     }
+}
+
+function submitRegistrationData(registrationType, messageDiv) {
+    // Collect form field values (including auto-calculated lat/lon)
+    const formData = {
+        registrationType: registrationType,
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        firstname: document.getElementById('firstname').value,
+        lastname: document.getElementById('lastname').value,
+        birthdate: document.getElementById('birthdate').value,
+        gender: document.getElementById('gender').value,
+        afm: document.getElementById('afm').value,
+        country: document.getElementById('country').value,
+        address: document.getElementById('address').value,
+        municipality: document.getElementById('municipality').value,
+        region: document.getElementById('region').value,
+        job: document.getElementById('job').value,
+        telephone: document.getElementById('telephone').value,
+        lat: document.getElementById('lat').value || null,
+        lon: document.getElementById('lon').value || null
+    };
+
+    if (registrationType === 'volunteer') {
+        formData.volunteer_type = document.getElementById('volunteer_type').value;
+        formData.height = document.getElementById('height').value || null;
+        formData.weight = document.getElementById('weight').value || null;
+    }
+
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (!validateRegistrationForm(formData, confirmPassword, messageDiv, registrationType)) {
+        return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    // Path from register.html (root) to the servlet is direct
+    xhr.open('POST', 'register', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 201) {
+                showSuccessMessage(messageDiv, 'Registration successful! Please login.');
+                document.getElementById('userRegisterForm').reset();
+                // Reset country field and hide location feedback
+                document.getElementById('country').value = 'Greece';
+                document.getElementById('locationFeedback').style.display = 'none';
+            } else {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    showErrorMessage(messageDiv, response.message || 'An error occurred.');
+                } catch (e) {
+                    showErrorMessage(messageDiv, 'An unknown error occurred.');
+                }
+            }
+        }
+    };
+    xhr.onerror = () => showErrorMessage(messageDiv, 'Network error.');
+    xhr.send(JSON.stringify(formData));
 }
 
 // Login Logic for login.html
@@ -190,7 +349,7 @@ function logoutUser() {
 function validateRegistrationForm(formData, confirmPassword, messageDiv, registrationType) {
     const requiredFields = ['username', 'email', 'password', 'firstname', 'lastname',
         'birthdate', 'gender', 'afm', 'country', 'address',
-        'municipality', 'prefecture', 'job', 'telephone'];
+        'municipality', 'region', 'job', 'telephone'];
 
     for (let field of requiredFields) {
         if (!formData[field] || String(formData[field]).trim() === '') {
@@ -222,6 +381,12 @@ function validateRegistrationForm(formData, confirmPassword, messageDiv, registr
     const afmRegex = /^\d{9}$/;
     if (!afmRegex.test(formData.afm)) {
         showErrorMessage(messageDiv, 'AFM must be exactly 9 digits.');
+        return false;
+    }
+
+    // Check if coordinates were calculated (address validation passed)
+    if (!formData.lat || !formData.lon) {
+        showErrorMessage(messageDiv, 'Please ensure your address is validated before registering.');
         return false;
     }
 

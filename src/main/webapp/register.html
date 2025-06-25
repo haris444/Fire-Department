@@ -89,7 +89,7 @@
 
         <div class="form-group">
             <label for="country">Country:</label>
-            <input type="text" id="country" name="country" required>
+            <input type="text" id="country" name="country" required value="Greece">
         </div>
 
         <div class="form-group">
@@ -103,9 +103,12 @@
         </div>
 
         <div class="form-group">
-            <label for="prefecture">Prefecture:</label>
-            <input type="text" id="prefecture" name="prefecture" required>
+            <label for="region">Region:</label>
+            <input type="text" id="region" name="region" required placeholder="e.g., Crete">
         </div>
+
+        <!-- Location validation feedback -->
+        <div id="locationFeedback" class="location-feedback" style="display: none;"></div>
 
         <div class="form-group">
             <label for="job">Job:</label>
@@ -117,15 +120,9 @@
             <input type="tel" id="telephone" name="telephone" required>
         </div>
 
-        <div class="form-group">
-            <label for="lat">Latitude (optional):</label>
-            <input type="number" id="lat" name="lat" step="any">
-        </div>
-
-        <div class="form-group">
-            <label for="lon">Longitude (optional):</label>
-            <input type="number" id="lon" name="lon" step="any">
-        </div>
+        <!-- Hidden fields for coordinates (calculated automatically) -->
+        <input type="hidden" id="lat" name="lat">
+        <input type="hidden" id="lon" name="lon">
 
         <input type="submit" value="Register">
 
