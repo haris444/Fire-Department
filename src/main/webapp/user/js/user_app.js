@@ -1,4 +1,4 @@
-// user_app.js - Compact version with external templates
+// user_app.js - Fixed CORS issue by removing withCredentials
 
 // Global Variables/Selectors
 const contentArea = document.getElementById('userContentArea');
@@ -156,6 +156,107 @@ function loadSubmitIncidentSection() {
 }
 
 function handleIncidentSubmission() {
+    // First validate the location
+    validateIncidentLocation()
+        .then(function(coords) {
+            // If validation successful, submit the incident
+            submitIncidentWithCoords(coords);
+        })
+        .catch(function(error) {
+            const messageDiv = document.getElementById('incidentSubmitMessage');
+            messageDiv.innerHTML = '<div class="error-message">' + error.message + '</div>';
+        });
+}
+
+/**
+ * Validates the incident location using the geocoding API
+ * @returns {Promise} Promise that resolves with coordinates if valid
+ */
+function validateIncidentLocation() {
+    return new Promise(function(resolve, reject) {
+        const countryName = document.getElementById('country').value;
+        const municipalityName = document.getElementById('municipality').value;
+        const addressName = document.getElementById('address').value;
+
+        // Check if required fields are filled
+        if (!countryName || !municipalityName || !addressName) {
+            reject(new Error('Please fill in all location fields'));
+            return;
+        }
+
+        // Show loading message
+        const locationFeedback = document.getElementById('locfeedback');
+        locationFeedback.style.display = 'block';
+        locationFeedback.innerHTML = '<span style="color: blue;">Validating location...</span>';
+
+        // Create the search address
+        const address = `${countryName} ${municipalityName} ${addressName}`;
+
+        // Create XMLHttpRequest for geocoding - FIXED: Remove withCredentials
+        const xhr = new XMLHttpRequest();
+        // REMOVED: xhr.withCredentials = true; - This was causing the CORS error
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === this.DONE) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+
+                    // Check if we got results
+                    if (response.length > 0 && countryName === "Greece" && municipalityName && addressName) {
+                        const location = response[0];
+                        const displayName = location.display_name;
+
+                        // Check if the location is in Crete
+                        if (displayName.includes("Crete")) {
+                            const lat = parseFloat(location.lat);
+                            const lon = parseFloat(location.lon);
+
+                            // Success - location found and valid
+                            locationFeedback.innerHTML = '<span style="color: green;">✓ Location validated successfully.</span>';
+
+                            // Clear any previous validation errors
+                            clearIncidentValidationErrors();
+
+                            resolve({ lat: lat, lon: lon });
+                        } else {
+                            // Location not in Crete
+                            locationFeedback.innerHTML = '<span style="color: red;">The service is available only in Crete.</span>';
+                            setIncidentValidationErrors("This location is not in Crete.");
+                            reject(new Error('The service is available only in Crete.'));
+                        }
+                    } else if (response.length > 0 && countryName !== "Greece") {
+                        // Not in Greece
+                        locationFeedback.innerHTML = '<span style="color: red;">The application is available only in Greece.</span>';
+                        setIncidentValidationErrors("The application is available only in Greece.");
+                        reject(new Error('The application is available only in Greece.'));
+                    } else {
+                        // Location not found
+                        locationFeedback.innerHTML = '<span style="color: red;">Location not found. Please check your address.</span>';
+                        setIncidentValidationErrors("This location could not be found.");
+                        reject(new Error('Location not found. Please check your address.'));
+                    }
+                } catch (e) {
+                    locationFeedback.innerHTML = '<span style="color: red;">Error validating location.</span>';
+                    reject(new Error('Error validating location: ' + e.message));
+                }
+            }
+        });
+
+        // Configure and send the geocoding request
+        xhr.open("GET", "https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=" +
+            encodeURIComponent(address) + "&accept-language=en&polygon_threshold=0.0");
+
+        xhr.setRequestHeader("x-rapidapi-host", "forward-reverse-geocoding.p.rapidapi.com");
+        xhr.setRequestHeader("x-rapidapi-key", "2137d13aedmsh3be9797ef5d78f4p12abd7jsn2946b41ea9a6");
+
+        xhr.send();
+    });
+}
+
+/**
+ * Submits the incident with validated coordinates
+ */
+function submitIncidentWithCoords(coords) {
     const incidentData = {
         incident_type: document.getElementById('incident_type').value,
         description: document.getElementById('description').value,
@@ -163,8 +264,8 @@ function handleIncidentSubmission() {
         municipality: document.getElementById('municipality').value,
         prefecture: document.getElementById('prefecture').value,
         danger: document.getElementById('danger').value,
-        lat: document.getElementById('lat').value || null,
-        lon: document.getElementById('lon').value || null
+        lat: coords.lat,
+        lon: coords.lon
     };
 
     makeUserAjaxRequest('../user/incidents', 'POST', incidentData, function(err, response) {
@@ -174,8 +275,27 @@ function handleIncidentSubmission() {
         } else {
             messageDiv.innerHTML = '<div class="success-message">Incident submitted successfully!</div>';
             document.getElementById('submitIncidentForm').reset();
+            document.getElementById('country').value = 'Greece'; // Reset country to Greece
+            document.getElementById('locfeedback').style.display = 'none';
         }
     });
+}
+
+/**
+ * Sets validation errors on incident form fields
+ */
+function setIncidentValidationErrors(message) {
+    document.getElementById('municipality').setCustomValidity(message);
+    document.getElementById('address').setCustomValidity(message);
+}
+
+/**
+ * Clears validation errors from incident form fields
+ */
+function clearIncidentValidationErrors() {
+    document.getElementById('municipality').setCustomValidity('');
+    document.getElementById('address').setCustomValidity('');
+    document.getElementById('country').setCustomValidity('');
 }
 
 // View Incidents Section

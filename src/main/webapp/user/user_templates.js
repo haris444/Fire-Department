@@ -30,6 +30,10 @@ const userTemplates = {
                 <textarea id="description" required placeholder="Describe the incident..."></textarea>
             </div>
             <div class="form-group">
+                <label for="country">Country:</label>
+                <input type="text" id="country" value="Greece" readonly>
+            </div>
+            <div class="form-group">
                 <label for="address">Address:</label>
                 <input type="text" id="address" required placeholder="Incident location">
             </div>
@@ -43,16 +47,9 @@ const userTemplates = {
                     <input type="text" id="prefecture" required>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="lat">Latitude:</label>
-                    <input type="number" id="lat" step="any" placeholder="Optional">
-                </div>
-                <div class="form-group">
-                    <label for="lon">Longitude:</label>
-                    <input type="number" id="lon" step="any" placeholder="Optional">
-                </div>
-            </div>
+            <!-- Location validation feedback -->
+            <div id="locfeedback" style="display: none; margin-top: 10px;"></div>
+            
             <button type="submit">Submit Incident</button>
         </form>
         <div id="incidentSubmitMessage"></div>

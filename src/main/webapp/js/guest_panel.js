@@ -1,4 +1,4 @@
-// Guest Panel JavaScript - Simple implementation for school assignment
+// Guest Panel JavaScript - Updated with location validation
 
 // Initialize the guest panel when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -134,12 +134,6 @@ function renderIncidentsTable(incidents) {
  */
 function setupIncidentForm() {
     const form = document.getElementById('guestIncidentForm');
-    const getLocationBtn = document.getElementById('getLocationBtn');
-
-    // Get location button functionality
-    if (getLocationBtn) {
-        getLocationBtn.addEventListener('click', getCurrentLocation);
-    }
 
     // Form submission
     if (form) {
@@ -148,44 +142,111 @@ function setupIncidentForm() {
 }
 
 /**
- * Get user's current location
- */
-function getCurrentLocation() {
-    const btn = document.getElementById('getLocationBtn');
-
-    if (!navigator.geolocation) {
-        showMessage('Geolocation is not supported by this browser.', 'warning');
-        return;
-    }
-
-    btn.textContent = '📍 Getting location...';
-    btn.disabled = true;
-
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            document.getElementById('lat').value = position.coords.latitude.toFixed(6);
-            document.getElementById('lon').value = position.coords.longitude.toFixed(6);
-            btn.textContent = '✅ Location obtained';
-
-            setTimeout(() => {
-                btn.textContent = '📍 Get My Current Location';
-                btn.disabled = false;
-            }, 2000);
-        },
-        function(error) {
-            showMessage('Unable to get your location. Please enter coordinates manually if needed.', 'warning');
-            btn.textContent = '📍 Get My Current Location';
-            btn.disabled = false;
-        }
-    );
-}
-
-/**
- * Handle incident form submission
+ * Handle incident form submission with location validation
  */
 function handleIncidentSubmission(event) {
     event.preventDefault();
 
+    // First validate the location
+    validateLocation()
+        .then(function(coords) {
+            // If validation successful, submit the incident
+            submitIncidentWithCoords(coords);
+        })
+        .catch(function(error) {
+            showMessage(error.message, 'error');
+        });
+}
+
+/**
+ * Validates the location using the geocoding API
+ * @returns {Promise} Promise that resolves with coordinates if valid
+ */
+function validateLocation() {
+    return new Promise(function(resolve, reject) {
+        const countryName = document.getElementById('country').value;
+        const municipalityName = document.getElementById('municipality').value;
+        const addressName = document.getElementById('address').value;
+
+        // Check if required fields are filled
+        if (!countryName || !municipalityName || !addressName) {
+            reject(new Error('Please fill in all location fields'));
+            return;
+        }
+
+        // Show loading message
+        const locationFeedback = document.getElementById('locfeedback');
+        locationFeedback.style.display = 'block';
+        locationFeedback.innerHTML = '<span style="color: blue;">Validating location...</span>';
+
+        // Create the search address
+        const address = `${countryName} ${municipalityName} ${addressName}`;
+
+        // Create XMLHttpRequest for geocoding
+        const xhr = new XMLHttpRequest();
+        // REMOVED withCredentials to fix CORS issue
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === this.DONE) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+
+                    // Check if we got results
+                    if (response.length > 0 && countryName === "Greece" && municipalityName && addressName) {
+                        const location = response[0];
+                        const displayName = location.display_name;
+
+                        // Check if the location is in Crete
+                        if (displayName.includes("Crete")) {
+                            const lat = parseFloat(location.lat);
+                            const lon = parseFloat(location.lon);
+
+                            // Success - location found and valid
+                            locationFeedback.innerHTML = '<span style="color: green;">Location validated successfully.</span>';
+
+                            // Clear any previous validation errors
+                            clearValidationErrors();
+
+                            resolve({ lat: lat, lon: lon });
+                        } else {
+                            // Location not in Crete
+                            locationFeedback.innerHTML = '<span style="color: red;">The service is available only in Crete.</span>';
+                            setValidationErrors("This location is not in Crete.");
+                            reject(new Error('The service is available only in Crete.'));
+                        }
+                    } else if (response.length > 0 && countryName !== "Greece") {
+                        // Not in Greece
+                        locationFeedback.innerHTML = '<span style="color: red;">The application is available only in Greece.</span>';
+                        setValidationErrors("The application is available only in Greece.");
+                        reject(new Error('The application is available only in Greece.'));
+                    } else {
+                        // Location not found
+                        locationFeedback.innerHTML = '<span style="color: red;">Location not found. Please check your address.</span>';
+                        setValidationErrors("This location could not be found.");
+                        reject(new Error('Location not found. Please check your address.'));
+                    }
+                } catch (e) {
+                    locationFeedback.innerHTML = '<span style="color: red;">Error validating location.</span>';
+                    reject(new Error('Error validating location: ' + e.message));
+                }
+            }
+        });
+
+        // Configure and send the geocoding request
+        xhr.open("GET", "https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=" +
+            encodeURIComponent(address) + "&accept-language=en&polygon_threshold=0.0");
+
+        xhr.setRequestHeader("x-rapidapi-host", "forward-reverse-geocoding.p.rapidapi.com");
+        xhr.setRequestHeader("x-rapidapi-key", "2137d13aedmsh3be9797ef5d78f4p12abd7jsn2946b41ea9a6");
+
+        xhr.send();
+    });
+}
+
+/**
+ * Submits the incident with validated coordinates
+ */
+function submitIncidentWithCoords(coords) {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
@@ -197,14 +258,10 @@ function handleIncidentSubmission(event) {
         description: document.getElementById('description').value,
         address: document.getElementById('address').value,
         municipality: document.getElementById('municipality').value,
-        prefecture: document.getElementById('prefecture').value
+        prefecture: document.getElementById('prefecture').value,
+        lat: coords.lat,
+        lon: coords.lon
     };
-
-    // Add optional coordinates if provided
-    const lat = document.getElementById('lat').value;
-    const lon = document.getElementById('lon').value;
-    if (lat) formData.lat = parseFloat(lat);
-    if (lon) formData.lon = parseFloat(lon);
 
     // Submit via AJAX
     const xhr = new XMLHttpRequest();
@@ -220,6 +277,8 @@ function handleIncidentSubmission(event) {
             if (response.success) {
                 showMessage('Incident submitted successfully! Emergency responders have been notified.', 'success');
                 document.getElementById('guestIncidentForm').reset();
+                document.getElementById('country').value = 'Greece'; // Reset country to Greece
+                document.getElementById('locfeedback').style.display = 'none';
             } else {
                 showMessage('Error: ' + response.message, 'error');
             }
@@ -235,6 +294,23 @@ function handleIncidentSubmission(event) {
     };
 
     xhr.send(JSON.stringify(formData));
+}
+
+/**
+ * Sets validation errors on form fields
+ */
+function setValidationErrors(message) {
+    document.getElementById('municipality').setCustomValidity(message);
+    document.getElementById('address').setCustomValidity(message);
+}
+
+/**
+ * Clears validation errors from form fields
+ */
+function clearValidationErrors() {
+    document.getElementById('municipality').setCustomValidity('');
+    document.getElementById('address').setCustomValidity('');
+    document.getElementById('country').setCustomValidity('');
 }
 
 /**
