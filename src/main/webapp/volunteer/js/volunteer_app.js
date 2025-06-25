@@ -536,6 +536,10 @@ function submitUserProfileUpdate() {
     });
 }
 
+// Global variables to store incident data for filtering
+let allIncidentsData = [];
+let assignedIncidentIds = [];
+
 /**
  * Loads the messaging section for the volunteer.
  */
@@ -547,9 +551,9 @@ function loadMessagesSection() {
             <div class="message-info">
                 <p><strong>Volunteer Message Rules:</strong></p>
                 <ul>
-                    <li>You can send messages to: <strong>Admin</strong>, <strong>Public</strong>, or <strong>Volunteers</strong></li>
+                    <li><strong>To Admin/Public:</strong> You can message about any incident</li>
+                    <li><strong>To Volunteers:</strong> You can only message about incidents you are assigned to</li>
                     <li>Incident ID is required for all messages</li>
-                    <li>You can send messages about any incident</li>
                     <li>You can see: Public messages and volunteer messages for your assigned incidents</li>
                 </ul>
             </div>
@@ -559,14 +563,14 @@ function loadMessagesSection() {
                     <select id="recipient" name="recipient" required>
                         <option value="">Select Recipient</option>
                         <option value="admin">Admin</option>
-                        <option value="volunteers">Volunteers (on incident)</option>
+                        <option value="volunteers">Volunteers (assigned incidents only)</option>
                         <option value="public">Public</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="incident_id">Incident: * <span class="field-note">(Format: Type - Municipality (Status))</span></label>
+                    <label for="incident_id">Incident: * <span class="field-note" id="incident_note">(Format: Type - Municipality (Status))</span></label>
                     <select id="incident_id" name="incident_id" required>
-                        <option value="">Loading incidents...</option>
+                        <option value="">First select a recipient</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -585,44 +589,90 @@ function loadMessagesSection() {
         if (err) {
             messagesContainer.innerHTML = `<div class="error-message">Error loading messages: ${err.message}</div>`;
         } else {
+            // Store data globally for filtering
+            allIncidentsData = responseData.incidents || [];
+            assignedIncidentIds = responseData.assigned_incident_ids || [];
+
             renderVolunteerMessages(responseData.messages, responseData.incident_info || {}, messagesContainer);
-            populateVolunteerIncidentsDropdown(responseData.incidents);
+            setupMessageForm();
         }
     });
+}
 
-    // FIXED: Use setTimeout to ensure form is in DOM before adding listener
+/**
+ * Sets up the message form with proper event listeners and filtering.
+ */
+function setupMessageForm() {
+    // Add recipient change listener
+    const recipientSelect = document.getElementById('recipient');
+    const incidentSelect = document.getElementById('incident_id');
+    const incidentNote = document.getElementById('incident_note');
+
+    if (recipientSelect && incidentSelect) {
+        recipientSelect.addEventListener('change', function() {
+            updateIncidentDropdown(this.value, incidentSelect, incidentNote);
+        });
+    }
+
+    // Add form submit listener
     setTimeout(() => {
         const sendMessageForm = document.getElementById('sendMessageForm');
         if (sendMessageForm) {
-            // Add single event listener
             sendMessageForm.addEventListener('submit', handleVolunteerSendMessage);
         }
     }, 0);
 }
 
 /**
- * Populates the incidents dropdown with only type, municipality, and status.
- * @param {Array<object>} incidents - Array of incident objects.
+ * Updates the incident dropdown based on the selected recipient.
+ * @param {string} recipient - The selected recipient type.
+ * @param {HTMLElement} incidentSelect - The incident select element.
+ * @param {HTMLElement} incidentNote - The note element to update.
  */
-function populateVolunteerIncidentsDropdown(incidents) {
-    const select = document.getElementById('incident_id');
-    if (!incidents || incidents.length === 0) {
-        select.innerHTML = '<option value="">No incidents found</option>';
-        select.disabled = true;
+function updateIncidentDropdown(recipient, incidentSelect, incidentNote) {
+    if (!recipient) {
+        incidentSelect.innerHTML = '<option value="">First select a recipient</option>';
+        incidentSelect.disabled = true;
+        incidentNote.textContent = '(Format: Type - Municipality (Status))';
         return;
     }
 
-    select.innerHTML = '<option value="">Select an incident</option>';
-    incidents.forEach(incident => {
+    let incidentsToShow = [];
+    let noteText = '';
+
+    if (recipient === 'volunteers') {
+        // Filter incidents to only show assigned ones
+        incidentsToShow = allIncidentsData.filter(incident =>
+            assignedIncidentIds.includes(incident.incident_id)
+        );
+        noteText = '(Only your assigned incidents - Format: Type - Municipality (Status))';
+
+        if (incidentsToShow.length === 0) {
+            incidentSelect.innerHTML = '<option value="">No assigned incidents found</option>';
+            incidentSelect.disabled = true;
+            incidentNote.textContent = noteText;
+            return;
+        }
+    } else {
+        // For admin and public, show all incidents
+        incidentsToShow = allIncidentsData;
+        noteText = '(All incidents - Format: Type - Municipality (Status))';
+    }
+
+    // Populate the dropdown
+    incidentSelect.innerHTML = '<option value="">Select an incident</option>';
+    incidentsToShow.forEach(incident => {
         const type = incident.incident_type || '';
         const municipality = incident.municipality || '';
         const status = incident.status || '';
 
-        select.innerHTML += `<option value="${incident.incident_id}">
+        incidentSelect.innerHTML += `<option value="${incident.incident_id}">
             ${type} - ${municipality} (${status})
         </option>`;
     });
-    select.disabled = false;
+
+    incidentSelect.disabled = false;
+    incidentNote.textContent = noteText;
 }
 
 /**
@@ -708,7 +758,7 @@ function getVolunteerMessageTypeLabel(messageType) {
 }
 
 /**
- * FIXED: Handles sending a message from the volunteer with proper event handling.
+ * Handles sending a message from the volunteer with proper validation.
  */
 function handleVolunteerSendMessage(event) {
     event.preventDefault();
@@ -733,10 +783,13 @@ function handleVolunteerSendMessage(event) {
         return;
     }
 
-    // Validate recipient options for volunteers
-    if (!['admin', 'public', 'volunteers'].includes(recipient)) {
-        showVolunteerMessageResult('Volunteers can only send to Admin, Public, or Volunteers.', 'error');
-        return;
+    // Client-side validation for volunteer messages (server will also validate)
+    if (recipient === 'volunteers') {
+        const selectedIncidentId = parseInt(incidentId);
+        if (!assignedIncidentIds.includes(selectedIncidentId)) {
+            showVolunteerMessageResult('You can only send volunteer messages for incidents you are assigned to.', 'error');
+            return;
+        }
     }
 
     const messageData = {
@@ -751,6 +804,14 @@ function handleVolunteerSendMessage(event) {
         } else {
             showVolunteerMessageResult('Message sent successfully!', 'success');
             document.getElementById('sendMessageForm').reset();
+
+            // Reset the incident dropdown to initial state
+            const incidentSelect = document.getElementById('incident_id');
+            const incidentNote = document.getElementById('incident_note');
+            incidentSelect.innerHTML = '<option value="">First select a recipient</option>';
+            incidentSelect.disabled = true;
+            incidentNote.textContent = '(Format: Type - Municipality (Status))';
+
             // Refresh messages after sending
             loadMessagesSection();
         }

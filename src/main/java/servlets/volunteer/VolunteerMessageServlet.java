@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Updated servlet to handle messaging for volunteers with simplified incident display.
- * Shows only type, municipality, status for incidents in dropdown and messages table.
+ * Updated servlet to handle messaging for volunteers with restricted volunteer messaging.
+ * Volunteers can only send messages to other volunteers for incidents they are assigned to.
  */
 public class VolunteerMessageServlet extends BaseServlet {
 
@@ -54,11 +54,12 @@ public class VolunteerMessageServlet extends BaseServlet {
             // Get all incidents for the dropdown
             ArrayList<Incident> allIncidents = incidentsTable.getAllIncidents();
 
-            // Create response object with messages, incidents, and incident info
+            // Create response object with messages, incidents, incident info, and assigned incident IDs
             VolunteerMessagesResponse responseObj = new VolunteerMessagesResponse();
             responseObj.messages = messages;
             responseObj.incidents = allIncidents;
             responseObj.incident_info = createIncidentInfoMap(allIncidents);
+            responseObj.assigned_incident_ids = assignedIncidentIds; // NEW: Add assigned incident IDs
 
             Gson gson = new Gson();
             String jsonResponse = gson.toJson(responseObj);
@@ -110,6 +111,21 @@ public class VolunteerMessageServlet extends BaseServlet {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.print("{\"success\": false, \"message\": \"Incident ID is required for all volunteer messages.\"}");
                 return;
+            }
+
+            // NEW: Additional validation for volunteer messages - must be assigned to incident
+            if ("volunteers".equals(recipient)) {
+                UsersTable usersTable = new UsersTable();
+                VolunteerAssignmentsTable assignmentsTable = new VolunteerAssignmentsTable();
+
+                int volunteerUserId = usersTable.getUserByUsername(senderUsername).getUser_id();
+                ArrayList<Integer> assignedIncidentIds = assignmentsTable.getAssignedIncidentIds(volunteerUserId);
+
+                if (!assignedIncidentIds.contains(messageRequest.incident_id)) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print("{\"success\": false, \"message\": \"You can only send volunteer messages for incidents you are assigned to.\"}");
+                    return;
+                }
             }
 
             // Validate message text
@@ -170,11 +186,12 @@ public class VolunteerMessageServlet extends BaseServlet {
     }
 
     /**
-     * Inner class for response structure that includes messages, incidents, and incident info
+     * Inner class for response structure that includes messages, incidents, incident info, and assigned incident IDs
      */
     private static class VolunteerMessagesResponse {
         ArrayList<Message> messages;
         ArrayList<Incident> incidents;
         HashMap<String, HashMap<String, String>> incident_info;
+        ArrayList<Integer> assigned_incident_ids; // NEW: Add assigned incident IDs to response
     }
 }
