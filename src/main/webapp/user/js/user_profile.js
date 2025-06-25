@@ -32,6 +32,7 @@ function submitUserProfileUpdate() {
         prefecture: document.getElementById('prefecture').value,
         job: document.getElementById('job').value,
         telephone: document.getElementById('telephone').value,
+        // Keep existing lat/lon values - users can't edit these
         lat: document.getElementById('lat').value || null,
         lon: document.getElementById('lon').value || null
     };
