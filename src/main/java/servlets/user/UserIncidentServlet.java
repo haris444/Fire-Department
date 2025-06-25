@@ -122,7 +122,7 @@ public class UserIncidentServlet extends BaseServlet {
                 return;
             }
 
-            if (incidentData.getPrefecture() == null || incidentData.getPrefecture().trim().isEmpty()) {
+            if (incidentData.getRegion() == null || incidentData.getRegion().trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 PrintWriter out = response.getWriter();
                 out.print("{\"success\": false, \"message\": \"Prefecture is required\"}");
@@ -146,7 +146,7 @@ public class UserIncidentServlet extends BaseServlet {
             newIncident.setUser_type("user");
             newIncident.setAddress(incidentData.getAddress().trim());
             newIncident.setMunicipality(incidentData.getMunicipality().trim());
-            newIncident.setPrefecture(incidentData.getPrefecture().trim());
+            newIncident.setPrefecture(incidentData.getRegion().trim());
             newIncident.setStart_datetime();
             newIncident.setStatus("running");
             newIncident.setDanger(incidentData.getDanger().trim());

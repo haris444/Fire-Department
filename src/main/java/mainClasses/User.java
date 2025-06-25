@@ -8,7 +8,11 @@ public class User {
         String country, address;
         Double lat, lon;
         String telephone;
-        String municipality, prefecture;
+        String municipality;
+        String prefecture;
+
+
+        String region;
 
         String user_type;
         String volunteer_type;
@@ -194,6 +198,13 @@ public class User {
         this.gender = gender;
     }
 
- 
-    
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+
 }

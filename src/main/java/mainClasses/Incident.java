@@ -14,9 +14,28 @@ import java.time.format.DateTimeFormatter;
  */
 public class Incident {
     int incident_id;
-    String incident_type, description, user_phone, user_type,address,
-     prefecture, municipality,start_datetime,end_datetime,danger,status,
-    finalResult;
+    String incident_type;
+    String description;
+    String user_phone;
+    String user_type;
+    String address;
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    String region;
+    String prefecture;
+    String municipality;
+    String start_datetime;
+    String end_datetime;
+    String danger;
+    String status;
+    String finalResult;
     double lat, lon;
     int vehicles, firemen;
 

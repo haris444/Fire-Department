@@ -229,7 +229,7 @@ label[for="incident_type"]:after,
 label[for="description"]:after,
 label[for="address"]:after,
 label[for="municipality"]:after,
-label[for="prefecture"]:after {
+label[for="region"]:after {
     content: " *";
     color: #e74c3c;
     font-weight: bold;

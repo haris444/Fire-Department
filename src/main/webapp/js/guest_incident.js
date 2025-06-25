@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
 
     // Add event listeners to clear validation errors when address fields change
-    const addressFields = ['country', 'municipality', 'address'];
+    const addressFields = ['country', 'municipality', 'address', 'region'];
     addressFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (field) {
@@ -43,13 +43,14 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function validateLocation() {
         return new Promise(function(resolve, reject) {
-            const countryName = document.getElementById('country').value;
-            const municipalityName = document.getElementById('municipality').value;
-            const addressName = document.getElementById('address').value;
+            const countryName = document.getElementById('country').value.trim();
+            const municipalityName = document.getElementById('municipality').value.trim();
+            const addressName = document.getElementById('address').value.trim();
+            const regionName = document.getElementById('region').value.trim();
 
             // Check if required fields are filled
-            if (!countryName || !municipalityName || !addressName) {
-                reject(new Error('Please fill in all location fields'));
+            if (!countryName || !municipalityName || !addressName || !regionName) {
+                reject(new Error('Please fill in all location fields (Country, Municipality, Address, Region)'));
                 return;
             }
 
@@ -61,8 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
             locationFeedback.style.display = 'block';
             locationFeedback.innerHTML = '<span style="color: blue;">🔄 Validating location...</span>';
 
-            // Create the search address
-            const address = `${countryName} ${municipalityName} ${addressName}`;
+            // Create the search address - prioritize region for better geocoding
+            const address = `${addressName}, ${municipalityName}, ${regionName}, ${countryName}`;
 
             // Create XMLHttpRequest for geocoding
             const xhr = new XMLHttpRequest();
@@ -73,35 +74,35 @@ document.addEventListener('DOMContentLoaded', function() {
                         const response = JSON.parse(xhr.responseText);
 
                         // Check if we got results
-                        if (response.length > 0 && countryName === "Greece" && municipalityName && addressName) {
+                        if (response.length > 0 && countryName === "Greece") {
                             const location = response[0];
                             const displayName = location.display_name;
 
-                            // Check if the location is in Crete
-                            if (displayName.includes("Crete")) {
+                            // Check if the location matches the specified region (case-insensitive)
+                            if (displayName.toLowerCase().includes(regionName.toLowerCase())) {
                                 const lat = parseFloat(location.lat);
                                 const lon = parseFloat(location.lon);
 
                                 // Success - location found and valid
-                                locationFeedback.innerHTML = '<span style="color: green;">✅ Location validated successfully.</span>';
+                                locationFeedback.innerHTML = `<span style="color: green;">✅ Location validated successfully in ${regionName}.</span>`;
 
                                 resolve({ lat: lat, lon: lon });
                             } else {
-                                // Location not in Crete
-                                locationFeedback.innerHTML = '<span style="color: red;">❌ The service is available only in Crete.</span>';
-                                setValidationErrors("This location is not in Crete.");
-                                reject(new Error('The service is available only in Crete.'));
+                                // Location not in specified region
+                                locationFeedback.innerHTML = `<span style="color: red;">❌ Address not found in ${regionName}. Please check your region.</span>`;
+                                setValidationErrors(`This location is not in ${regionName}.`);
+                                reject(new Error(`Address not found in ${regionName}. Please check your region.`));
                             }
                         } else if (response.length > 0 && countryName !== "Greece") {
                             // Not in Greece
-                            locationFeedback.innerHTML = '<span style="color: red;">❌ The application is available only in Greece.</span>';
-                            setValidationErrors("The application is available only in Greece.");
-                            reject(new Error('The application is available only in Greece.'));
+                            locationFeedback.innerHTML = '<span style="color: red;">❌ This application is available only in Greece.</span>';
+                            setValidationErrors("This application is available only in Greece.");
+                            reject(new Error('This application is available only in Greece.'));
                         } else {
                             // Location not found
-                            locationFeedback.innerHTML = '<span style="color: red;">❌ Location not found. Please check your address.</span>';
-                            setValidationErrors("This location could not be found.");
-                            reject(new Error('Location not found. Please check your address.'));
+                            locationFeedback.innerHTML = '<span style="color: red;">❌ Address not found. Please check your address details.</span>';
+                            setValidationErrors("This address could not be found.");
+                            reject(new Error('Address not found. Please check your address details.'));
                         }
                     } catch (e) {
                         locationFeedback.innerHTML = '<span style="color: red;">❌ Error validating location.</span>';
@@ -142,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             description: document.getElementById('description').value,
             address: document.getElementById('address').value,
             municipality: document.getElementById('municipality').value,
-            prefecture: document.getElementById('prefecture').value,
+            region: document.getElementById('region').value,
             lat: coords.lat,
             lon: coords.lon
         };
@@ -182,10 +183,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const municipalityField = document.getElementById('municipality');
         const addressField = document.getElementById('address');
         const countryField = document.getElementById('country');
+        const regionField = document.getElementById('region');
 
         if (municipalityField) municipalityField.setCustomValidity(message);
         if (addressField) addressField.setCustomValidity(message);
         if (countryField) countryField.setCustomValidity(message);
+        if (regionField) regionField.setCustomValidity(message);
     }
 
     /**
@@ -195,10 +198,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const municipalityField = document.getElementById('municipality');
         const addressField = document.getElementById('address');
         const countryField = document.getElementById('country');
+        const regionField = document.getElementById('region');
 
         if (municipalityField) municipalityField.setCustomValidity('');
         if (addressField) addressField.setCustomValidity('');
         if (countryField) countryField.setCustomValidity('');
+        if (regionField) regionField.setCustomValidity('');
     }
 
     /**

@@ -43,8 +43,8 @@ const userTemplates = {
                     <input type="text" id="municipality" required>
                 </div>
                 <div class="form-group">
-                    <label for="prefecture">Prefecture:</label>
-                    <input type="text" id="prefecture" required>
+                    <label for="region">Region:</label>
+                    <input type="text" id="region" required placeholder="e.g., Crete">
                 </div>
             </div>
             <!-- Location validation feedback -->

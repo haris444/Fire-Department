@@ -70,7 +70,9 @@ public class UnifiedRegisterServlet extends HttpServlet {
                 return;
             }
 
-
+            if (user.getRegion() != null) {
+                user.setPrefecture(user.getRegion().trim());
+            }
             usersTable.addNewUser(user);
 
 

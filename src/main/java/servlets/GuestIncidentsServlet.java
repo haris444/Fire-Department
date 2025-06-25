@@ -116,9 +116,9 @@ public class GuestIncidentsServlet extends HttpServlet {
                 return;
             }
 
-            if (incidentData.getPrefecture() == null || incidentData.getPrefecture().trim().isEmpty()) {
+            if (incidentData.getRegion() == null || incidentData.getRegion().trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print("{\"success\": false, \"message\": \"Prefecture is required\"}");
+                out.print("{\"success\": false, \"message\": \"Region is required\"}");
                 return;
             }
 
@@ -130,7 +130,7 @@ public class GuestIncidentsServlet extends HttpServlet {
             newIncident.setUser_type("guest");
             newIncident.setAddress(incidentData.getAddress().trim());
             newIncident.setMunicipality(incidentData.getMunicipality().trim());
-            newIncident.setPrefecture(incidentData.getPrefecture().trim());
+            newIncident.setPrefecture(incidentData.getRegion().trim());
             newIncident.setStart_datetime();
             newIncident.setStatus("submitted");
             newIncident.setDanger("unknown");
