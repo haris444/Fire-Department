@@ -443,11 +443,12 @@ function renderUserProfileForm(user) {
                 <div class="form-group"><label for="job">Job:</label><input type="text" id="job" name="job" value="${user.job || ''}" required></div>
                 <div class="form-group"><label for="telephone">Telephone:</label><input type="tel" id="telephone" name="telephone" value="${user.telephone || ''}" required></div>
             </div>
-            <div class="form-row">
-                <div class="form-group"><label for="lat">Latitude:</label><input type="number" id="lat" name="lat" value="${user.lat || ''}" step="any"></div>
-                <div class="form-group"><label for="lon">Longitude:</label><input type="number" id="lon" name="lon" value="${user.lon || ''}" step="any"></div>
-            </div>
     `;
+
+    // REMOVED: Latitude and Longitude fields are no longer editable
+    // The coordinates are stored in hidden fields and managed automatically
+    html += `<input type="hidden" id="lat" name="lat" value="${user.lat || ''}">`;
+    html += `<input type="hidden" id="lon" name="lon" value="${user.lon || ''}">`;
 
     // Add volunteer-specific fields
     if (user.user_type === 'volunteer') {
@@ -507,6 +508,7 @@ function submitUserProfileUpdate() {
         prefecture: document.getElementById('prefecture').value,
         job: document.getElementById('job').value,
         telephone: document.getElementById('telephone').value,
+        // Keep existing lat/lon values - users can't edit these
         lat: document.getElementById('lat').value || null,
         lon: document.getElementById('lon').value || null
     };

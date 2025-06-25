@@ -132,10 +132,11 @@ function buildProfileForm(user) {
         <div class="form-group"><label for="job">Job:</label><input type="text" id="job" value="${user.job || ''}" required></div>
         <div class="form-group"><label for="telephone">Phone:</label><input type="tel" id="telephone" value="${user.telephone || ''}" required></div>
     </div>`;
-    h += `<div class="form-row">
-        <div class="form-group"><label for="lat">Latitude:</label><input type="number" id="lat" value="${user.lat || ''}" step="any"></div>
-        <div class="form-group"><label for="lon">Longitude:</label><input type="number" id="lon" value="${user.lon || ''}" step="any"></div>
-    </div>`;
+
+    // REMOVED: Latitude and Longitude fields are no longer editable
+    // The coordinates are now calculated automatically during address validation and stored in hidden fields
+    h += `<input type="hidden" id="lat" value="${user.lat || ''}">`;
+    h += `<input type="hidden" id="lon" value="${user.lon || ''}">`;
 
     // Volunteer fields
     if (isVol) {
