@@ -88,12 +88,10 @@
 </div>
 
 <script>
-    // Auto-redirect to guest panel after 5 seconds if no interaction
     let redirectTimer = setTimeout(() => {
         window.location.href = 'guest_panel.html';
     }, 10000);
 
-    // Cancel auto-redirect if user interacts with page
     document.addEventListener('click', () => {
         clearTimeout(redirectTimer);
     });
