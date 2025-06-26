@@ -5,7 +5,6 @@ public class VolunteerAssignment {
     private int incident_id;
     private String assignment_date;
 
-    // Constructors
     public VolunteerAssignment() {}
 
     public VolunteerAssignment(int volunteer_user_id, int incident_id) {
@@ -13,7 +12,6 @@ public class VolunteerAssignment {
         this.incident_id = incident_id;
     }
 
-    // Getters and setters
     public int getVolunteer_user_id() { return volunteer_user_id; }
     public void setVolunteer_user_id(int volunteer_user_id) { this.volunteer_user_id = volunteer_user_id; }
 

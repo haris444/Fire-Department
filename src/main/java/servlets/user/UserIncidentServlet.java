@@ -195,12 +195,7 @@ public class UserIncidentServlet extends BaseServlet {
         }
     }
 
-    /**
-     * Validates that coordinates are within reasonable bounds for Crete
-     * @param lat Latitude
-     * @param lon Longitude
-     * @return true if coordinates are valid for Crete region
-     */
+
     private boolean isValidCreteCoordinates(double lat, double lon) {
         // Approximate bounds for Crete:
         // Latitude: 34.8° to 35.7° N

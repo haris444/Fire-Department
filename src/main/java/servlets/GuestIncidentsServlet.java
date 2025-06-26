@@ -73,7 +73,6 @@ public class GuestIncidentsServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Read JSON payload from request body
             StringBuilder jsonBuffer = new StringBuilder();
             BufferedReader reader = request.getReader();
             String line;
@@ -81,11 +80,10 @@ public class GuestIncidentsServlet extends HttpServlet {
                 jsonBuffer.append(line);
             }
 
-            // Parse JSON to get incident data
             Gson gson = new Gson();
             Incident incidentData = gson.fromJson(jsonBuffer.toString(), Incident.class);
 
-            // Validate required fields
+            // validate required fields
             if (incidentData.getIncident_type() == null || incidentData.getIncident_type().trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.print("{\"success\": false, \"message\": \"Incident type is required\"}");
@@ -122,7 +120,7 @@ public class GuestIncidentsServlet extends HttpServlet {
                 return;
             }
 
-            // Create new incident with guest data
+            //  new incident with guest data
             Incident newIncident = new Incident();
             newIncident.setIncident_type(incidentData.getIncident_type().trim());
             newIncident.setDescription(incidentData.getDescription().trim());
@@ -168,16 +166,8 @@ public class GuestIncidentsServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Validates that coordinates are within reasonable bounds for Crete
-     * @param lat Latitude
-     * @param lon Longitude
-     * @return true if coordinates are valid for Crete region
-     */
+
     private boolean isValidCreteCoordinates(double lat, double lon) {
-        // Approximate bounds for Crete:
-        // Latitude: 34.8° to 35.7° N
-        // Longitude: 23.3° to 26.3° E
         return lat >= 34.8 && lat <= 35.7 && lon >= 23.3 && lon <= 26.3;
     }
 }

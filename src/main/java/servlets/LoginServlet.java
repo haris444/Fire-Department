@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 
 /**
  * Consolidated Login Servlet for all types of users
- * This servlet handles authentication for all user types and returns
+ * handles authentication for all user types and returns
  * the 'user_type' in the success response, allowing the frontend
  * to redirect to the correct dashboard.
  */

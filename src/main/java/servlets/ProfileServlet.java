@@ -14,7 +14,7 @@ import com.google.gson.JsonParser;
 
 import java.util.*;
 /**
- * Universal Profile Servlet for handling user profile operations for users and volunteers
+ * Universal Profile Servlet for users and volunteers
  */
 public class ProfileServlet extends BaseServlet {
 

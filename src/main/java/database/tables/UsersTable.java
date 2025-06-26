@@ -28,7 +28,6 @@ public class UsersTable {
 
 
 
-    // Retrieves users from database basic info only
     public ArrayList<User> getAllUsersSummary() throws SQLException, ClassNotFoundException {
         ArrayList<User> userList = new ArrayList<User>();
         Connection con = DB_Connection.getConnection();
@@ -105,7 +104,6 @@ public class UsersTable {
                 + "    weight DOUBLE,"                    //  optional
                 + " PRIMARY KEY (user_id))";
         stmt.execute(query);
-        stmt.close();
         stmt.close();
         con.close();
     }

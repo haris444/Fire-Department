@@ -19,7 +19,7 @@ public class UserMessageServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check user session
+
         if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
@@ -64,7 +64,6 @@ public class UserMessageServlet extends BaseServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Check user session
         if (!checkSession(request, response, "userRole", "REGULAR_USER")) {
             return;
         }
@@ -73,11 +72,11 @@ public class UserMessageServlet extends BaseServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Get logged in username from session (this is the sender)
+            // logged in username from session
             HttpSession session = request.getSession(false);
             String loggedInUsername = (String) session.getAttribute("loggedInUsername");
 
-            // Read JSON payload
+
             StringBuilder jsonBuffer = new StringBuilder();
             BufferedReader reader = request.getReader();
             String line;
@@ -85,11 +84,11 @@ public class UserMessageServlet extends BaseServlet {
                 jsonBuffer.append(line);
             }
 
-            // Parse JSON
+
             Gson gson = new Gson();
             MessageRequest messageRequest = gson.fromJson(jsonBuffer.toString(), MessageRequest.class);
 
-            // Validate recipient type (user can send to 'admin' or 'public')
+            // (user can send to 'admin' or 'public')
             if (messageRequest.recipient == null ||
                     (!messageRequest.recipient.equals("admin") && !messageRequest.recipient.equals("public"))) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -99,7 +98,6 @@ public class UserMessageServlet extends BaseServlet {
                 return;
             }
 
-            // Validate message text
             if (messageRequest.message_text == null || messageRequest.message_text.trim().isEmpty()) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 PrintWriter out = response.getWriter();
@@ -108,7 +106,6 @@ public class UserMessageServlet extends BaseServlet {
                 return;
             }
 
-            // Incident_id is required for all messages
             if (messageRequest.incident_id == null || messageRequest.incident_id <= 0) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 PrintWriter out = response.getWriter();
@@ -160,14 +157,12 @@ public class UserMessageServlet extends BaseServlet {
         return incidentInfo;
     }
 
-    // Inner class for JSON parsing
     private static class MessageRequest {
         String recipient;
         String message_text;
         Integer incident_id;
     }
 
-    // Inner class for response structure that includes both messages and incidents
     private static class UserMessagesResponse {
         ArrayList<Message> messages;
         ArrayList<Incident> incidents;
