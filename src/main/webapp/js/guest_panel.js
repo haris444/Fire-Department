@@ -1,22 +1,16 @@
-// Guest Panel JavaScript - Updated with location validation
 
-// Initialize the guest panel when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initGuestPanel();
 });
 
-/**
- * Initialize the guest panel functionality
- */
+
 function initGuestPanel() {
     setupTabNavigation();
     loadActiveIncidents();
     setupIncidentForm();
 }
 
-/**
- * Setup tab navigation functionality
- */
+
 function setupTabNavigation() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -25,11 +19,9 @@ function setupTabNavigation() {
         button.addEventListener('click', function() {
             const targetTab = this.dataset.tab;
 
-            // Remove active class from all tabs and buttons
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
 
-            // Add active class to clicked button and corresponding tab
             this.classList.add('active');
             if (targetTab === 'view') {
                 document.getElementById('viewIncidentsTab').classList.add('active');
@@ -37,7 +29,6 @@ function setupTabNavigation() {
                 document.getElementById('submitIncidentsTab').classList.add('active');
             }
 
-            // Load incidents if switching to view tab
             if (targetTab === 'view') {
                 loadActiveIncidents();
             }
@@ -45,14 +36,11 @@ function setupTabNavigation() {
     });
 }
 
-/**
- * Load and display active incidents
- */
+
 function loadActiveIncidents() {
     const container = document.getElementById('incidentsContainer');
     container.innerHTML = 'Loading incidents...';
 
-    // Simple AJAX request to get incidents
     const xhr = new XMLHttpRequest();
     xhr.open('GET', 'guest/incident', true);
 
@@ -76,9 +64,7 @@ function loadActiveIncidents() {
     xhr.send();
 }
 
-/**
- * Render incidents in a table format
- */
+
 function renderIncidentsTable(incidents) {
     const container = document.getElementById('incidentsContainer');
 
@@ -87,7 +73,6 @@ function renderIncidentsTable(incidents) {
         return;
     }
 
-    // Filter for active incidents only
     const activeIncidents = incidents.filter(incident =>
         incident.status === 'running' || incident.status === 'submitted'
     );
@@ -129,22 +114,17 @@ function renderIncidentsTable(incidents) {
     container.innerHTML = html;
 }
 
-/**
- * Setup the incident submission form
- */
+
 function setupIncidentForm() {
     const form = document.getElementById('guestIncidentForm');
 
     if (form) {
-        // Add event listeners to clear validation errors when address fields change
         const addressFields = ['country', 'municipality', 'address', 'region'];
         addressFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.addEventListener('input', function() {
-                    // Clear validation errors when user starts typing
                     clearValidationErrors();
-                    // Hide any previous location feedback
                     const locationFeedback = document.getElementById('locfeedback');
                     if (locationFeedback) {
                         locationFeedback.style.display = 'none';
@@ -153,14 +133,11 @@ function setupIncidentForm() {
             }
         });
 
-        // Form submission
         form.addEventListener('submit', handleIncidentSubmission);
     }
 }
 
-/**
- * Handle incident form submission with location validation
- */
+
 function handleIncidentSubmission(event) {
     event.preventDefault();
 
@@ -175,10 +152,7 @@ function handleIncidentSubmission(event) {
         });
 }
 
-/**
- * Validates the location using the geocoding API
- * @returns {Promise} Promise that resolves with coordinates if valid
- */
+
 function validateLocation() {
     return new Promise(function(resolve, reject) {
         const countryName = document.getElementById('country').value.trim();
@@ -186,24 +160,19 @@ function validateLocation() {
         const addressName = document.getElementById('address').value.trim();
         const regionName = document.getElementById('region').value.trim();
 
-        // Check if required fields are filled
         if (!countryName || !municipalityName || !addressName || !regionName) {
             reject(new Error('Please fill in all location fields (Country, Municipality, Address, Region)'));
             return;
         }
 
-        // Clear any existing validation errors before starting new validation
         clearValidationErrors();
 
-        // Show loading message
         const locationFeedback = document.getElementById('locfeedback');
         locationFeedback.style.display = 'block';
         locationFeedback.innerHTML = '<span style="color: blue;">🔄 Validating location...</span>';
 
-        // Create the search address - prioritize region for better geocoding
         const address = `${addressName}, ${municipalityName}, ${regionName}, ${countryName}`;
 
-        // Create XMLHttpRequest for geocoding
         const xhr = new XMLHttpRequest();
 
         xhr.addEventListener("readystatechange", function () {
@@ -211,33 +180,33 @@ function validateLocation() {
                 try {
                     const response = JSON.parse(xhr.responseText);
 
-                    // Check if we got results
+
                     if (response.length > 0 && countryName === "Greece") {
                         const location = response[0];
                         const displayName = location.display_name;
 
-                        // Check if the location matches the specified region (case-insensitive)
+
                         if (displayName.toLowerCase().includes(regionName.toLowerCase())) {
                             const lat = parseFloat(location.lat);
                             const lon = parseFloat(location.lon);
 
-                            // Success - location found and valid
+
                             locationFeedback.innerHTML = `<span style="color: green;">✅ Location validated successfully in ${regionName}.</span>`;
 
                             resolve({ lat: lat, lon: lon });
                         } else {
-                            // Location not in specified region
+
                             locationFeedback.innerHTML = `<span style="color: red;">❌ Address not found in ${regionName}. Please check your region.</span>`;
                             setValidationErrors(`This location is not in ${regionName}.`);
                             reject(new Error(`Address not found in ${regionName}. Please check your region.`));
                         }
                     } else if (response.length > 0 && countryName !== "Greece") {
-                        // Not in Greece
+
                         locationFeedback.innerHTML = '<span style="color: red;">❌ This application is available only in Greece.</span>';
                         setValidationErrors("This application is available only in Greece.");
                         reject(new Error('This application is available only in Greece.'));
                     } else {
-                        // Location not found
+
                         locationFeedback.innerHTML = '<span style="color: red;">❌ Address not found. Please check your address details.</span>';
                         setValidationErrors("This address could not be found.");
                         reject(new Error('Address not found. Please check your address details.'));
@@ -256,7 +225,7 @@ function validateLocation() {
             reject(new Error('Network error during location validation.'));
         };
 
-        // Configure and send the geocoding request
+
         xhr.open("GET", "https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=" +
             encodeURIComponent(address) + "&accept-language=en&polygon_threshold=0.0");
 
@@ -267,15 +236,13 @@ function validateLocation() {
     });
 }
 
-/**
- * Submits the incident with validated coordinates
- */
+
 function submitIncidentWithCoords(coords) {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
 
-    // Collect form data
+
     const formData = {
         user_phone: document.getElementById('user_phone').value,
         incident_type: document.getElementById('incident_type').value,
@@ -287,7 +254,7 @@ function submitIncidentWithCoords(coords) {
         lon: coords.lon
     };
 
-    // Submit via AJAX
+
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'guest/incident', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
@@ -320,9 +287,7 @@ function submitIncidentWithCoords(coords) {
     xhr.send(JSON.stringify(formData));
 }
 
-/**
- * Sets validation errors on form fields
- */
+
 function setValidationErrors(message) {
     const municipalityField = document.getElementById('municipality');
     const addressField = document.getElementById('address');
@@ -335,9 +300,7 @@ function setValidationErrors(message) {
     if (regionField) regionField.setCustomValidity(message);
 }
 
-/**
- * Clears validation errors from form fields
- */
+
 function clearValidationErrors() {
     const municipalityField = document.getElementById('municipality');
     const addressField = document.getElementById('address');
@@ -350,16 +313,13 @@ function clearValidationErrors() {
     if (regionField) regionField.setCustomValidity('');
 }
 
-/**
- * Show a message to the user
- */
+
 function showMessage(message, type) {
     const messageArea = document.getElementById('messageArea');
     messageArea.textContent = message;
     messageArea.className = 'message-area ' + type + '-message';
     messageArea.style.display = 'block';
 
-    // Auto-hide success messages after 5 seconds
     if (type === 'success') {
         setTimeout(() => {
             messageArea.style.display = 'none';
@@ -367,9 +327,7 @@ function showMessage(message, type) {
     }
 }
 
-/**
- * Format date and time for display
- */
+
 function formatDateTime(dateTimeStr) {
     if (!dateTimeStr) return 'N/A';
 
