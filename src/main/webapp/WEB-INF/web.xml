@@ -5,7 +5,7 @@
          http://xmlns.jcp.org/xml/ns/javaee/web-app_4.0.xsd">
 
 
-    <!-- Authentication Servlets -->
+    <!-- authentication  -->
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>servlets.LoginServlet</servlet-class>
@@ -19,7 +19,7 @@
         <servlet-class>servlets.UnifiedRegisterServlet</servlet-class>
     </servlet>
 
-    <!-- Universal Profile Servlet -->
+    <!-- Profile Servlet -->
     <servlet>
         <servlet-name>ProfileServlet</servlet-name>
         <servlet-class>servlets.ProfileServlet</servlet-class>
@@ -31,7 +31,7 @@
         <servlet-class>servlets.GuestIncidentsServlet</servlet-class>
     </servlet>
 
-    <!-- Admin Servlets -->
+    <!-- admin -->
     <servlet>
         <servlet-name>AdminIncidentsServlet</servlet-name>
         <servlet-class>servlets.admin.AdminIncidentsServlet</servlet-class>
@@ -57,7 +57,7 @@
         <servlet-class>servlets.admin.AdminVolunteersServlet</servlet-class>
     </servlet>
 
-    <!-- User Servlets -->
+    <!-- user -->
     <servlet>
         <servlet-name>UserIncidentServlet</servlet-name>
         <servlet-class>servlets.user.UserIncidentServlet</servlet-class>
@@ -67,7 +67,7 @@
         <servlet-class>servlets.user.UserMessageServlet</servlet-class>
     </servlet>
 
-    <!-- Volunteer Servlets -->
+    <!-- volunteer -->
     <servlet>
         <servlet-name>VolunteerIncidentServlet</servlet-name>
         <servlet-class>servlets.volunteer.VolunteerIncidentServlet</servlet-class>
@@ -77,9 +77,9 @@
         <servlet-class>servlets.volunteer.VolunteerMessageServlet</servlet-class>
     </servlet>
 
-    <!-- SERVLET MAPPINGS -->
 
-    <!-- Authentication Mappings -->
+
+    <!-- auth mappings -->
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -93,7 +93,7 @@
         <url-pattern>/register</url-pattern>
     </servlet-mapping>
 
-    <!-- Universal Profile Mappings -->
+    <!-- profile Mappings -->
     <servlet-mapping>
         <servlet-name>ProfileServlet</servlet-name>
         <url-pattern>/user/profile</url-pattern>
@@ -109,7 +109,7 @@
         <url-pattern>/guest/incident</url-pattern>
     </servlet-mapping>
 
-    <!-- Admin Mappings -->
+    <!--admin Mappings -->
     <servlet-mapping>
         <servlet-name>AdminIncidentsServlet</servlet-name>
         <url-pattern>/admin/incidents</url-pattern>
@@ -135,7 +135,7 @@
         <url-pattern>/admin/volunteers</url-pattern>
     </servlet-mapping>
 
-    <!-- User Mappings -->
+    <!--user Mappings -->
     <servlet-mapping>
         <servlet-name>UserIncidentServlet</servlet-name>
         <url-pattern>/user/incidents</url-pattern>
@@ -145,7 +145,7 @@
         <url-pattern>/user/messages</url-pattern>
     </servlet-mapping>
 
-    <!-- Volunteer Mappings -->
+    <!--volunteer Mappings -->
     <servlet-mapping>
         <servlet-name>VolunteerIncidentServlet</servlet-name>
         <url-pattern>/volunteer/incidents</url-pattern>
@@ -155,7 +155,7 @@
         <url-pattern>/volunteer/messages</url-pattern>
     </servlet-mapping>
 
-    <!-- Session Configuration -->
+    <!--session Configuration -->
     <session-config>
         <session-timeout>30</session-timeout>
     </session-config>
