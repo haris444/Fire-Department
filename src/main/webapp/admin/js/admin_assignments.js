@@ -7,13 +7,13 @@ function loadAssignments() {
             return;
         }
 
-        // Load dropdowns with the data from the server
+        //dropdowns
         loadVolunteersDropdown(responseData.volunteers);
         loadIncidentsDropdown(responseData.incidents);
         loadCurrentAssignments(responseData.assignments);
     });
 
-    // Setup form submission handler
+    //form sub handler
     document.getElementById('createAssignmentForm').addEventListener('submit', event => {
         event.preventDefault();
         const volunteerUserId = document.getElementById('volunteerSelect').value;
@@ -61,7 +61,6 @@ function loadIncidentsDropdown(incidents) {
         return;
     }
 
-    // Build options showing Type, Municipality, Status instead of just ID
     select.innerHTML = '<option value="">Select Incident</option>' +
         buildOptions(incidents, 'incident_id', inc => {
             const type = inc.incident_type || 'Unknown';

@@ -1,5 +1,3 @@
-// admin_users.js - User management functionality
-
 function loadUsers() {
     makeAdminAjaxRequest('../admin/users', 'GET', null, (err, users) => {
         const container = document.getElementById('usersTableContainer');

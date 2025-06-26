@@ -1,6 +1,3 @@
-// admin_messaging.js
-
-// Store incidents data globally for table rendering
 let incidentsData = [];
 
 function loadMessages() {
@@ -11,21 +8,18 @@ function loadMessages() {
             return;
         }
 
-        // Store incidents data for later use in table rendering
+        // for later use
         incidentsData = responseData.incidents || [];
 
         renderMessagesTable(responseData.messages, container);
         populateIncidentsForMessages(responseData.incidents);
     });
 
-    // Remove existing event listener before adding new one
     const sendMessageForm = document.getElementById('sendMessageForm');
     if (sendMessageForm) {
-        // Clone the form to remove all event listeners
         const newForm = sendMessageForm.cloneNode(true);
         sendMessageForm.parentNode.replaceChild(newForm, sendMessageForm);
 
-        // Add single event listener to the new form
         document.getElementById('sendMessageForm').addEventListener('submit', handleAdminSendMessage);
     }
 }
@@ -42,7 +36,6 @@ function handleAdminSendMessage(event) {
         return;
     }
 
-    // Validate admin can only send to public or volunteers
     if (recipient !== 'public' && recipient !== 'volunteers') {
         showMessageResult('Admin can only send to Public or Volunteers', 'error');
         return;
@@ -74,7 +67,6 @@ function renderMessagesTable(messages, container) {
     messages.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
 
     const rows = messages.map(msg => {
-        // Get incident details from the incidents data loaded earlier
         const incidentInfo = getIncidentDisplayInfo(msg.incident_id);
         return buildRow([
             formatDateTime(msg.date_time),
@@ -100,7 +92,6 @@ function populateIncidentsForMessages(incidents) {
         return;
     }
 
-    // UPDATED: Show only type, municipality, status
     select.innerHTML = '<option value="">Select incident</option>' +
         buildOptions(incidents, 'incident_id', inc =>
             `${inc.incident_type || 'Unknown'} - ${inc.municipality || 'Unknown'} (${inc.status || 'Unknown'})`
@@ -122,7 +113,6 @@ function showMessageResult(message, type) {
     setTimeout(() => resultDiv.innerHTML = '', 5000);
 }
 
-// Helper function to get incident display info for messages table
 function getIncidentDisplayInfo(incidentId) {
     if (!incidentId) return 'N/A';
 

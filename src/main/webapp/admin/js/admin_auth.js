@@ -1,4 +1,3 @@
-// Session Token Management Functions
 function storeSessionToken(token) {
     localStorage.setItem('adminSessionToken', token);
 }
@@ -11,7 +10,6 @@ function clearSessionToken() {
     localStorage.removeItem('adminSessionToken');
 }
 
-// Redirection Functions
 function redirectToLogin() {
     window.location.href = 'admin_login.html';
 }
@@ -20,7 +18,6 @@ function redirectToPanel() {
     window.location.href = 'admin_panel.html';
 }
 
-// Login Logic for admin_login.html
 function initializeLoginPage() {
     const loginForm = document.getElementById('adminLoginForm');
     const errorDiv = document.getElementById('loginErrorMessage');
@@ -78,7 +75,7 @@ function initializeLoginPage() {
     }
 }
 
-// Logout Logic
+//logout
 function logoutAdmin() {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '../logout', true);
@@ -104,25 +101,20 @@ function logoutAdmin() {
     xhr.send();
 }
 
-// Authentication Check for admin_panel.html
 function checkAuthStatusForPanel() {
     if (!getSessionToken()) {
         redirectToLogin();
     }
 }
 
-// Initialize based on current page
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if we're on the login page
     if (document.getElementById('adminLoginForm')) {
         initializeLoginPage();
     }
 
-    // Check if we're on the admin panel page
     if (document.getElementById('adminContentArea')) {
         checkAuthStatusForPanel();
 
-        // Set up logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function() {

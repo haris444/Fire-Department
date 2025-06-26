@@ -1,5 +1,3 @@
-// admin_incidents.js - Incidents management functionality
-
 function loadIncidents() {
     makeAdminAjaxRequest('../admin/incidents', 'GET', null, (err, incidents) => {
         const container = document.getElementById('incidentsTableContainer');
@@ -22,7 +20,6 @@ function loadIncidents() {
 
         container.innerHTML = buildTable(['ID', 'Type', 'Description', 'Status', 'Danger', 'Vehicles', 'Actions'], rows);
 
-        // Add edit listeners
         document.querySelectorAll('.edit-incident-btn').forEach(btn => {
             btn.addEventListener('click', () => showEditModal(btn.dataset.incidentId));
         });
@@ -30,7 +27,6 @@ function loadIncidents() {
 }
 
 function showEditModal(incidentId) {
-    // First get the current incident data
     makeAdminAjaxRequest('../admin/incidents', 'GET', null, (err, incidents) => {
         if (err) {
             alert('Error loading incident data: ' + err.message);

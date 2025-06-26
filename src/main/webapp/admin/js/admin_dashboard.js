@@ -1,5 +1,3 @@
-// admin_dashboard.js - Dashboard functionality
-
 function loadDashboard() {
     makeAdminAjaxRequest('../admin/statistics', 'GET', null, (err, stats) => {
         const container = document.getElementById('statsContainer');
@@ -11,7 +9,7 @@ function loadDashboard() {
         const totalPeople = (stats.userCount || 0) + (stats.volunteerCount || 0);
         const totalIncidents = stats.incidentsByType ? stats.incidentsByType.reduce((sum, item) => sum + item.count, 0) : 0;
 
-        // Build incidents table
+        //incidents table
         let incidentsTable = '';
         if (stats.incidentsByType?.length) {
             const rows = stats.incidentsByType.map(item => buildRow([item.type, item.count])).join('');

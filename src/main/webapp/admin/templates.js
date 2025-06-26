@@ -63,7 +63,6 @@ const templates = {
     </div>`
 };
 
-// Table builders
 function buildTable(headers, rows) {
     return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -76,7 +75,6 @@ function buildOptions(items, valueKey, textFunction) {
     if (typeof textFunction === 'function') {
         return items.map(item => `<option value="${item[valueKey]}">${textFunction(item)}</option>`).join('');
     } else {
-        // Fallback for backwards compatibility
         return items.map(item => `<option value="${item[valueKey]}">${item[textFunction]}</option>`).join('');
     }
 }

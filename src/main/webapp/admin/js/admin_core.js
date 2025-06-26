@@ -1,11 +1,9 @@
-// admin_core.js - Common functionality shared across all admin modules
 
-// Global variables
 const contentArea = document.getElementById('adminContentArea');
 const navLinks = document.querySelectorAll('nav ul li a');
 const logoutButton = document.getElementById('logoutBtn');
 
-// AJAX Helper - Used by all modules
+//AJAX
 function makeAdminAjaxRequest(url, method, data, callback) {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
@@ -38,7 +36,6 @@ function makeAdminAjaxRequest(url, method, data, callback) {
     }
 }
 
-// Table building utilities
 function buildTable(headers, rows) {
     return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -55,20 +52,6 @@ function buildOptions(items, valueField, labelFunction) {
     ).join('');
 }
 
-// Utility functions
-function showMessage(message, type) {
-    contentArea.insertAdjacentHTML('afterbegin', `<div class="${type}-message">${message}</div>`);
-}
-
-function formatDateTime(dateTimeStr) {
-    if (!dateTimeStr) return 'N/A';
-    try {
-        const date = new Date(dateTimeStr);
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    } catch (e) {
-        return dateTimeStr;
-    }
-}
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -76,7 +59,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Main section loader - delegates to specific modules
 function loadSection(sectionName) {
     contentArea.innerHTML = templates[sectionName] || '<div class="content-section"><h2>Section not found</h2></div>';
 
@@ -99,7 +81,7 @@ function loadSection(sectionName) {
     }
 }
 
-// Initialization
+
 function initAdminPanel() {
     if (!getSessionToken()) {
         redirectToLogin();
@@ -120,5 +102,4 @@ function initAdminPanel() {
     loadSection('dashboard');
 }
 
-// Initialize when page loads
 document.addEventListener('DOMContentLoaded', initAdminPanel);
