@@ -1,6 +1,4 @@
-// user_profile.js - Profile management functionality
 
-// Profile Section
 function loadUserProfileSection() {
     makeUserAjaxRequest('../user/profile', 'GET', null, function(err, userData) {
         const profileContainer = document.getElementById('profileContainer');
@@ -9,7 +7,7 @@ function loadUserProfileSection() {
         } else {
             profileContainer.innerHTML = buildProfileForm(userData);
 
-            // Add form submit listener
+
             document.getElementById('userProfileForm').addEventListener('submit', function(event) {
                 event.preventDefault();
                 submitUserProfileUpdate();
@@ -19,7 +17,7 @@ function loadUserProfileSection() {
 }
 
 function submitUserProfileUpdate() {
-    // Collect standard user fields
+
     const formData = {
         firstname: document.getElementById('firstname').value,
         lastname: document.getElementById('lastname').value,
@@ -32,12 +30,12 @@ function submitUserProfileUpdate() {
         prefecture: document.getElementById('prefecture').value,
         job: document.getElementById('job').value,
         telephone: document.getElementById('telephone').value,
-        // Keep existing lat/lon values - users can't edit these
+
         lat: document.getElementById('lat').value || null,
         lon: document.getElementById('lon').value || null
     };
 
-    // Collect volunteer fields if they exist
+
     const volunteerTypeField = document.getElementById('volunteer_type');
     const heightField = document.getElementById('height');
     const weightField = document.getElementById('weight');

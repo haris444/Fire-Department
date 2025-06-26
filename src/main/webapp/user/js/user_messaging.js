@@ -1,6 +1,3 @@
-// user_messaging.js - Messaging functionality
-
-// Messages Section
 function loadMessagesSection() {
     makeUserAjaxRequest('../user/messages', 'GET', null, function(err, responseData) {
         const messagesContainer = document.getElementById('messagesContainer');
@@ -12,19 +9,18 @@ function loadMessagesSection() {
         }
     });
 
-    // Remove existing event listener before adding new one
+
     const sendMessageForm = document.getElementById('sendMessageForm');
     if (sendMessageForm) {
-        // Clone the form to remove all event listeners
+
         const newForm = sendMessageForm.cloneNode(true);
         sendMessageForm.parentNode.replaceChild(newForm, sendMessageForm);
 
-        // Add single event listener to the new form
         document.getElementById('sendMessageForm').addEventListener('submit', handleUserSendMessage);
     }
 }
 
-// Extract the send message handler to a separate function
+
 function handleUserSendMessage(event) {
     event.preventDefault();
 
@@ -42,13 +38,13 @@ function handleUserSendMessage(event) {
         return;
     }
 
-    // Incident ID is now required for all messages
+
     if (!incidentId) {
         showUserMessageResult('Please select an incident (required for all messages).', 'error');
         return;
     }
 
-    // Validate user can only send to admin or public
+
     if (recipient !== 'admin' && recipient !== 'public') {
         showUserMessageResult('Users can only send to Admin or Public.', 'error');
         return;

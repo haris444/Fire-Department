@@ -47,7 +47,7 @@ const userTemplates = {
                     <input type="text" id="region" required placeholder="e.g., Crete">
                 </div>
             </div>
-            <!-- Location validation feedback -->
+     
             <div id="locfeedback" style="display: none; margin-top: 10px;"></div>
             
             <button type="submit">Submit Incident</button>
@@ -57,7 +57,7 @@ const userTemplates = {
 
     viewIncidents: `<div class="content-section"><h2>View Incidents</h2><div id="incidentsContainer">Loading...</div></div>`,
 
-    // UPDATED MSG TEMPLATE with field note about format
+
     messages: `<div class="content-section"><h2>Messages</h2>
         <div id="messagesContainer">Loading...</div>
         <div class="message-compose">
@@ -94,19 +94,19 @@ const userTemplates = {
     </div>`
 };
 
-// Profile form builder and utility functions
+
 function buildProfileForm(user) {
     const isVol = user.user_type === 'volunteer';
     let h = '<form id="userProfileForm" class="user-form"><h3>Profile Information</h3>';
 
-    // Read-only fields
+
     h += `<div class="form-row">
         <div class="form-group"><label>Username:</label><input type="text" value="${user.username || ''}" readonly></div>
         <div class="form-group"><label>Email:</label><input type="email" value="${user.email || ''}" readonly></div>
     </div>`;
     h += `<div class="form-group"><label>Type:</label><input type="text" value="${user.user_type || 'user'}" readonly></div>`;
 
-    // Editable fields
+
     h += `<div class="form-row">
         <div class="form-group"><label for="firstname">First Name:</label><input type="text" id="firstname" value="${user.firstname || ''}" required></div>
         <div class="form-group"><label for="lastname">Last Name:</label><input type="text" id="lastname" value="${user.lastname || ''}" required></div>
@@ -133,12 +133,11 @@ function buildProfileForm(user) {
         <div class="form-group"><label for="telephone">Phone:</label><input type="tel" id="telephone" value="${user.telephone || ''}" required></div>
     </div>`;
 
-    // REMOVED: Latitude and Longitude fields are no longer editable
-    // The coordinates are now calculated automatically during address validation and stored in hidden fields
+
     h += `<input type="hidden" id="lat" value="${user.lat || ''}">`;
     h += `<input type="hidden" id="lon" value="${user.lon || ''}">`;
 
-    // Volunteer fields
+
     if (isVol) {
         h += '<h3>Volunteer Info</h3>';
         h += `<div class="form-row">
@@ -157,7 +156,7 @@ function buildProfileForm(user) {
     return h + '<button type="submit">Update Profile</button></form><div id="profileUpdateMessage"></div>';
 }
 
-// Utility functions
+
 function buildUserTable(headers, rows) {
     return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
 }

@@ -1,17 +1,11 @@
-// user_incidents.js - Incident management functionality
-
-// Submit Incident Section
 function loadSubmitIncidentSection() {
-    // Add event listeners to clear validation errors when address fields change
     setTimeout(function() {
         const addressFields = ['country', 'municipality', 'address', 'region'];
         addressFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.addEventListener('input', function() {
-                    // Clear validation errors when user starts typing
                     clearIncidentValidationErrors();
-                    // Hide any previous location feedback
                     const locationFeedback = document.getElementById('locfeedback');
                     if (locationFeedback) {
                         locationFeedback.style.display = 'none';
@@ -28,10 +22,10 @@ function loadSubmitIncidentSection() {
 }
 
 function handleIncidentSubmission() {
-    // First validate the location
+
     validateIncidentLocation()
         .then(function(coords) {
-            // If validation successful, submit the incident
+
             submitIncidentWithCoords(coords);
         })
         .catch(function(error) {
@@ -40,10 +34,7 @@ function handleIncidentSubmission() {
         });
 }
 
-/**
- * Validates the incident location using the geocoding API
- * @returns {Promise} Promise that resolves with coordinates if valid
- */
+
 function validateIncidentLocation() {
     return new Promise(function(resolve, reject) {
         const countryName = document.getElementById('country').value.trim();
@@ -51,24 +42,21 @@ function validateIncidentLocation() {
         const addressName = document.getElementById('address').value.trim();
         const regionName = document.getElementById('region').value.trim();
 
-        // Check if required fields are filled
         if (!countryName || !municipalityName || !addressName || !regionName) {
             reject(new Error('Please fill in all location fields (Country, Municipality, Address, Region)'));
             return;
         }
 
-        // Clear any existing validation errors before starting new validation
         clearIncidentValidationErrors();
 
-        // Show loading message
         const locationFeedback = document.getElementById('locfeedback');
         locationFeedback.style.display = 'block';
         locationFeedback.innerHTML = '<span style="color: blue;">🔄 Validating location...</span>';
 
-        // Create the search address - prioritize region for better geocoding
+
         const address = `${addressName}, ${municipalityName}, ${regionName}, ${countryName}`;
 
-        // Create XMLHttpRequest for geocoding
+
         const xhr = new XMLHttpRequest();
 
         xhr.addEventListener("readystatechange", function () {
@@ -76,33 +64,33 @@ function validateIncidentLocation() {
                 try {
                     const response = JSON.parse(xhr.responseText);
 
-                    // Check if we got results
+
                     if (response.length > 0 && countryName === "Greece") {
                         const location = response[0];
                         const displayName = location.display_name;
 
-                        // Check if the location matches the specified region (case-insensitive)
+
                         if (displayName.toLowerCase().includes(regionName.toLowerCase())) {
                             const lat = parseFloat(location.lat);
                             const lon = parseFloat(location.lon);
 
-                            // Success - location found and valid
+
                             locationFeedback.innerHTML = `<span style="color: green;">✅ Location validated successfully in ${regionName}.</span>`;
 
                             resolve({ lat: lat, lon: lon });
                         } else {
-                            // Location not in specified region
+
                             locationFeedback.innerHTML = `<span style="color: red;">❌ Address not found in ${regionName}. Please check your region.</span>`;
                             setIncidentValidationErrors(`This location is not in ${regionName}.`);
                             reject(new Error(`Address not found in ${regionName}. Please check your region.`));
                         }
                     } else if (response.length > 0 && countryName !== "Greece") {
-                        // Not in Greece
+
                         locationFeedback.innerHTML = '<span style="color: red;">❌ This application is available only in Greece.</span>';
                         setIncidentValidationErrors("This application is available only in Greece.");
                         reject(new Error('This application is available only in Greece.'));
                     } else {
-                        // Location not found
+
                         locationFeedback.innerHTML = '<span style="color: red;">❌ Address not found. Please check your address details.</span>';
                         setIncidentValidationErrors("This address could not be found.");
                         reject(new Error('Address not found. Please check your address details.'));
@@ -121,7 +109,7 @@ function validateIncidentLocation() {
             reject(new Error('Network error during location validation.'));
         };
 
-        // Configure and send the geocoding request
+
         xhr.open("GET", "https://forward-reverse-geocoding.p.rapidapi.com/v1/search?q=" +
             encodeURIComponent(address) + "&accept-language=en&polygon_threshold=0.0");
 
@@ -132,9 +120,7 @@ function validateIncidentLocation() {
     });
 }
 
-/**
- * Submits the incident with validated coordinates
- */
+
 function submitIncidentWithCoords(coords) {
     const incidentData = {
         incident_type: document.getElementById('incident_type').value,
@@ -160,9 +146,7 @@ function submitIncidentWithCoords(coords) {
     });
 }
 
-/**
- * Sets validation errors on incident form fields
- */
+
 function setIncidentValidationErrors(message) {
     const municipalityField = document.getElementById('municipality');
     const addressField = document.getElementById('address');
@@ -175,9 +159,7 @@ function setIncidentValidationErrors(message) {
     if (regionField) regionField.setCustomValidity(message);
 }
 
-/**
- * Clears validation errors from incident form fields
- */
+
 function clearIncidentValidationErrors() {
     const municipalityField = document.getElementById('municipality');
     const addressField = document.getElementById('address');
@@ -190,7 +172,7 @@ function clearIncidentValidationErrors() {
     if (regionField) regionField.setCustomValidity('');
 }
 
-// View Incidents Section
+
 function loadViewIncidentsSection() {
     makeUserAjaxRequest('../user/incidents', 'GET', null, function(err, incidentsData) {
         const incidentsContainer = document.getElementById('incidentsContainer');
