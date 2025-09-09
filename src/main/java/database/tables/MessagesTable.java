@@ -125,9 +125,11 @@ public class MessagesTable {
 
         String query = "SELECT * FROM messages WHERE recipient = 'public'";
 
-        // Create placeholders for the IN clause
-        String placeholders = String.join(",", Collections.nCopies(assignedIncidentIds.size(), "?"));
-        query += " OR (recipient = 'volunteers' AND incident_id IN (" + placeholders + "))";
+        // Only add the volunteer part if there are assigned incidents
+        if (assignedIncidentIds != null && !assignedIncidentIds.isEmpty()) {
+            String placeholders = String.join(",", Collections.nCopies(assignedIncidentIds.size(), "?"));
+            query += " OR (recipient = 'volunteers' AND incident_id IN (" + placeholders + "))";
+        }
 
         query += " ORDER BY date_time DESC";
 

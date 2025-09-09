@@ -35,7 +35,15 @@ function makeAdminAjaxRequest(url, method, data, callback) {
         xhr.send(null);
     }
 }
-
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return 'N/A';
+    try {
+        const date = new Date(dateTimeStr);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch (e) {
+        return dateTimeStr;
+    }
+}
 function buildTable(headers, rows) {
     return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -100,6 +108,10 @@ function initAdminPanel() {
     });
 
     loadSection('dashboard');
+}
+
+function showMessage(message, type) {
+    contentArea.insertAdjacentHTML('afterbegin', `<div class="${type}-message">${message}</div>`);
 }
 
 document.addEventListener('DOMContentLoaded', initAdminPanel);

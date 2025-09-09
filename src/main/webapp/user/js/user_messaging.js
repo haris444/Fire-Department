@@ -132,7 +132,7 @@ function getIncidentDisplayString(incidentId, incidentInfo) {
 
 function getUserMessageType(message) {
     if (message.sender === 'admin') return 'from-admin';
-    if (message.sender.includes('volunteer') || isKnownVolunteer(message.sender)) return 'from-volunteer';
+    if (message.sender.includes('volunteer')) return 'from-volunteer';
     return 'from-user';
 }
 
@@ -145,10 +145,6 @@ function getUserMessageTypeLabel(messageType) {
     }
 }
 
-function isKnownVolunteer(sender) {
-    const volunteerPatterns = ['volunteer', 'vol_', 'raphael', 'nick', 'mary', 'papas'];
-    return volunteerPatterns.some(pattern => sender.toLowerCase().includes(pattern.toLowerCase()));
-}
 
 function showUserMessageResult(message, type) {
     const resultDiv = document.getElementById('sendMessageResult');

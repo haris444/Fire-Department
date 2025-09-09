@@ -24,7 +24,7 @@ public class InitDatabase {
         Connection conn = getInitialConnection();
         Statement stmt = conn.createStatement();
         String sql = "DROP DATABASE  HY359_2024";
-        stmt.executeUpdate(sql);
+        //stmt.executeUpdate(sql);
         System.out.println("Database dropped successfully...");
     }
 

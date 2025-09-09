@@ -29,23 +29,29 @@ public class IncidentsTable {
     public ArrayList<Incident> getAllIncidents() throws SQLException, ClassNotFoundException {
         Connection con = DB_Connection.getConnection();
         Statement stmt = con.createStatement();
-        ArrayList<Incident> pets = new ArrayList<Incident>();
-        ResultSet rs;
+        ArrayList<Incident> incidents = new ArrayList<Incident>();
+        ResultSet rs = null;
+        
         try {
             rs = stmt.executeQuery("SELECT * FROM incidents");
             while (rs.next()) {
                 String json = DB_Connection.getResultsToJSON(rs);
                 Gson gson = new Gson();
-                Incident pet = gson.fromJson(json, Incident.class);
-                pets.add(pet);
+                Incident incident = gson.fromJson(json, Incident.class);
+                incidents.add(incident);
             }
-            return pets;
-
+            return incidents;
+        } catch (SQLException e) {
+            System.err.println("SQL Exception in getAllIncidents: " + e.getMessage());
+            throw e;
         } catch (Exception e) {
-            System.err.println("Got an exception! ");
-            System.err.println(e.getMessage());
+            System.err.println("Exception in getAllIncidents: " + e.getMessage());
+            throw new SQLException("Error processing incidents: " + e.getMessage(), e);
+        } finally {
+            if (rs != null) rs.close();
+            stmt.close();
+            con.close();
         }
-        return null;
     }
 
 
